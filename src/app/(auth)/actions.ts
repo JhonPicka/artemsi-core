@@ -7,7 +7,7 @@ import { getPostLoginPath, isAdminEmail } from "@/lib/admin-auth";
 import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
 import { isBillingEnforced } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
-import { loginSchema, signupSchema } from "@/lib/validation";
+import { loginSchema, passwordChangeSchema, signupSchema } from "@/lib/validation";
 
 export type AuthFormState = {
   error?: string;
@@ -124,4 +124,45 @@ export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/");
+}
+
+export async function changePasswordAction(
+  _prevState: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const parsed = passwordChangeSchema.safeParse({
+    currentPassword: formData.get("currentPassword"),
+    newPassword: formData.get("newPassword"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.email) {
+    return { error: "Tu dois être connecté." };
+  }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: parsed.data.currentPassword,
+  });
+  if (signInError) {
+    return { error: "Mot de passe actuel incorrect." };
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: parsed.data.newPassword,
+  });
+  if (updateError) {
+    return { error: updateError.message };
+  }
+
+  return { success: "Mot de passe mis à jour." };
 }

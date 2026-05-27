@@ -1,6 +1,7 @@
 "use client";
 
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
+import { ChangePasswordForm } from "@/components/profile/change-password-form";
 import { legalConfig } from "@/lib/legal-config";
 
 export function ManageAccountPanel() {
@@ -9,6 +10,16 @@ export function ManageAccountPanel() {
 
   return (
     <div className="manage-account-panel">
+      <article className="manage-account-row">
+        <p className="manage-account-row-title">Mot de passe</p>
+        <p className="muted manage-account-row-lead">
+          Change ton mot de passe à tout moment depuis ton espace ARTEMSI.
+        </p>
+        <ChangePasswordForm />
+      </article>
+
+      <div className="manage-account-divider" role="separator" />
+
       <article className="manage-account-row">
         <p className="manage-account-row-title">Annuler son abonnement</p>
         <p className="muted manage-account-row-lead">

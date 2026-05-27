@@ -45,6 +45,26 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Mot de passe requis"),
 });
 
+export const passwordChangeSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Mot de passe actuel requis"),
+    newPassword: z
+      .string()
+      .min(8, "Le mot de passe doit faire au moins 8 caractères")
+      .regex(/[a-z]/, "Le mot de passe doit contenir une minuscule")
+      .regex(/[A-Z]/, "Le mot de passe doit contenir une majuscule")
+      .regex(/[0-9]/, "Le mot de passe doit contenir un chiffre"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Les nouveaux mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: "Le nouveau mot de passe doit être différent de l'ancien",
+    path: ["newPassword"],
+  });
+
 export const onboardingSchema = z.object({
   fullName: z.string().min(2, "Nom complet requis"),
   phone: z.string().min(8, "Téléphone invalide"),
