@@ -1,0 +1,214 @@
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { redirect } from "next/navigation";
+import type Stripe from "stripe";
+
+import { isBillingBypassEmail } from "@/lib/billing-access";
+import { isBillingEnforced } from "@/lib/stripe";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+
+export type SubscriptionStatus = "inactive" | "active" | "past_due" | "canceled";
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+export function isActiveSubscriptionStatus(status: SubscriptionStatus | string | null | undefined) {
+  return status === "active";
+}
+
+function pickStripeId(value: string | { id: string } | null | undefined) {
+  if (!value) return null;
+  return typeof value === "string" ? value : value.id;
+}
+
+export function emailFromCheckoutSession(session: Stripe.Checkout.Session) {
+  const raw = session.customer_details?.email ?? session.customer_email ?? null;
+  return raw ? normalizeEmail(raw) : null;
+}
+
+/** Active l'abonnement en base (webhook ou page succes checkout). */
+export async function activateBillingFromCheckoutSession(session: Stripe.Checkout.Session) {
+  const email = emailFromCheckoutSession(session);
+  if (!email) return false;
+
+  const admin = createAdminClient();
+  const values = {
+    email,
+    subscription_status: "active" as const,
+    stripe_customer_id: pickStripeId(session.customer),
+    stripe_subscription_id: pickStripeId(session.subscription),
+    stripe_checkout_session_id: session.id,
+    last_event_type: "checkout.session.completed",
+    last_event_id: session.id,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await admin.from("billing_customers").upsert(values, { onConflict: "email" });
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await syncBillingEmailToProfiles(email);
+  return true;
+}
+
+export async function userHasBillingAccess(email: string): Promise<boolean> {
+  if (!isBillingEnforced()) return true;
+  if (isBillingBypassEmail(email)) return true;
+  const status = await getBillingStatusByEmail(email);
+  return isActiveSubscriptionStatus(status);
+}
+
+export async function getBillingStatusByEmail(email: string): Promise<SubscriptionStatus> {
+  if (isBillingBypassEmail(email)) {
+    return "active";
+  }
+
+  const admin = createAdminClient();
+  const normalizedEmail = normalizeEmail(email);
+
+  const { data, error } = await admin
+    .from("billing_customers")
+    .select("subscription_status")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data?.subscription_status as SubscriptionStatus | undefined) ?? "inactive";
+}
+
+export async function syncProfileSubscriptionStatus(params: {
+  userId: string;
+  email: string;
+  userClient?: SupabaseClient;
+}) {
+  const { userId, email, userClient } = params;
+  const normalizedEmail = normalizeEmail(email);
+
+  if (isBillingBypassEmail(normalizedEmail)) {
+    const values = {
+      id: userId,
+      email: normalizedEmail,
+      subscription_status: "active" as const,
+      stripe_customer_id: null,
+      stripe_subscription_id: null,
+      subscription_current_period_end: null,
+      updated_at: new Date().toISOString(),
+    };
+    if (userClient) {
+      const { error } = await userClient.from("profiles").upsert(values, { onConflict: "id" });
+      if (error) throw new Error(error.message);
+      return "active";
+    }
+    const admin = createAdminClient();
+    const { error } = await admin.from("profiles").upsert(values, { onConflict: "id" });
+    if (error) throw new Error(error.message);
+    return "active";
+  }
+
+  const admin = createAdminClient();
+
+  const { data: billing, error: billingError } = await admin
+    .from("billing_customers")
+    .select("subscription_status, stripe_customer_id, stripe_subscription_id, current_period_end")
+    .eq("email", normalizedEmail)
+    .maybeSingle();
+
+  if (billingError) {
+    throw new Error(billingError.message);
+  }
+
+  const subscriptionStatus =
+    (billing?.subscription_status as SubscriptionStatus | undefined) ?? "inactive";
+  const values = {
+    id: userId,
+    email: normalizedEmail,
+    subscription_status: subscriptionStatus,
+    stripe_customer_id: billing?.stripe_customer_id ?? null,
+    stripe_subscription_id: billing?.stripe_subscription_id ?? null,
+    subscription_current_period_end: billing?.current_period_end ?? null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (userClient) {
+    const { error } = await userClient.from("profiles").upsert(values, { onConflict: "id" });
+    if (error) {
+      throw new Error(error.message);
+    }
+    return subscriptionStatus;
+  }
+
+  const { error } = await admin.from("profiles").upsert(values, { onConflict: "id" });
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return subscriptionStatus;
+}
+
+/** After webhook upsert on billing_customers, sync every profile with that email. */
+export async function syncBillingEmailToProfiles(email: string) {
+  const normalizedEmail = normalizeEmail(email);
+  const admin = createAdminClient();
+
+  const { data: profiles, error } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("email", normalizedEmail);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  for (const profile of profiles ?? []) {
+    await syncProfileSubscriptionStatus({ userId: profile.id, email: normalizedEmail });
+  }
+}
+
+export async function syncUserBilling(user: Pick<User, "id" | "email">) {
+  if (!user.email) {
+    return "inactive" as SubscriptionStatus;
+  }
+  const supabase = await createClient();
+  return syncProfileSubscriptionStatus({
+    userId: user.id,
+    email: user.email,
+    userClient: supabase,
+  });
+}
+
+export async function requireActiveSubscription(user: Pick<User, "id" | "email">) {
+  if (!user.email) {
+    redirect("/subscribe");
+  }
+
+  if (!isBillingEnforced()) {
+    return;
+  }
+
+  if (isBillingBypassEmail(user.email)) {
+    await syncUserBilling(user);
+    return;
+  }
+
+  const status = await syncUserBilling(user);
+  if (!isActiveSubscriptionStatus(status)) {
+    redirect("/subscribe");
+  }
+}
+
+/** Guard API routes: true when paid access is allowed. */
+export async function hasApiBillingAccess(user: Pick<User, "id" | "email">) {
+  if (!user.email) return false;
+  if (!isBillingEnforced()) return true;
+  if (isBillingBypassEmail(user.email)) {
+    await syncUserBilling(user);
+    return true;
+  }
+  const status = await syncUserBilling(user);
+  return isActiveSubscriptionStatus(status);
+}

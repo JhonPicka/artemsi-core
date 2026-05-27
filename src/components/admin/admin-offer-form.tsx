@@ -1,0 +1,308 @@
+"use client";
+
+import { useState } from "react";
+
+type ExtractedFields = {
+  title: string;
+  company: string | null;
+  location: string | null;
+  description: string;
+  contractHint: string | null;
+  resumeKeywords?: string[];
+};
+
+type PublishResult = {
+  offerId?: string;
+  matching?: {
+    matchedPairs: number;
+    insertedAssignments: number;
+    profilesConsidered: number;
+  };
+};
+
+export function AdminOfferForm() {
+  const [url, setUrl] = useState("");
+  const [pastedText, setPastedText] = useState("");
+  const [title, setTitle] = useState("");
+  const [company, setCompany] = useState("");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [source, setSource] = useState<"partner" | "autre">("partner");
+  const [isPublic, setIsPublic] = useState(true);
+  const [isExclusive, setIsExclusive] = useState(false);
+  const [keywordsInput, setKeywordsInput] = useState("");
+  const [info, setInfo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [published, setPublished] = useState<PublishResult | null>(null);
+
+  async function handleExtract() {
+    setError(null);
+    setInfo(null);
+    setPublished(null);
+
+    if (!url.trim()) {
+      setError("Indique l'URL de l'offre.");
+      return;
+    }
+
+    setExtracting(true);
+    try {
+      const response = await fetch("/api/admin/offers/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: url.trim(),
+          pastedText: pastedText.trim() || undefined,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error ?? "Extraction impossible.");
+        return;
+      }
+
+      const fields = data.fields as ExtractedFields;
+      setTitle(fields.title ?? "");
+      setCompany(fields.company ?? "");
+      setLocation(fields.location ?? "");
+      setDescription(fields.description ?? "");
+      setKeywordsInput((fields.resumeKeywords ?? []).join(", "));
+
+      const hints: string[] = [];
+      if (data.rawSource) hints.push(`Source analysee : ${data.rawSource}.`);
+      if (data.fetchWarning) hints.push(data.fetchWarning);
+      if (data.usedAi) hints.push("Analyse IA appliquee.");
+      if (fields.contractHint) {
+        hints.push(
+          `Contrat : ${fields.contractHint} — mots-clés intégrés pour le matching candidats.`,
+        );
+      }
+      setInfo(hints.length ? hints.join(" ") : "Champs pre-remplis — verifie avant publication.");
+    } catch {
+      setError("Erreur reseau lors de l'analyse.");
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  async function handlePublish() {
+    setError(null);
+    setInfo(null);
+    setPublished(null);
+
+    if (!url.trim() || !title.trim() || description.trim().length < 20) {
+      setError("URL, titre et description (20 caracteres min.) sont obligatoires.");
+      return;
+    }
+
+    const keywordsList = keywordsInput
+      .split(/[,;\n]/)
+      .map((k) => k.trim())
+      .filter((k) => k.length >= 2 && k.length <= 60)
+      .slice(0, 20);
+
+    setPublishing(true);
+    try {
+      const response = await fetch("/api/admin/offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: url.trim(),
+          title: title.trim(),
+          company: company.trim() || null,
+          location: location.trim() || null,
+          description: description.trim(),
+          source,
+          isPublic,
+          isPartnerExclusive: isExclusive,
+          keywords: keywordsList,
+          runMatching: true,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error ?? "Publication impossible.");
+        return;
+      }
+
+      setPublished({
+        offerId: data.offerId,
+        matching: data.matching,
+      });
+      setInfo("Offre publiee. Le matching a ete lance pour les profils eligibles.");
+    } catch {
+      setError("Erreur reseau lors de la publication.");
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  return (
+    <div className="admin-offer-panel">
+      <section className="card form admin-offer-step">
+        <h2>1. URL de l&apos;offre</h2>
+        <p className="muted admin-offer-lead">
+          Colle en priorité le lien officiel de l&apos;annonce (site carrières entreprise, page
+          recrutement ou école partenaire). Si la page est bloquee, copie le texte de l&apos;annonce
+          dans le champ ci-dessous.
+        </p>
+        <label htmlFor="offer-url">URL</label>
+        <input
+          id="offer-url"
+          type="url"
+          placeholder="https://..."
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <label htmlFor="offer-paste">Texte de l&apos;annonce (optionnel)</label>
+        <textarea
+          id="offer-paste"
+          rows={6}
+          placeholder="Colle ici le contenu si le lien ne se charge pas..."
+          value={pastedText}
+          onChange={(e) => setPastedText(e.target.value)}
+        />
+        <div className="form-actions">
+          <button
+            type="button"
+            className="button-link"
+            onClick={handleExtract}
+            disabled={extracting}
+          >
+            {extracting ? "Analyse en cours…" : "Analyser l'offre"}
+          </button>
+        </div>
+      </section>
+
+      <section className="card form admin-offer-step">
+        <h2>2. Verifier et publier</h2>
+        <label htmlFor="offer-title">Titre</label>
+        <input
+          id="offer-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <label htmlFor="offer-company">Entreprise</label>
+        <input
+          id="offer-company"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+        />
+        <label htmlFor="offer-location">Lieu</label>
+        <input
+          id="offer-location"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
+        <label htmlFor="offer-description">Description</label>
+        <textarea
+          id="offer-description"
+          rows={10}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <label htmlFor="offer-keywords">
+          Mots-clés CV/LM <span className="muted">(séparés par virgule)</span>
+        </label>
+        <textarea
+          id="offer-keywords"
+          rows={3}
+          placeholder="Ex. Excel avancé, gestion de projet, anglais professionnel, Adobe Photoshop"
+          value={keywordsInput}
+          onChange={(e) => setKeywordsInput(e.target.value)}
+        />
+        <p className="muted small-label">
+          Affichés au candidat dans <em>Voir l&apos;offre complète</em> sous « Mots-clés à intégrer dans
+          ton CV et ta lettre de motivation ». L&apos;IA pré-remplit ce champ lors de l&apos;analyse.
+        </p>
+        <label htmlFor="offer-source">Source</label>
+        <select
+          id="offer-source"
+          value={source}
+          onChange={(e) => setSource(e.target.value as "partner" | "autre")}
+        >
+          <option value="partner">Partenaire</option>
+          <option value="autre">Autre</option>
+        </select>
+        <label className="admin-offer-check">
+          <input
+            type="checkbox"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+          />
+          Visible dans le pool public d&apos;offres
+        </label>
+        <label className="admin-offer-check">
+          <input
+            type="checkbox"
+            checked={isExclusive}
+            onChange={(e) => setIsExclusive(e.target.checked)}
+          />
+          Offre exclusive ARTEMSI
+        </label>
+        <div className="form-actions">
+          <button
+            type="button"
+            className="button-link"
+            onClick={handlePublish}
+            disabled={publishing}
+          >
+            {publishing ? "Publication…" : "Publier et lancer le matching"}
+          </button>
+        </div>
+      </section>
+
+      {info ? (
+        <p className="admin-offer-info" role="status">
+          {info}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="error admin-offer-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {published?.offerId ? (
+        <section className="card admin-offer-success" role="status" aria-live="polite">
+          <div className="admin-offer-success-head">
+            <span className="admin-offer-success-icon" aria-hidden="true">
+              ✓
+            </span>
+            <div>
+              <h3>Offre publiée avec succès</h3>
+              <p className="muted">
+                ID : <code>{published.offerId}</code>
+              </p>
+            </div>
+          </div>
+          <div className="admin-offer-success-checks" aria-label="Statut de publication">
+            <span>✓ Enregistrée en base</span>
+            <span>✓ Matching lancé</span>
+          </div>
+          {published.matching ? (
+            <div className="admin-offer-matching-summary">
+              <div>
+                <strong>{published.matching.insertedAssignments}</strong>
+                <span>assignation(s) créée(s)</span>
+              </div>
+              <div>
+                <strong>{published.matching.matchedPairs}</strong>
+                <span>match(s) trouvé(s)</span>
+              </div>
+              <div>
+                <strong>{published.matching.profilesConsidered}</strong>
+                <span>profil(s) analysé(s)</span>
+              </div>
+            </div>
+          ) : (
+            <p className="muted">
+              L&apos;offre est publiée. Aucun détail de matching n&apos;a été retourné par l&apos;API.
+            </p>
+          )}
+        </section>
+      ) : null}
+    </div>
+  );
+}
