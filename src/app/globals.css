@@ -475,7 +475,19 @@ html:has(.landing-shell) {
 
 @media (max-width: 520px) {
   .landing-nav-link {
-    display: none;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.84rem;
+    padding: 0.35rem 0.45rem;
+  }
+
+  .landing-nav-links {
+    gap: 0.4rem;
+  }
+
+  .landing-nav-cta {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.82rem;
   }
 }
 
