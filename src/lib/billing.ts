@@ -1,11 +1,10 @@
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import type Stripe from "stripe";
 
 import { isBillingBypassEmail } from "@/lib/billing-access";
 import { isBillingEnforced } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 export type SubscriptionStatus = "inactive" | "active" | "past_due" | "canceled";
 
@@ -84,10 +83,10 @@ export async function getBillingStatusByEmail(email: string): Promise<Subscripti
 export async function syncProfileSubscriptionStatus(params: {
   userId: string;
   email: string;
-  userClient?: SupabaseClient;
 }) {
-  const { userId, email, userClient } = params;
+  const { userId, email } = params;
   const normalizedEmail = normalizeEmail(email);
+  const admin = createAdminClient();
 
   if (isBillingBypassEmail(normalizedEmail)) {
     const values = {
@@ -99,18 +98,10 @@ export async function syncProfileSubscriptionStatus(params: {
       subscription_current_period_end: null,
       updated_at: new Date().toISOString(),
     };
-    if (userClient) {
-      const { error } = await userClient.from("profiles").upsert(values, { onConflict: "id" });
-      if (error) throw new Error(error.message);
-      return "active";
-    }
-    const admin = createAdminClient();
     const { error } = await admin.from("profiles").upsert(values, { onConflict: "id" });
     if (error) throw new Error(error.message);
     return "active";
   }
-
-  const admin = createAdminClient();
 
   const { data: billing, error: billingError } = await admin
     .from("billing_customers")
@@ -133,14 +124,6 @@ export async function syncProfileSubscriptionStatus(params: {
     subscription_current_period_end: billing?.current_period_end ?? null,
     updated_at: new Date().toISOString(),
   };
-
-  if (userClient) {
-    const { error } = await userClient.from("profiles").upsert(values, { onConflict: "id" });
-    if (error) {
-      throw new Error(error.message);
-    }
-    return subscriptionStatus;
-  }
 
   const { error } = await admin.from("profiles").upsert(values, { onConflict: "id" });
   if (error) {
@@ -173,11 +156,9 @@ export async function syncUserBilling(user: Pick<User, "id" | "email">) {
   if (!user.email) {
     return "inactive" as SubscriptionStatus;
   }
-  const supabase = await createClient();
   return syncProfileSubscriptionStatus({
     userId: user.id,
     email: user.email,
-    userClient: supabase,
   });
 }
 
