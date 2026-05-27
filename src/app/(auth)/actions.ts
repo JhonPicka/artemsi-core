@@ -2,10 +2,8 @@
 
 import { redirect } from "next/navigation";
 
-import { isBillingBypassEmail } from "@/lib/billing-access";
 import { getPostLoginPath, isAdminEmail } from "@/lib/admin-auth";
 import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
-import { isBillingEnforced } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, signupSchema } from "@/lib/validation";
 
@@ -27,19 +25,6 @@ export async function signupAction(
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
-  }
-
-  const normalizedEmail = parsed.data.email.trim().toLowerCase();
-  const isPrivilegedEmail = isAdminEmail(normalizedEmail) || isBillingBypassEmail(normalizedEmail);
-
-  if (isBillingEnforced() && !isPrivilegedEmail) {
-    const hasPaid = await userHasBillingAccess(normalizedEmail);
-    if (!hasPaid) {
-      return {
-        error:
-          "Aucun abonnement actif trouvé pour cet email. Souscris d’abord, puis reviens créer ton compte avec le même email.",
-      };
-    }
   }
 
   const supabase = await createClient();
