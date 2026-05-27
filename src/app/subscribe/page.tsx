@@ -53,8 +53,9 @@ export default async function SubscribePage() {
               </>
             ) : (
               <p className="muted">
-                Deja abonné ?{" "}
-                <Link href="/login">Connecte-toi</Link> avec l&apos;email utilisé au paiement.
+                Deja abonne ?{" "}
+                <Link href="/login">Connecte-toi</Link> ou{" "}
+                <Link href="/signup">cree ton compte</Link> avec l&apos;email utilise au paiement.
               </p>
             )}
 

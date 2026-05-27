@@ -1,9 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 
 import { loginAction, type AuthFormState } from "@/app/(auth)/actions";
-import { SubscribeButton } from "@/components/billing/subscribe-button";
 
 const initialState: AuthFormState = {};
 
@@ -29,10 +29,9 @@ export function LoginForm() {
       </button>
 
       <p className="muted auth-form-footer">
-        Pas encore abonné ?{" "}
-        <SubscribeButton className="inline-link-button">
-          Souscrire pour créer un compte
-        </SubscribeButton>
+        Pas encore inscrit ? <Link href="/signup">Creer un compte</Link>
+        {" · "}
+        <Link href="/subscribe">Abonnement</Link>
       </p>
     </form>
   );
