@@ -31,21 +31,13 @@ export async function signupAction(
 
   const normalizedEmail = parsed.data.email.trim().toLowerCase();
   const isPrivilegedEmail = isAdminEmail(normalizedEmail) || isBillingBypassEmail(normalizedEmail);
-  const billingRequired = isBillingEnforced() && !isPrivilegedEmail;
 
-  if (billingRequired) {
-    try {
-      const hasPaid = await userHasBillingAccess(normalizedEmail);
-      if (!hasPaid) {
-        return {
-          error:
-            "Aucun abonnement actif trouvé pour cet email. Souscris d’abord, puis reviens créer ton compte avec le même email.",
-        };
-      }
-    } catch {
+  if (isBillingEnforced() && !isPrivilegedEmail) {
+    const hasPaid = await userHasBillingAccess(normalizedEmail);
+    if (!hasPaid) {
       return {
         error:
-          "Configuration facturation incomplète côté serveur. Vérifie SUPABASE_SERVICE_ROLE_KEY dans Vercel.",
+          "Aucun abonnement actif trouvé pour cet email. Souscris d’abord, puis reviens créer ton compte avec le même email.",
       };
     }
   }
@@ -64,18 +56,9 @@ export async function signupAction(
     if (isAdminEmail(data.user.email)) {
       redirect(getPostLoginPath(data.user.email));
     }
-    if (billingRequired) {
-      try {
-        await syncUserBilling(data.user);
-        if (!(await userHasBillingAccess(data.user.email))) {
-          redirect("/subscribe");
-        }
-      } catch {
-        return {
-          error:
-            "Configuration facturation incomplète côté serveur. Vérifie SUPABASE_SERVICE_ROLE_KEY dans Vercel.",
-        };
-      }
+    await syncUserBilling(data.user);
+    if (!(await userHasBillingAccess(data.user.email))) {
+      redirect("/subscribe");
     }
     redirect("/onboarding");
   }
@@ -119,22 +102,9 @@ export async function loginAction(
     redirect(getPostLoginPath(user.email));
   }
 
-  const billingRequired = isBillingEnforced() && !isBillingBypassEmail(user.email);
-  if (billingRequired) {
-    try {
-      await syncUserBilling(user);
-      if (!(await userHasBillingAccess(user.email))) {
-        redirect("/subscribe");
-      }
-    } catch {
-      return {
-        error:
-          "Connexion impossible: configuration facturation serveur incomplète. Vérifie SUPABASE_SERVICE_ROLE_KEY dans Vercel.",
-      };
-    }
-  } else if (isBillingBypassEmail(user.email)) {
-    // Best effort sync for bypass users; do not block login if billing tables are unavailable.
-    await syncUserBilling(user).catch(() => undefined);
+  await syncUserBilling(user);
+  if (!(await userHasBillingAccess(user.email))) {
+    redirect("/subscribe");
   }
 
   const { data: profile } = await supabase
