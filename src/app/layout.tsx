@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "ARTEMSI — Alternance sans le bruit",
   description:
     "Offres ciblées, suivi des candidatures, audit CV/LM. Réduis le bruit et garde la confiance dans ta recherche d’alternance.",
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default function RootLayout({
@@ -30,10 +33,11 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} notranslate`}
       suppressHydrationWarning
     >
       <head>
+        <meta name="google" content="notranslate" />
         <script
           dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
         />
