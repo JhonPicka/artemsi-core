@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { signupAction, type AuthFormState } from "@/app/(auth)/actions";
-import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { legalRoutes } from "@/lib/legal-config";
 
 const initialState: AuthFormState = {};
@@ -64,12 +63,7 @@ export function SignupForm({ initialEmail }: Props) {
       </button>
 
       <p className="muted">
-        Deja un compte ? <Link href="/login">Se connecter</Link>
-      </p>
-
-      <p className="muted">
-        Pas encore abonne ?{" "}
-        <SubscribeButton className="inline-link-button">Souscrire — 19,90&nbsp;EUR / mois</SubscribeButton>
+        Déjà un compte ? <Link href="/login">Se connecter</Link>
       </p>
     </form>
   );
