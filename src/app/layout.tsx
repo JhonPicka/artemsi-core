@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ARTEMSI — Alternance sans le bruit",
+  title: "ARTEMSI — Trouve ton alternance et profite de l'été",
   description:
-    "Offres ciblées, suivi des candidatures, audit CV/LM. Réduis le bruit et garde la confiance dans ta recherche d’alternance.",
+    "Trouve ton alternance plus vite : offres ciblées, suivi des candidatures et accompagnement personnalisé dans un seul espace.",
   other: {
     google: "notranslate",
   },

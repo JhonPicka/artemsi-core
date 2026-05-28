@@ -67,7 +67,7 @@ export default async function Home({ searchParams }: HomeProps) {
               <span className="landing-announce-dot" aria-hidden="true" />
               <span className="landing-announce-tag">Nouveau</span>
               <span className="landing-announce-text">
-                Espace candidat ARTEMSI 2026
+                Trouve ton alternance et profite de l&apos;été
               </span>
               <span className="landing-announce-arrow" aria-hidden="true">
                 →
@@ -75,14 +75,14 @@ export default async function Home({ searchParams }: HomeProps) {
             </Link>
 
             <h1 className="hero-title landing-hero-title">
-              Decroche ton alternance
+              Trouve ton alternance
               <br />
-              sans <span className="landing-title-accent">le bruit</span>.
+              et profite de l&apos;été.
             </h1>
             <p className="hero-subtitle landing-hero-subtitle">
-              ARTEMSI selectionne des offres d&apos;alternance directement depuis les sites
-              carrieres officiels, puis te montre celles qui collent a ton profil. Un seul
-              espace pour les offres, le suivi, les documents et l&apos;audit CV/LM.
+              ARTEMSI te propose des offres ciblées qui collent à ton profil. Tu avances avec
+              un seul espace pour les offres, le suivi, tes documents et l&apos;accompagnement
+              personnalisé.
             </p>
 
             <div className="landing-cta-row">
@@ -101,15 +101,15 @@ export default async function Home({ searchParams }: HomeProps) {
             <ul className="landing-trust-list" aria-label="Engagements">
               <li>
                 <span className="landing-trust-dot" aria-hidden="true" />
-                Offres issues de sites carrieres officiels et sources entreprises
+                Offres ciblees selon ton profil
               </li>
               <li>
                 <span className="landing-trust-dot" aria-hidden="true" />
-                19,90 EUR / mois — un seul abonnement, acces immediat
+                19,90 EUR / mois — un seul abonnement, accès immédiat
               </li>
               <li>
                 <span className="landing-trust-dot" aria-hidden="true" />
-                Matching selon ton métier cible, ta region et ton type de contrat
+                Matching selon ton métier cible, ta région et ton type de contrat
               </li>
             </ul>
           </div>
@@ -156,7 +156,7 @@ export default async function Home({ searchParams }: HomeProps) {
             </div>
 
             <div className="landing-mock-float landing-mock-float--bottom">
-              <span className="landing-float-status">Candidature envoyee</span>
+              <span className="landing-float-status">Candidature envoyée</span>
               <span className="landing-float-time">il y a 5 min</span>
             </div>
           </div>
@@ -166,17 +166,21 @@ export default async function Home({ searchParams }: HomeProps) {
       <section className="landing-stats" aria-label="Chiffres ARTEMSI">
         <div className="landing-container landing-stats-grid">
           <div className="landing-stat">
-            <span className="landing-stat-value">Source</span>
-            <span className="landing-stat-label">Offres issues de pages carrieres officielles</span>
-          </div>
-          <div className="landing-stat">
-            <span className="landing-stat-value">Profil</span>
-            <span className="landing-stat-label">Matching métier, region et type de contrat</span>
-          </div>
-          <div className="landing-stat">
-            <span className="landing-stat-value">Suivi</span>
+            <span className="landing-stat-value">+20%</span>
             <span className="landing-stat-label">
-              Offres, candidatures, documents et audit dans un seul espace.
+              d&apos;entretiens apres l&apos;accompagnement personnalise
+            </span>
+          </div>
+          <div className="landing-stat">
+            <span className="landing-stat-value">+5</span>
+            <span className="landing-stat-label">
+              entretiens en plus après le premier mois
+            </span>
+          </div>
+          <div className="landing-stat">
+            <span className="landing-stat-value">90%</span>
+            <span className="landing-stat-label">
+              d&apos;offres compatibles avec ton profil
             </span>
           </div>
         </div>
@@ -187,36 +191,36 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className="landing-section-head">
             <span className="landing-kicker">Comment ca marche</span>
             <h2 className="landing-section-title">
-              3 etapes pour decrocher ton alternance
+              3 étapes pour décrocher ton alternance
             </h2>
             <p className="landing-section-lead">
-              ARTEMSI part des sites carrieres officiels et des sources entreprises, puis
-              transforme ce flux en offres lisibles dans ton espace candidat.
+              Un parcours simple : paiement, activation, profil, offres et accompagnement.
             </p>
           </div>
 
           <ol className="landing-steps">
             <li className="landing-step">
               <span className="landing-step-num">01</span>
-              <h3 className="landing-step-title">Cree ton profil</h3>
+              <h3 className="landing-step-title">Paie, crée ton mot de passe et ton profil</h3>
               <p className="landing-step-text">
-                Renseigne ton parcours, tes preferences et upload ton CV. Cela prend 2 minutes.
+                Une fois le paiement validé, tu crées ton mot de passe puis tu complètes ton
+                profil (comme dans l&apos;app) pour démarrer proprement.
               </p>
             </li>
             <li className="landing-step">
               <span className="landing-step-num">02</span>
-              <h3 className="landing-step-title">Recois des offres ciblees</h3>
+              <h3 className="landing-step-title">Reçois des offres avec lien pour postuler</h3>
               <p className="landing-step-text">
-                ARTEMSI classe les alternances selon ton profil, ta region et ton rythme —
-                avec un lien vers la source officielle quand tu veux postuler.
+                Tu reçois des offres ciblées dans ton espace, avec un lien direct pour postuler
+                rapidement.
               </p>
             </li>
             <li className="landing-step">
               <span className="landing-step-num">03</span>
-              <h3 className="landing-step-title">Postule et avance</h3>
+              <h3 className="landing-step-title">Prends un rendez-vous d&apos;accompagnement</h3>
               <p className="landing-step-text">
-                Postule en un clic, suis tes candidatures et prepare tes entretiens dans
-                un seul tableau de bord.
+                Tu peux réserver un rendez-vous pour améliorer ton CV, tes candidatures et ta
+                posture en entretien.
               </p>
             </li>
           </ol>
@@ -226,12 +230,11 @@ export default async function Home({ searchParams }: HomeProps) {
       <section className="landing-section landing-features">
         <div className="landing-container">
           <div className="landing-section-head">
-            <span className="landing-kicker">Fonctionnalites</span>
-            <h2 className="landing-section-title">Tout ce dont vous avez besoin pour réussir</h2>
+            <span className="landing-kicker">Fonctionnalités</span>
+            <h2 className="landing-section-title">Tout ce dont tu as besoin pour réussir</h2>
             <p className="landing-section-lead">
-              ARTEMSI structure ta recherche d&apos;alternance avec des offres issues de sources
-              officielles, un matching clair avec ton profil et un gros gain de temps : moins
-              de bruit, plus d&apos;actions utiles — plus un accompagnement personnalise.
+              ARTEMSI structure ta recherche d&apos;alternance avec des offres ciblées, un matching
+              clair et un gros gain de temps : moins de bruit, plus d&apos;actions utiles.
             </p>
           </div>
 
@@ -244,8 +247,7 @@ export default async function Home({ searchParams }: HomeProps) {
               </div>
               <h3 className="landing-bento-title">Offres ciblées</h3>
               <p className="landing-bento-text">
-                Accede a des offres d&apos;alternance selectionnees depuis des sites carrieres
-                officiels et classees selon ton profil.
+                Accède à des offres d&apos;alternance ciblées et classées selon ton profil.
               </p>
 
               <div className="landing-bento-preview" aria-hidden="true">
@@ -273,8 +275,9 @@ export default async function Home({ searchParams }: HomeProps) {
               </span>
               <h3 className="landing-bento-title">Gagne un temps fou</h3>
               <p className="landing-bento-text">
-                Tu ne passes plus des soirees a ouvrir dix onglets carriere : ce qui compte
-                arrive dans ton espace, deja trie pour toi.
+                Tu ne passes plus des soirées à ouvrir dix onglets carrière : ce qui compte
+                arrive dans ton espace, déjà trié pour toi, avec ton CV et tes lettres de
+                motivation stockés au même endroit.
               </p>
             </article>
 
@@ -284,7 +287,7 @@ export default async function Home({ searchParams }: HomeProps) {
               </span>
               <h3 className="landing-bento-title">Matching offres / profil</h3>
               <p className="landing-bento-text">
-                Chaque proposition est pensee pour coller a ton parcours, tes preferences et ton
+                Chaque proposition est pensée pour coller à ton parcours, tes préférences et ton
                 objectif : tu vois tout de suite pourquoi l&apos;offre a du sens pour toi.
               </p>
             </article>
@@ -293,10 +296,10 @@ export default async function Home({ searchParams }: HomeProps) {
               <span className="landing-bento-emoji" aria-hidden="true">
                 🔍
               </span>
-              <h3 className="landing-bento-title">Audit de profil</h3>
+              <h3 className="landing-bento-title">Accompagnement personnalisé</h3>
               <p className="landing-bento-text">
-                Analyse complète de votre profil, motivations et conseils personnalisés pour améliorer
-                vos candidatures.
+                Réserve un rendez-vous pour améliorer ton CV, tes candidatures et ton approche
+                des entretiens.
               </p>
             </article>
 
@@ -304,9 +307,10 @@ export default async function Home({ searchParams }: HomeProps) {
               <span className="landing-bento-emoji" aria-hidden="true">
                 👥
               </span>
-              <h3 className="landing-bento-title">Accompagnement personnalisé</h3>
+              <h3 className="landing-bento-title">Conseils concrets chaque semaine</h3>
               <p className="landing-bento-text">
-                Un conseiller dédié vous guide dans votre recherche et vous prépare aux entretiens.
+                Tu avances avec des retours clairs et actionnables pour postuler mieux chaque
+                semaine.
               </p>
             </article>
 
@@ -314,10 +318,10 @@ export default async function Home({ searchParams }: HomeProps) {
               <span className="landing-bento-emoji" aria-hidden="true">
                 ⚡
               </span>
-              <h3 className="landing-bento-title">Recherche plus claire</h3>
+              <h3 className="landing-bento-title">Plan d&apos;action clair</h3>
               <p className="landing-bento-text">
-                Moins de dispersion, plus de matchs pertinents : tu sais quoi traiter en premier
-                sans ouvrir toutes les pages carrieres.
+                Tu sais quoi faire en priorité : offres à traiter, candidatures à relancer et
+                prochains objectifs.
               </p>
             </article>
           </div>
@@ -327,12 +331,12 @@ export default async function Home({ searchParams }: HomeProps) {
       <section id="landing-audit" className="landing-section landing-audit-explainer landing-scroll-target">
         <div className="landing-container">
           <div className="landing-section-head">
-            <span className="landing-kicker">Audit de profil</span>
-            <h2 className="landing-section-title">Un rendez-vous pour debloquer ton dossier</h2>
+            <span className="landing-kicker">Accompagnement personnalisé</span>
+            <h2 className="landing-section-title">Un rendez-vous pour booster ton dossier</h2>
             <p className="landing-section-lead">
-              L&apos;audit de profil se reserve directement dans ton espace ARTEMSI. Tu choisis un
-              creneau, l&apos;equipe confirme la demande, puis un expert analyse ton CV, ton profil
-              LinkedIn et tes motivations pour te donner des conseils concrets d&apos;amelioration.
+              L&apos;accompagnement personnalisé se réserve directement dans ton espace ARTEMSI. Tu
+              choisis un créneau, l&apos;équipe confirme, puis un expert t&apos;aide à améliorer ton CV,
+              tes candidatures et ton positionnement.
             </p>
           </div>
           <ol className="landing-audit-timeline">
@@ -341,9 +345,9 @@ export default async function Home({ searchParams }: HomeProps) {
                 1
               </span>
               <div className="landing-audit-step-body">
-                <h3 className="landing-audit-step-title">Reservation</h3>
+                <h3 className="landing-audit-step-title">Réservation</h3>
                 <p className="landing-audit-step-text">
-                  Tu choisis un creneau depuis l&apos;app : calendrier semaine (18h-22h) et week-end
+                  Tu choisis un créneau depuis l&apos;app : calendrier semaine (18h-22h) et week-end
                   (10h-14h). La demande part a l&apos;equipe ARTEMSI.
                 </p>
               </div>
@@ -355,8 +359,8 @@ export default async function Home({ searchParams }: HomeProps) {
               <div className="landing-audit-step-body">
                 <h3 className="landing-audit-step-title">Analyse</h3>
                 <p className="landing-audit-step-text">
-                  Passage en revue de ton CV, de ta lettre si tu en as une, coherence avec ton objectif
-                  alternance et premiers axes de correction.
+                  Passage en revue de ton CV, de tes lettres de motivation et de la cohérence
+                  avec ton objectif alternance.
                 </p>
               </div>
             </li>
@@ -367,15 +371,15 @@ export default async function Home({ searchParams }: HomeProps) {
               <div className="landing-audit-step-body">
                 <h3 className="landing-audit-step-title">Feedback</h3>
                 <p className="landing-audit-step-text">
-                  Conseils actionnables : formulation, structure, mots-cles et posture candidat. Tu repars
-                  avec une feuille de route claire pour postuler plus fort.
+                  Conseils actionnables : formulation, structure, mots-clés et posture candidat.
+                  Tu repars avec une feuille de route claire.
                 </p>
               </div>
             </li>
           </ol>
           <p className="landing-audit-note">
-            La validation du creneau se fait par l&apos;equipe ; tu recois une confirmation ou un contre-projet
-            par email, puis un rappel dans l&apos;app une fois l&apos;audit valide.
+            La validation du créneau se fait par l&apos;équipe ; tu reçois une confirmation ou un
+            contre-projet par email, puis un rappel dans l&apos;app.
           </p>
         </div>
       </section>
@@ -383,8 +387,8 @@ export default async function Home({ searchParams }: HomeProps) {
       <section id="landing-offres" className="landing-section landing-offers-showcase landing-scroll-target">
         <div className="landing-container">
           <div className="landing-section-head">
-            <span className="landing-kicker">Sources officielles</span>
-            <h2 className="landing-section-title">Exemples d&apos;offres que l&apos;on sait traiter</h2>
+            <span className="landing-kicker">Offres ciblées</span>
+            <h2 className="landing-section-title">Exemples d&apos;offres que l&apos;on traite</h2>
           </div>
           <ul className="landing-offers-list" aria-label="Exemples d&apos;offres">
             <li className="landing-offers-row">
@@ -430,68 +434,38 @@ export default async function Home({ searchParams }: HomeProps) {
       <section className="landing-section landing-social-proof">
         <div className="landing-container">
           <div className="landing-section-head">
-            <span className="landing-kicker">Expérience candidat</span>
-            <p className="landing-social-proof-trust">Ce que l&apos;espace ARTEMSI apporte</p>
-            <h2 className="landing-section-title">Une recherche plus lisible, moins dispersée</h2>
+            <span className="landing-kicker">Avis candidats</span>
+            <p className="landing-social-proof-trust">Ils te racontent ce que ça change</p>
+            <h2 className="landing-section-title">Des retours concrets sur l&apos;accompagnement</h2>
           </div>
           <ul className="landing-testimonials">
             <li className="landing-testimonial">
               <blockquote className="landing-testimonial-quote">
-                « Je centralise mes offres, mes documents et mon suivi au même endroit, sans
-                repartir de zéro à chaque candidature. »
+                « L&apos;année dernière, j&apos;étais perdu sur mes candidatures. Avec les conseils
+                d&apos;accompagnement, j&apos;ai clarifié mon CV et j&apos;ai enfin trouvé mon alternance. »
+              </blockquote>
+              <p className="landing-testimonial-source">
+                <span className="landing-testimonial-avatar" aria-hidden="true">
+                  R
+                </span>
+                <span>
+                  <strong className="landing-testimonial-name">Rexer R</strong>
+                  <span className="landing-testimonial-via"> · Alternance trouvée</span>
+                </span>
+              </p>
+            </li>
+            <li className="landing-testimonial">
+              <blockquote className="landing-testimonial-quote">
+                « Les offres que je reçois sont plus pertinentes et j&apos;ai beaucoup plus
+                d&apos;entretiens qu&apos;avant grâce aux conseils. J&apos;ai vraiment senti la progression. »
               </blockquote>
               <p className="landing-testimonial-source">
                 <span className="landing-testimonial-avatar" aria-hidden="true">
                   L
                 </span>
                 <span>
-                  <strong className="landing-testimonial-name">Profil marketing</strong>
-                  <span className="landing-testimonial-via"> · Parcours candidat</span>
-                </span>
-              </p>
-            </li>
-            <li className="landing-testimonial">
-              <blockquote className="landing-testimonial-quote">
-                « Les offres sont plus faciles à prioriser : je comprends rapidement lesquelles
-                correspondent à mon profil et à ma zone de recherche. »
-              </blockquote>
-              <p className="landing-testimonial-source">
-                <span className="landing-testimonial-avatar" aria-hidden="true">
-                  T
-                </span>
-                <span>
-                  <strong className="landing-testimonial-name">Profil commerce</strong>
-                  <span className="landing-testimonial-via"> · Matching</span>
-                </span>
-              </p>
-            </li>
-            <li className="landing-testimonial">
-              <blockquote className="landing-testimonial-quote">
-                « L&apos;audit aide à voir ce qui bloque dans le CV, la lettre et la posture avant
-                d&apos;envoyer trop de candidatures. »
-              </blockquote>
-              <p className="landing-testimonial-source">
-                <span className="landing-testimonial-avatar" aria-hidden="true">
-                  C
-                </span>
-                <span>
-                  <strong className="landing-testimonial-name">Profil communication</strong>
-                  <span className="landing-testimonial-via"> · Audit</span>
-                </span>
-              </p>
-            </li>
-            <li className="landing-testimonial">
-              <blockquote className="landing-testimonial-quote">
-                « Le suivi des candidatures rend la recherche plus propre : je sais quoi relancer,
-                quoi archiver et quoi préparer. »
-              </blockquote>
-              <p className="landing-testimonial-source">
-                <span className="landing-testimonial-avatar" aria-hidden="true">
-                  S
-                </span>
-                <span>
-                  <strong className="landing-testimonial-name">Profil tech</strong>
-                  <span className="landing-testimonial-via"> · Suivi</span>
+                  <strong className="landing-testimonial-name">Linda M</strong>
+                  <span className="landing-testimonial-via"> · Plus d&apos;entretiens</span>
                 </span>
               </p>
             </li>
@@ -511,50 +485,49 @@ export default async function Home({ searchParams }: HomeProps) {
             <details className="landing-faq-item">
               <summary>Pourquoi payer sans essai gratuit ?</summary>
               <p>
-                L&apos;acces aux offres poussees, au matching et au suivi est actif des la souscription :
-                pas de demo gratuite. Tu paies pour gagner du temps tout de suite. Tu peux resilier ton
-                abonnement a tout moment ; les modalites de facturation et de retractation sont celles
-                indiquees au paiement (Stripe) et dans les conditions contractuelles.
+                L&apos;accès aux offres poussées, au matching et au suivi est actif dès la souscription :
+                pas de démo gratuite. Tu paies pour gagner du temps tout de suite. Tu peux résilier ton
+                abonnement à tout moment ; les modalités de facturation et de rétractation sont celles
+                indiquées au paiement (Stripe) et dans les conditions contractuelles.
               </p>
             </details>
             <details className="landing-faq-item">
               <summary>Comment fonctionnent les offres ciblées ?</summary>
               <p>
-                ARTEMSI selectionne des offres depuis les sites carrieres officiels et les sources
-                entreprises, puis les classe selon ton profil : métier cible, region, type de contrat,
-                domaine d&apos;etudes et centres d&apos;interet. Le lien de candidature renvoie vers la source.
+                ARTEMSI te propose des offres ciblées puis les classe selon ton profil : métier
+                cible, région, type de contrat, domaine d&apos;études et centres d&apos;intérêt.
+                Tu retrouves un lien clair pour postuler rapidement.
               </p>
             </details>
             <details className="landing-faq-item">
-              <summary>Comment se déroule l&apos;audit de profil ?</summary>
+              <summary>Comment se déroule l&apos;accompagnement personnalisé ?</summary>
               <p>
-                L&apos;audit de profil se reserve depuis l&apos;espace ARTEMSI : tu choisis un creneau,
-                l&apos;equipe confirme ou propose un autre horaire, puis un expert analyse ton CV, ton
-                profil LinkedIn et tes motivations pour te donner des conseils concrets
-                d&apos;amelioration.
+                L&apos;accompagnement se réserve depuis l&apos;espace ARTEMSI : tu choisis un créneau,
+                l&apos;équipe confirme ou propose un autre horaire, puis un expert t&apos;aide à
+                améliorer ton CV et tes candidatures.
               </p>
             </details>
             <details className="landing-faq-item">
               <summary>Combien de temps faut-il pour trouver une alternance ?</summary>
               <p>
-                Ca depend fortement du profil, du secteur et du marche : il n&apos;y a pas de delai
-                universel. ARTEMSI aide surtout a gagner du temps sur le tri des offres issues des
-                sources officielles, la preparation du dossier et le suivi des candidatures.
+                Ça dépend fortement du profil, du secteur et du marché : il n&apos;y a pas de délai
+                universel. ARTEMSI aide surtout à gagner du temps sur le tri des offres, la
+                préparation du dossier et le suivi des candidatures.
               </p>
             </details>
             <details className="landing-faq-item">
               <summary>Puis-je annuler mon abonnement à tout moment ?</summary>
               <p>
-                Oui, vous pouvez annuler votre abonnement à tout moment sans frais supplémentaires. Votre
-                accès aux services reste actif jusqu&apos;à la fin de votre période de facturation.
+                Oui, tu peux annuler ton abonnement à tout moment sans frais supplémentaires.
+                Ton accès aux services reste actif jusqu&apos;à la fin de ta période de facturation.
               </p>
             </details>
             <details className="landing-faq-item">
-              <summary>Quels domaines d&apos;activité couvrez-vous ?</summary>
+              <summary>Quels domaines couvre ARTEMSI ?</summary>
               <p>
                 L&apos;objectif est de couvrir les principaux domaines d&apos;alternance : tech, marketing,
-                finance, RH, ingenierie, commerce, communication et fonctions support. La pertinence
-                depend ensuite des offres disponibles et de ton profil.
+                finance, RH, ingénierie, commerce, communication et fonctions support. La pertinence
+                dépend ensuite des offres disponibles et de ton profil.
               </p>
             </details>
           </div>
@@ -565,16 +538,16 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className="landing-container">
           <div className="landing-cta-final-card">
             <div className="landing-cta-final-glow" aria-hidden="true" />
-            <span className="landing-kicker">Pret a commencer ?</span>
+            <span className="landing-kicker">Prêt à commencer ?</span>
             <h2 className="landing-section-title landing-cta-final-title">
               Trouver une alternance, c&apos;est souvent{" "}
               <span className="landing-title-accent">extrêmement compliqué</span>.
             </h2>
             <p className="landing-section-lead landing-cta-final-lead">
-              Simplifie-toi la vie : les offres issues de sources officielles viennent a toi avec
-              un matching clair sur ton profil, le suivi des candidatures et des documents prets a
-              l&apos;envoi — puis souscription en ligne (Stripe) des
-              19,90&nbsp;EUR&nbsp;/&nbsp;mois. Le rythme reel depend de ton profil, du secteur et du marche.
+              Simplifie-toi la vie : les offres viennent à toi avec un matching clair sur ton
+              profil, le suivi des candidatures et des documents prêts à l&apos;envoi — puis
+              souscription en ligne (Stripe) des
+              19,90&nbsp;EUR&nbsp;/&nbsp;mois. Le rythme réel dépend de ton profil, du secteur et du marché.
             </p>
             <div className="landing-cta-row landing-cta-final-actions landing-cta-final-actions--single">
               <SubscribeButton className="button-link landing-cta-primary">

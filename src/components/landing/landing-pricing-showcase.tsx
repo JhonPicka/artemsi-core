@@ -4,7 +4,6 @@ import { legalConfig } from "@/lib/legal-config";
 type PricingGroup = {
   title: string;
   items: readonly string[];
-  muted?: boolean;
 };
 
 const GROUPS: PricingGroup[] = [
@@ -12,8 +11,8 @@ const GROUPS: PricingGroup[] = [
     title: "Offres & matching",
     items: [
       "Offres ciblées selon ton profil (métier, région, contrat)",
-      "Sélection depuis des sites carrières officiels et sources entreprises",
-      "Propositions directement dans ton espace — sans ouvrir dix onglets",
+      "Nouvelles opportunités ajoutées en continu dans ton espace",
+      "Lien direct pour postuler rapidement à chaque offre",
     ],
   },
   {
@@ -26,14 +25,9 @@ const GROUPS: PricingGroup[] = [
   {
     title: "Profil & accompagnement",
     items: [
-      "Audit CV / LM sur créneau réservé dans l'app",
-      "Support et accompagnement personnalisé",
+      "Accompagnement personnalisé avec rendez-vous CV/candidatures",
+      "Conseils actionnables pour progresser plus vite",
     ],
-  },
-  {
-    title: "Prochainement",
-    items: ["Alertes e-mail sur les nouvelles offres"],
-    muted: true,
   },
 ];
 
@@ -58,21 +52,6 @@ function CheckIcon() {
   );
 }
 
-function DotIcon() {
-  return (
-    <svg
-      className="landing-pricing-check landing-pricing-check--muted"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="3" fill="currentColor" />
-    </svg>
-  );
-}
-
 export function LandingPricingShowcase() {
   return (
     <section
@@ -87,8 +66,8 @@ export function LandingPricingShowcase() {
             Un investissement qui va changer ta recherche d&apos;alternance
           </h2>
           <p className="landing-section-lead">
-            Pour 19,90&nbsp;EUR/mois&nbsp;: des offres issues de sources officielles qui matchent
-            ton profil, un seul endroit pour candidater et suivre.
+            Pour 19,90&nbsp;EUR/mois&nbsp;: des offres ciblées qui matchent ton profil, un seul
+            endroit pour candidater, suivre et progresser.
           </p>
         </div>
 
@@ -150,16 +129,14 @@ export function LandingPricingShowcase() {
                 {GROUPS.map((group, groupIndex) => (
                   <div
                     key={group.title}
-                    className={`landing-pricing-group${
-                      group.muted ? " landing-pricing-group--muted" : ""
-                    }`}
+                    className="landing-pricing-group"
                   >
                     {groupIndex > 0 ? <div className="landing-pricing-group-rule" /> : null}
                     <h3 className="landing-pricing-group-title">{group.title}</h3>
                     <ul className="landing-pricing-group-list">
                       {group.items.map((item) => (
                         <li key={item} className="landing-pricing-group-item">
-                          {group.muted ? <DotIcon /> : <CheckIcon />}
+                          <CheckIcon />
                           <span>{item}</span>
                         </li>
                       ))}
