@@ -11,7 +11,7 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const rate = takeRateLimit({
+  const rate = await takeRateLimit({
     bucket: "admin-offer-extract",
     key: getRequestKey(request),
     limit: 30,

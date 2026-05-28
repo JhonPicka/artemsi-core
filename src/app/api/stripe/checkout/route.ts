@@ -17,7 +17,7 @@ type CheckoutBody = {
 };
 
 export async function POST(request: Request) {
-  const rate = takeRateLimit({
+  const rate = await takeRateLimit({
     bucket: "stripe-checkout",
     key: getRequestKey(request),
     limit: 20,

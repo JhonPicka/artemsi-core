@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Abonnement actif requis." }, { status: 402 });
   }
 
-  const rate = takeRateLimit({
+  const rate = await takeRateLimit({
     bucket: "profile-document-upload",
     key: getRequestKey(request, user.id),
     limit: 20,

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
-import { getAdminHomePath, isAdminEmail } from "@/lib/admin-auth";
+import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
 import { requireActiveSubscription } from "@/lib/billing";
 import { requireUser } from "@/lib/auth";
 import {
@@ -18,7 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function OnboardingPage() {
   const user = await requireUser();
-  if (isAdminEmail(user.email)) {
+  if (isAdminUser(user)) {
     redirect(getAdminHomePath());
   }
   await requireActiveSubscription(user);

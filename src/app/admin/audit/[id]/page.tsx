@@ -1,37 +1,57 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { getAdminAuditsPath, getAdminHomePath, isAdminEmail } from "@/lib/admin-auth";
-import { updateAuditBookingStatus } from "@/lib/admin-audit";
+import { getAdminAuditsPath, getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
+import { patchAdminAuditBooking } from "@/lib/admin-audit";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type AuditAdminPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ token?: string; action?: string }>;
-};
-
-const ACTION_LABEL: Record<string, string> = {
-  confirm: "Audit confirme",
-  decline: "Audit refuse",
+  searchParams: Promise<{ token?: string; error?: string; success?: string }>;
 };
 
 export const dynamic = "force-dynamic";
+
+async function submitAuditAction(formData: FormData) {
+  "use server";
+
+  const bookingId = String(formData.get("bookingId") ?? "");
+  const token = String(formData.get("token") ?? "");
+  const action = String(formData.get("action") ?? "");
+  if (!bookingId || !token || (action !== "confirm" && action !== "decline")) {
+    redirect(`/admin/audit/${bookingId}?token=${encodeURIComponent(token)}&error=Action invalide`);
+  }
+
+  const user = await getCurrentUser();
+  const result = await patchAdminAuditBooking(bookingId, { action }, {
+    adminToken: token,
+    asTrustedAdmin: isAdminUser(user),
+  });
+
+  const base = `/admin/audit/${bookingId}?token=${encodeURIComponent(token)}`;
+  if (!result.ok) {
+    redirect(`${base}&error=${encodeURIComponent(result.error)}`);
+  }
+
+  const message = action === "confirm" ? "Audit confirme avec succes." : "Audit refuse avec succes.";
+  redirect(`${base}&success=${encodeURIComponent(message)}`);
+}
 
 export default async function AuditAdminPage({
   params,
   searchParams,
 }: AuditAdminPageProps) {
   const { id } = await params;
-  const { token, action } = await searchParams;
+  const { token, error, success } = await searchParams;
   const user = await getCurrentUser();
 
-  if (user?.email && isAdminEmail(user.email) && !action) {
+  if (isAdminUser(user) && !token) {
     redirect(getAdminAuditsPath());
   }
 
   if (!token) {
-    if (user?.email && isAdminEmail(user.email)) {
+    if (isAdminUser(user)) {
       redirect(getAdminAuditsPath());
     }
     notFound();
@@ -63,33 +83,11 @@ export default async function AuditAdminPage({
     notFound();
   }
 
-  let resultMessage: string | null = null;
-  let resultClass: "success" | "error" | null = null;
-
-  if (action === "confirm" || action === "decline") {
-    const result = await updateAuditBookingStatus(id, action, {
-      adminToken: token,
-      asTrustedAdmin: isAdminEmail(user?.email),
-    });
-
-    if (!result.ok) {
-      resultMessage = result.error;
-      resultClass = "error";
-    } else {
-      resultMessage = `${ACTION_LABEL[action]} avec succes.`;
-      resultClass = "success";
-      booking.status = result.status;
-    }
-  }
-
   const slotLabel = new Date(booking.slot_start).toLocaleString("fr-FR", {
     timeZone: "Europe/Paris",
     dateStyle: "full",
     timeStyle: "short",
   });
-
-  const baseConfirmHref = `?token=${encodeURIComponent(token)}&action=confirm`;
-  const baseDeclineHref = `?token=${encodeURIComponent(token)}&action=decline`;
 
   return (
     <main className="centered-page">
@@ -105,20 +103,29 @@ export default async function AuditAdminPage({
           </li>
         </ul>
 
-        {resultMessage ? (
-          <p className={resultClass ?? "muted"}>{resultMessage}</p>
-        ) : null}
+        {error ? <p className="error">{error}</p> : null}
+        {success ? <p className="success">{success}</p> : null}
 
         <div className="form-actions">
-          <a className="button-link secondary-link" href={baseDeclineHref}>
-            Refuser
-          </a>
-          <a className="button-link" href={baseConfirmHref}>
-            Confirmer
-          </a>
+          <form action={submitAuditAction}>
+            <input type="hidden" name="bookingId" value={id} />
+            <input type="hidden" name="token" value={token} />
+            <input type="hidden" name="action" value="decline" />
+            <button type="submit" className="button-link secondary-link">
+              Refuser
+            </button>
+          </form>
+          <form action={submitAuditAction}>
+            <input type="hidden" name="bookingId" value={id} />
+            <input type="hidden" name="token" value={token} />
+            <input type="hidden" name="action" value="confirm" />
+            <button type="submit" className="button-link">
+              Confirmer
+            </button>
+          </form>
         </div>
 
-        {user?.email && isAdminEmail(user.email) ? (
+        {isAdminUser(user) ? (
           <p className="muted small-label" style={{ marginTop: "1rem" }}>
             <Link href={getAdminAuditsPath()}>Retour aux audits</Link>
             {" · "}

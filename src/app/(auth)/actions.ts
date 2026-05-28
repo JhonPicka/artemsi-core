@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 
-import { getPostLoginPath, isAdminEmail } from "@/lib/admin-auth";
+import { getPostLoginPath, isAdminUser } from "@/lib/admin-auth";
 import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, signupSchema } from "@/lib/validation";
@@ -38,8 +38,8 @@ export async function signupAction(
   }
 
   if (data.session && data.user?.email) {
-    if (isAdminEmail(data.user.email)) {
-      redirect(getPostLoginPath(data.user.email));
+    if (isAdminUser(data.user)) {
+      redirect(getPostLoginPath(data.user));
     }
     await syncUserBilling(data.user);
     if (!(await userHasBillingAccess(data.user.email))) {
@@ -83,8 +83,8 @@ export async function loginAction(
     return { error: "Impossible de recuperer la session utilisateur" };
   }
 
-  if (isAdminEmail(user.email)) {
-    redirect(getPostLoginPath(user.email));
+  if (isAdminUser(user)) {
+    redirect(getPostLoginPath(user));
   }
 
   await syncUserBilling(user);

@@ -26,7 +26,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && isAuthRoute) {
-    return NextResponse.redirect(new URL(getPostLoginPath(user.email), request.url));
+    return NextResponse.redirect(new URL(getPostLoginPath(user), request.url));
   }
 
   return response;

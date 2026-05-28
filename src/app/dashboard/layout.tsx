@@ -7,7 +7,7 @@ import { logoutAction } from "@/app/(auth)/actions";
 import { DashboardBottomNav } from "@/components/dashboard/dashboard-bottom-nav";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { LegalFooterLinks } from "@/components/legal/legal-footer-links";
-import { getAdminHomePath, isAdminEmail } from "@/lib/admin-auth";
+import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
 import { requireActiveSubscription } from "@/lib/billing";
 import { requireUser } from "@/lib/auth";
 import { legalConfig } from "@/lib/legal-config";
@@ -17,7 +17,7 @@ export default async function DashboardLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const user = await requireUser();
-  if (isAdminEmail(user.email)) {
+  if (isAdminUser(user)) {
     redirect(getAdminHomePath());
   }
   await requireActiveSubscription(user);

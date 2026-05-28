@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { isAdminEmail } from "@/lib/admin-auth";
+import { isAdminUser } from "@/lib/admin-auth";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getAdminUserOrNull() {
@@ -9,7 +9,7 @@ export async function getAdminUserOrNull() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || !isAdminEmail(user.email)) return null;
+  if (!user || !isAdminUser(user)) return null;
   return user;
 }
 
