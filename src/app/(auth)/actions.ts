@@ -2,59 +2,108 @@
 
 import { redirect } from "next/navigation";
 
-import { userHasBillingAccess } from "@/lib/billing";
-import { getAppUrl } from "@/lib/email";
+import { getPostLoginPath, isAdminUser } from "@/lib/admin-auth";
+import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
-import { authEmailSchema } from "@/lib/validation";
+import { loginSchema, signupSchema } from "@/lib/validation";
 
 export type AuthFormState = {
   error?: string;
   success?: string;
 };
 
-const MAGIC_LINK_SENT_MESSAGE =
-  "Lien envoye. Verifie ta boite mail (et spams) pour te connecter.";
-
-export async function sendMagicLinkAction(
+export async function signupAction(
   _prevState: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  const parsed = authEmailSchema.safeParse({
+  const parsed = signupSchema.safeParse({
     email: formData.get("email"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+    acceptLegal: formData.get("acceptLegal")?.toString(),
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
   }
 
-  const email = parsed.data.email.trim().toLowerCase();
-  if (!(await userHasBillingAccess(email))) {
-    return {
-      error:
-        "Aucun abonnement actif pour cet email. Utilise l'email du paiement Stripe ou souscris d'abord.",
-    };
-  }
-
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${getAppUrl()}/auth/callback`,
-      shouldCreateUser: true,
-    },
+  const { data, error } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
   });
 
   if (error) {
     return { error: error.message };
   }
 
-  return { success: MAGIC_LINK_SENT_MESSAGE };
+  if (data.session && data.user?.email) {
+    if (isAdminUser(data.user)) {
+      redirect(getPostLoginPath(data.user));
+    }
+    await syncUserBilling(data.user);
+    if (!(await userHasBillingAccess(data.user.email))) {
+      redirect("/subscribe");
+    }
+    redirect("/onboarding");
+  }
+
+  return {
+    success:
+      "Compte créé. Vérifie ta boîte mail si la confirmation email est activée.",
+  };
 }
 
-/** @deprecated Use sendMagicLinkAction instead. */
-export const signupAction = sendMagicLinkAction;
-/** @deprecated Use sendMagicLinkAction instead. */
-export const loginAction = sendMagicLinkAction;
+export async function loginAction(
+  _prevState: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const parsed = loginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    return { error: "Email ou mot de passe incorrect" };
+  }
+
+  const user = data.user;
+  const userId = user?.id;
+  if (!userId || !user?.email) {
+    return { error: "Impossible de recuperer la session utilisateur" };
+  }
+
+  if (isAdminUser(user)) {
+    redirect(getPostLoginPath(user));
+  }
+
+  await syncUserBilling(user);
+  if (!(await userHasBillingAccess(user.email))) {
+    redirect("/subscribe");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarding_completed")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!profile?.onboarding_completed) {
+    redirect("/onboarding");
+  }
+
+  redirect("/dashboard");
+}
 
 export async function logoutAction() {
   const supabase = await createClient();

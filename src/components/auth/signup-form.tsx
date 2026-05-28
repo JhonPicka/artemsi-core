@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { sendMagicLinkAction, type AuthFormState } from "@/app/(auth)/actions";
+import { signupAction, type AuthFormState } from "@/app/(auth)/actions";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
+import { legalRoutes } from "@/lib/legal-config";
 
 const initialState: AuthFormState = {};
 
@@ -13,15 +14,15 @@ type Props = {
 };
 
 export function SignupForm({ initialEmail }: Props) {
-  const [state, action, pending] = useActionState(sendMagicLinkAction, initialState);
+  const [state, action, pending] = useActionState(signupAction, initialState);
 
   return (
     <form className="card form" action={action}>
-      <span className="brand-chip">ACTIVATION</span>
-      <h1>Active ton acces ARTEMSI</h1>
+      <span className="brand-chip">INSCRIPTION</span>
+      <h1>Creer mon compte ARTEMSI</h1>
       <p className="muted">
-        Utilise le <strong>meme email</strong> que lors du paiement Stripe. On t&apos;envoie un lien
-        securise pour te connecter.
+        Utilise le <strong>meme email</strong> que lors du paiement Stripe, puis complete ton
+        profil candidat.
       </p>
 
       <label htmlFor="email">Email</label>
@@ -34,15 +35,36 @@ export function SignupForm({ initialEmail }: Props) {
         readOnly={Boolean(initialEmail)}
       />
 
+      <label htmlFor="password">Mot de passe</label>
+      <input id="password" name="password" type="password" required />
+
+      <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
+      <input id="confirmPassword" name="confirmPassword" type="password" required />
+
+      <label className="legal-consent">
+        <input type="checkbox" name="acceptLegal" value="on" required />
+        <span>
+          J&apos;accepte les{" "}
+          <Link href={legalRoutes.terms} target="_blank" rel="noopener noreferrer">
+            CGU & CGV
+          </Link>{" "}
+          et la{" "}
+          <Link href={legalRoutes.privacy} target="_blank" rel="noopener noreferrer">
+            politique de confidentialité
+          </Link>
+          .
+        </span>
+      </label>
+
       {state.error ? <p className="error">{state.error}</p> : null}
       {state.success ? <p className="success">{state.success}</p> : null}
 
       <button type="submit" disabled={pending}>
-        {pending ? "Envoi en cours..." : "M'envoyer le lien"}
+        {pending ? "Creation en cours..." : "Creer mon compte"}
       </button>
 
       <p className="muted">
-        Deja abonne ? <Link href="/login">Recevoir un lien de connexion</Link>
+        Deja un compte ? <Link href="/login">Se connecter</Link>
       </p>
 
       <p className="muted">

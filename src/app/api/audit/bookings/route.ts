@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       slot_end: slotEnd.toISOString(),
       user_notes: parsed.data.notes ?? null,
     })
-    .select("id, slot_start")
+    .select("id, admin_token, slot_start")
     .single();
 
   if (error || !booking) {
@@ -78,7 +78,8 @@ export async function POST(request: Request) {
   if (adminEmail) {
     const baseUrl = getAppUrl();
     const dashboardUrl = `${baseUrl}${getAdminAuditsPath()}`;
-    const bookingUrl = `${baseUrl}/admin/audit/${booking.id}`;
+    const confirmUrl = `${baseUrl}/admin/audit/${booking.id}?token=${booking.admin_token}&action=confirm`;
+    const declineUrl = `${baseUrl}/admin/audit/${booking.id}?token=${booking.admin_token}&action=decline`;
     const slotLabel = new Date(booking.slot_start).toLocaleString("fr-FR", {
       timeZone: "Europe/Paris",
       dateStyle: "full",
@@ -100,7 +101,8 @@ export async function POST(request: Request) {
           (connecte-toi avec ton compte admin)
         </p>
         <p style="margin-top:12px;font-size:14px;color:#666;">
-          Acces direct a la demande : <a href="${bookingUrl}">Ouvrir la demande</a>
+          Liens directs : <a href="${confirmUrl}">Confirmer</a> &nbsp;|&nbsp;
+          <a href="${declineUrl}">Refuser</a>
         </p>
       `,
     });

@@ -105,7 +105,7 @@ export default async function Home({ searchParams }: HomeProps) {
               </li>
               <li>
                 <span className="landing-trust-dot" aria-hidden="true" />
-                19,90 EUR / mois — un seul abonnement, acces par lien de connexion
+                19,90 EUR / mois — un seul abonnement, acces immediat
               </li>
               <li>
                 <span className="landing-trust-dot" aria-hidden="true" />
@@ -198,23 +198,25 @@ export default async function Home({ searchParams }: HomeProps) {
           <ol className="landing-steps">
             <li className="landing-step">
               <span className="landing-step-num">01</span>
-              <h3 className="landing-step-title">Souscris puis connecte-toi</h3>
+              <h3 className="landing-step-title">Cree ton profil</h3>
               <p className="landing-step-text">
-                Tu paies en ligne, puis tu recois un lien securise sur ton email pour acceder a ton espace.
+                Renseigne ton parcours, tes preferences et upload ton CV. Cela prend 2 minutes.
               </p>
             </li>
             <li className="landing-step">
               <span className="landing-step-num">02</span>
-              <h3 className="landing-step-title">Complete ton profil</h3>
+              <h3 className="landing-step-title">Recois des offres ciblees</h3>
               <p className="landing-step-text">
-                Tu renseignes ton parcours, tes preferences et tes documents pour personnaliser le matching.
+                ARTEMSI classe les alternances selon ton profil, ta region et ton rythme —
+                avec un lien vers la source officielle quand tu veux postuler.
               </p>
             </li>
             <li className="landing-step">
               <span className="landing-step-num">03</span>
-              <h3 className="landing-step-title">Recois des offres et postule</h3>
+              <h3 className="landing-step-title">Postule et avance</h3>
               <p className="landing-step-text">
-                ARTEMSI te propose des offres ciblees. Tu postules, suis tes candidatures et prepares tes entretiens.
+                Postule en un clic, suis tes candidatures et prepare tes entretiens dans
+                un seul tableau de bord.
               </p>
             </li>
           </ol>
@@ -225,7 +227,7 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className="landing-container">
           <div className="landing-section-head">
             <span className="landing-kicker">Fonctionnalites</span>
-            <h2 className="landing-section-title">Tout ce dont tu as besoin pour avancer</h2>
+            <h2 className="landing-section-title">Tout ce dont vous avez besoin pour réussir</h2>
             <p className="landing-section-lead">
               ARTEMSI structure ta recherche d&apos;alternance avec des offres issues de sources
               officielles, un matching clair avec ton profil et un gros gain de temps : moins
@@ -293,8 +295,8 @@ export default async function Home({ searchParams }: HomeProps) {
               </span>
               <h3 className="landing-bento-title">Audit de profil</h3>
               <p className="landing-bento-text">
-                Analyse complete de ton profil, de tes motivations et conseils personnalises pour
-                ameliorer tes candidatures.
+                Analyse complète de votre profil, motivations et conseils personnalisés pour améliorer
+                vos candidatures.
               </p>
             </article>
 
@@ -304,7 +306,7 @@ export default async function Home({ searchParams }: HomeProps) {
               </span>
               <h3 className="landing-bento-title">Accompagnement personnalisé</h3>
               <p className="landing-bento-text">
-                Un conseiller dedie te guide dans ta recherche et te prepare aux entretiens.
+                Un conseiller dédié vous guide dans votre recherche et vous prépare aux entretiens.
               </p>
             </article>
 
@@ -543,8 +545,8 @@ export default async function Home({ searchParams }: HomeProps) {
             <details className="landing-faq-item">
               <summary>Puis-je annuler mon abonnement à tout moment ?</summary>
               <p>
-                Oui, tu peux annuler ton abonnement a tout moment sans frais supplementaires. Ton
-                acces aux services reste actif jusqu&apos;a la fin de ta periode de facturation.
+                Oui, vous pouvez annuler votre abonnement à tout moment sans frais supplémentaires. Votre
+                accès aux services reste actif jusqu&apos;à la fin de votre période de facturation.
               </p>
             </details>
             <details className="landing-faq-item">
