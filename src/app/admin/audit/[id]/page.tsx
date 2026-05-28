@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { getAdminAuditsPath, getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
+import { getAdminAuditsPath, getAdminHomePath, requireAdminUser } from "@/lib/admin-auth";
 import { patchAdminAuditBooking } from "@/lib/admin-audit";
-import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type AuditAdminPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ token?: string; error?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; success?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -17,25 +16,23 @@ async function submitAuditAction(formData: FormData) {
   "use server";
 
   const bookingId = String(formData.get("bookingId") ?? "");
-  const token = String(formData.get("token") ?? "");
   const action = String(formData.get("action") ?? "");
-  if (!bookingId || !token || (action !== "confirm" && action !== "decline")) {
-    redirect(`/admin/audit/${bookingId}?token=${encodeURIComponent(token)}&error=Action invalide`);
+  if (!bookingId || (action !== "confirm" && action !== "decline")) {
+    redirect(`/admin/audit/${bookingId}?error=Action invalide`);
   }
 
-  const user = await getCurrentUser();
+  await requireAdminUser();
   const result = await patchAdminAuditBooking(bookingId, { action }, {
-    adminToken: token,
-    asTrustedAdmin: isAdminUser(user),
+    asTrustedAdmin: true,
   });
 
-  const base = `/admin/audit/${bookingId}?token=${encodeURIComponent(token)}`;
+  const base = `/admin/audit/${bookingId}`;
   if (!result.ok) {
-    redirect(`${base}&error=${encodeURIComponent(result.error)}`);
+    redirect(`${base}?error=${encodeURIComponent(result.error)}`);
   }
 
   const message = action === "confirm" ? "Audit confirme avec succes." : "Audit refuse avec succes.";
-  redirect(`${base}&success=${encodeURIComponent(message)}`);
+  redirect(`${base}?success=${encodeURIComponent(message)}`);
 }
 
 export default async function AuditAdminPage({
@@ -43,19 +40,8 @@ export default async function AuditAdminPage({
   searchParams,
 }: AuditAdminPageProps) {
   const { id } = await params;
-  const { token, error, success } = await searchParams;
-  const user = await getCurrentUser();
-
-  if (isAdminUser(user) && !token) {
-    redirect(getAdminAuditsPath());
-  }
-
-  if (!token) {
-    if (isAdminUser(user)) {
-      redirect(getAdminAuditsPath());
-    }
-    notFound();
-  }
+  const { error, success } = await searchParams;
+  await requireAdminUser();
 
   let supabase;
   try {
@@ -75,11 +61,11 @@ export default async function AuditAdminPage({
 
   const { data: booking } = await supabase
     .from("audit_bookings")
-    .select("id, status, slot_start, admin_token, user_id")
+    .select("id, status, slot_start, user_id")
     .eq("id", id)
     .maybeSingle();
 
-  if (!booking || booking.admin_token !== token) {
+  if (!booking) {
     notFound();
   }
 
@@ -109,7 +95,6 @@ export default async function AuditAdminPage({
         <div className="form-actions">
           <form action={submitAuditAction}>
             <input type="hidden" name="bookingId" value={id} />
-            <input type="hidden" name="token" value={token} />
             <input type="hidden" name="action" value="decline" />
             <button type="submit" className="button-link secondary-link">
               Refuser
@@ -117,7 +102,6 @@ export default async function AuditAdminPage({
           </form>
           <form action={submitAuditAction}>
             <input type="hidden" name="bookingId" value={id} />
-            <input type="hidden" name="token" value={token} />
             <input type="hidden" name="action" value="confirm" />
             <button type="submit" className="button-link">
               Confirmer
@@ -125,13 +109,11 @@ export default async function AuditAdminPage({
           </form>
         </div>
 
-        {isAdminUser(user) ? (
-          <p className="muted small-label" style={{ marginTop: "1rem" }}>
-            <Link href={getAdminAuditsPath()}>Retour aux audits</Link>
-            {" · "}
-            <Link href={getAdminHomePath()}>Tableau de bord</Link>
-          </p>
-        ) : null}
+        <p className="muted small-label" style={{ marginTop: "1rem" }}>
+          <Link href={getAdminAuditsPath()}>Retour aux audits</Link>
+          {" · "}
+          <Link href={getAdminHomePath()}>Tableau de bord</Link>
+        </p>
       </section>
     </main>
   );

@@ -119,7 +119,7 @@ export function LandingPricingShowcase() {
                 </li>
                 <li>
                   <CheckIcon />
-                  <span>Accès immédiat après souscription</span>
+                  <span>Lien de connexion envoye apres souscription</span>
                 </li>
                 <li>
                   <CheckIcon />

@@ -107,12 +107,8 @@ export async function loadAdminAuditHistory(limit = 80): Promise<AdminAuditRow[]
   return enrichAuditBookings(bookings ?? []);
 }
 
-async function assertAdminAccess(
-  booking: { admin_token: string },
-  auth: { adminToken?: string; asTrustedAdmin?: boolean },
-) {
-  if (auth.asTrustedAdmin) return null;
-  if (!auth.adminToken || booking.admin_token !== auth.adminToken) {
+async function assertAdminAccess(auth: { asTrustedAdmin?: boolean }) {
+  if (!auth.asTrustedAdmin) {
     return "Acces non autorise.";
   }
   return null;
@@ -162,7 +158,7 @@ export type PatchAdminAuditInput = {
 export async function patchAdminAuditBooking(
   bookingId: string,
   patch: PatchAdminAuditInput,
-  auth: { adminToken?: string; asTrustedAdmin?: boolean },
+  auth: { asTrustedAdmin?: boolean },
 ): Promise<
   | { ok: true; status: AuditBookingStatus; slotStart: string }
   | { ok: false; error: string }
@@ -171,7 +167,7 @@ export async function patchAdminAuditBooking(
 
   const { data: booking, error: readError } = await supabase
     .from("audit_bookings")
-    .select("id, status, admin_token, user_id, slot_start")
+    .select("id, status, user_id, slot_start")
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -179,7 +175,7 @@ export async function patchAdminAuditBooking(
     return { ok: false, error: "Reservation introuvable." };
   }
 
-  const accessError = await assertAdminAccess(booking, auth);
+  const accessError = await assertAdminAccess(auth);
   if (accessError) return { ok: false, error: accessError };
 
   const updates: Record<string, unknown> = {};
@@ -256,7 +252,7 @@ export async function patchAdminAuditBooking(
 export async function updateAuditBookingStatus(
   bookingId: string,
   action: "confirm" | "decline",
-  auth: { adminToken?: string; asTrustedAdmin?: boolean },
+  auth: { asTrustedAdmin?: boolean },
 ) {
   const result = await patchAdminAuditBooking(bookingId, { action }, auth);
   if (!result.ok) return result;

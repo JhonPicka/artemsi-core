@@ -37,8 +37,8 @@ export default async function SubscribePage() {
           <>
             <p className="muted">
               L&apos;espace candidat est reserve aux abonnes. Souscris a{" "}
-              <strong>19,90&nbsp;EUR TTC / mois</strong> (paiement securise Stripe), puis cree ton
-              compte avec <strong>le meme email</strong> que lors du paiement.
+              <strong>19,90&nbsp;EUR TTC / mois</strong> (paiement securise Stripe). Ensuite, tu
+              recois un lien de connexion sur <strong>le meme email</strong> que lors du paiement.
             </p>
 
             <SubscribeButton className="button-link">S&apos;abonner — 19,90&nbsp;EUR / mois</SubscribeButton>
@@ -46,16 +46,18 @@ export default async function SubscribePage() {
             {user ? (
               <>
                 <p className="muted">
-                  Deja paye ? Attends quelques secondes que le paiement soit confirme, puis
-                  rafraichis cette page.
+                  Deja paye ? Verifie ta boite mail (et spams), puis demande un lien de connexion
+                  si besoin.
                 </p>
                 <ManageSubscriptionButton className="button-link secondary-link" />
+                <Link href="/login" className="button-link secondary-link">
+                  Recevoir un lien de connexion
+                </Link>
               </>
             ) : (
               <p className="muted">
-                Deja abonne ?{" "}
-                <Link href="/login">Connecte-toi</Link> ou{" "}
-                <Link href="/signup">cree ton compte</Link> avec l&apos;email utilise au paiement.
+                Deja abonne ? <Link href="/login">Recevoir un lien de connexion</Link> avec
+                l&apos;email utilise au paiement.
               </p>
             )}
 
