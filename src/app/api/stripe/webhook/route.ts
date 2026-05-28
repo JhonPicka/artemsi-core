@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
 import { syncBillingEmailToProfiles } from "@/lib/billing";
+import { getAppUrl, sendEmail } from "@/lib/email";
 import { env } from "@/lib/env";
 import { getStripeClient } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -17,6 +18,27 @@ function getWebhookSecret() {
 
 async function afterBillingUpsert(email: string) {
   await syncBillingEmailToProfiles(email);
+}
+
+async function sendSignupActivationEmail(email: string) {
+  const appUrl = getAppUrl();
+  const signupUrl = `${appUrl}/signup?email=${encodeURIComponent(email)}`;
+  const loginUrl = `${appUrl}/login?email=${encodeURIComponent(email)}`;
+  await sendEmail({
+    to: email,
+    subject: "Ton abonnement ARTEMSI est actif - cree ton mot de passe",
+    html: `
+      <p>Ton paiement ARTEMSI a bien ete confirme.</p>
+      <p>
+        Pour activer ton acces, clique ici :
+        <a href="${signupUrl}"><strong>Creer mon mot de passe</strong></a>
+      </p>
+      <p style="font-size:14px;color:#666;">
+        Si tu as deja un compte, connecte-toi ici :
+        <a href="${loginUrl}">Se connecter</a>
+      </p>
+    `,
+  });
 }
 
 function toIsoOrNull(unixSeconds?: number | null) {
@@ -64,6 +86,13 @@ export async function POST(request: Request) {
         const email = rawEmail ? rawEmail.toLowerCase() : null;
         if (!email) break;
 
+        const { data: existing, error: existingError } = await admin
+          .from("billing_customers")
+          .select("subscription_status, last_event_id")
+          .eq("email", email)
+          .maybeSingle();
+        if (existingError) throw new Error(existingError.message);
+
         const values = {
           email,
           subscription_status: "active",
@@ -78,6 +107,12 @@ export async function POST(request: Request) {
         const { error } = await admin.from("billing_customers").upsert(values, { onConflict: "email" });
         if (error) throw new Error(error.message);
         await afterBillingUpsert(email);
+
+        const alreadyProcessedThisEvent = existing?.last_event_id === event.id;
+        const wasAlreadyActive = existing?.subscription_status === "active";
+        if (!alreadyProcessedThisEvent && !wasAlreadyActive) {
+          await sendSignupActivationEmail(email);
+        }
         break;
       }
 
