@@ -44,7 +44,8 @@ export function LoginForm({ initialEmail, initialError }: Props) {
         Déjà payé ?{" "}
         <Link href="/signup" className="inline-link">
           Créer mon compte
-        </Link>
+        </Link>{" "}
+        avec le même email qu&apos;au paiement.
       </p>
     </form>
   );

@@ -30,9 +30,8 @@ export function SignupForm({ initialEmail }: Props) {
         <span className="brand-chip">COMPTE</span>
         <h1>Crée ton mot de passe</h1>
         <p className="muted">
-          Après ton paiement, tu reçois un <strong>email avec un lien</strong> pour activer ton
-          espace. Pas reçu ? Choisis ton mot de passe ici avec le <strong>même email</strong> qu&apos;au
-          paiement.
+          Après ton paiement, tu reçois un <strong>email avec un lien</strong> pour activer ton espace.
+          Pas reçu ? Crée ton mot de passe ici avec le même email qu&apos;au paiement.
         </p>
 
         <label htmlFor="email">Email</label>

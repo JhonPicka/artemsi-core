@@ -71,11 +71,10 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
               débloquer les offres.
             </p>
             <p className="muted" style={{ fontSize: "0.9rem" }}>
-              Pas reçu sous 2&nbsp;min ? Vérifie tes spams ou crée ton mot de passe ci-dessous (même
-              email qu&apos;au paiement).
+              Pas reçu sous 2&nbsp;min ? Vérifie tes spams.
             </p>
             <Link href={signupHref} className="button-link secondary-link">
-              Créer mon mot de passe
+              Créer mon mot de passe (même email qu&apos;au paiement)
             </Link>
             <Link href={loginHref} className="button-link secondary-link">
               J&apos;ai déjà un compte
