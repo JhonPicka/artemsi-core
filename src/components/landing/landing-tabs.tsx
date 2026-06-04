@@ -7,8 +7,8 @@ const SECTION_ORDER = [
   "landing-accueil",
   "landing-candidatures",
   "landing-audit",
-  "landing-offres",
   "landing-faq",
+  "landing-offres",
   "landing-prix",
 ] as const;
 
@@ -16,8 +16,8 @@ const NAV_LINKS: { id: (typeof SECTION_ORDER)[number]; label: string }[] = [
   { id: "landing-accueil", label: "Accueil" },
   { id: "landing-candidatures", label: "Candidatures" },
   { id: "landing-audit", label: "Audit" },
-  { id: "landing-offres", label: "Offres" },
   { id: "landing-faq", label: "FAQ" },
+  { id: "landing-offres", label: "Offres" },
   { id: "landing-prix", label: "Tarif" },
 ];
 

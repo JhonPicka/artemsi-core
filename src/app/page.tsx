@@ -421,53 +421,6 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
-      <section id="landing-offres" className="landing-section landing-offers-showcase landing-scroll-target">
-        <div className="landing-container">
-          <div className="landing-section-head">
-            <span className="landing-kicker">Offres ciblées</span>
-            <h2 className="landing-section-title">Exemples d&apos;offres que l&apos;on traite</h2>
-          </div>
-          <ul className="landing-offers-list" aria-label="Exemples d&apos;offres">
-            <li className="landing-offers-row">
-              <span className="landing-offers-role">Data-Analyst</span>
-              <span className="landing-offers-co">Accenture</span>
-              <span className="landing-offers-loc">Paris 13ème</span>
-              <span className="landing-offers-badge">Exemple ARTEMSI</span>
-            </li>
-            <li className="landing-offers-row">
-              <span className="landing-offers-role">Chargé de Marketing Digital</span>
-              <span className="landing-offers-co">Publicis Groupe</span>
-              <span className="landing-offers-loc">Lyon</span>
-              <span className="landing-offers-badge">Exemple ARTEMSI</span>
-            </li>
-            <li className="landing-offers-row">
-              <span className="landing-offers-role">Assistant Communication</span>
-              <span className="landing-offers-co">Michelin</span>
-              <span className="landing-offers-loc">Bordeaux</span>
-              <span className="landing-offers-badge">Exemple ARTEMSI</span>
-            </li>
-            <li className="landing-offers-row">
-              <span className="landing-offers-role">Consultant en Stratégie</span>
-              <span className="landing-offers-co">Capgemini</span>
-              <span className="landing-offers-loc">Lille</span>
-              <span className="landing-offers-badge">Exemple ARTEMSI</span>
-            </li>
-            <li className="landing-offers-row">
-              <span className="landing-offers-role">Designer UX/UI</span>
-              <span className="landing-offers-co">Airbus</span>
-              <span className="landing-offers-loc">Toulouse</span>
-              <span className="landing-offers-badge">Exemple ARTEMSI</span>
-            </li>
-            <li className="landing-offers-row">
-              <span className="landing-offers-role">Chargé de Recrutement</span>
-              <span className="landing-offers-co">BNP Paribas</span>
-              <span className="landing-offers-loc">Nantes</span>
-              <span className="landing-offers-badge">Exemple ARTEMSI</span>
-            </li>
-          </ul>
-        </div>
-      </section>
-
       <section id="landing-faq" className="landing-section landing-faq landing-scroll-target">
         <div className="landing-container">
           <div className="landing-section-head">
@@ -565,6 +518,53 @@ export default async function Home({ searchParams }: HomeProps) {
               </p>
             </details>
           </div>
+        </div>
+      </section>
+
+      <section id="landing-offres" className="landing-section landing-offers-showcase landing-scroll-target">
+        <div className="landing-container">
+          <div className="landing-section-head">
+            <span className="landing-kicker">Offres ciblées</span>
+            <h2 className="landing-section-title">Exemples d&apos;offres que l&apos;on traite</h2>
+          </div>
+          <ul className="landing-offers-list" aria-label="Exemples d&apos;offres">
+            <li className="landing-offers-row">
+              <span className="landing-offers-role">Data-Analyst</span>
+              <span className="landing-offers-co">Accenture</span>
+              <span className="landing-offers-loc">Paris 13ème</span>
+              <span className="landing-offers-badge">Exemple ARTEMSI</span>
+            </li>
+            <li className="landing-offers-row">
+              <span className="landing-offers-role">Chargé de Marketing Digital</span>
+              <span className="landing-offers-co">Publicis Groupe</span>
+              <span className="landing-offers-loc">Lyon</span>
+              <span className="landing-offers-badge">Exemple ARTEMSI</span>
+            </li>
+            <li className="landing-offers-row">
+              <span className="landing-offers-role">Assistant Communication</span>
+              <span className="landing-offers-co">Michelin</span>
+              <span className="landing-offers-loc">Bordeaux</span>
+              <span className="landing-offers-badge">Exemple ARTEMSI</span>
+            </li>
+            <li className="landing-offers-row">
+              <span className="landing-offers-role">Consultant en Stratégie</span>
+              <span className="landing-offers-co">Capgemini</span>
+              <span className="landing-offers-loc">Lille</span>
+              <span className="landing-offers-badge">Exemple ARTEMSI</span>
+            </li>
+            <li className="landing-offers-row">
+              <span className="landing-offers-role">Designer UX/UI</span>
+              <span className="landing-offers-co">Airbus</span>
+              <span className="landing-offers-loc">Toulouse</span>
+              <span className="landing-offers-badge">Exemple ARTEMSI</span>
+            </li>
+            <li className="landing-offers-row">
+              <span className="landing-offers-role">Chargé de Recrutement</span>
+              <span className="landing-offers-co">BNP Paribas</span>
+              <span className="landing-offers-loc">Nantes</span>
+              <span className="landing-offers-badge">Exemple ARTEMSI</span>
+            </li>
+          </ul>
         </div>
       </section>
 
