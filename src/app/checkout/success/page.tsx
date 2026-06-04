@@ -16,7 +16,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   let error: string | null = null;
 
   if (!isStripeConfigured()) {
-    error = "Stripe non configure sur ce serveur.";
+    error = "Paiement non configuré sur ce serveur.";
   } else if (!sessionId) {
     error = "Session de paiement introuvable.";
   } else {
@@ -27,7 +27,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
       });
       const paid = session.payment_status === "paid" || session.status === "complete";
       if (!paid) {
-        error = "Le paiement n'est pas encore confirme. Reessaie dans quelques instants.";
+        error = "Le paiement n'est pas encore confirmé. Réessaie dans quelques instants.";
       } else {
         await activateBillingFromCheckoutSession(session);
         verified = true;
@@ -40,7 +40,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
       error =
         cause instanceof Error
           ? cause.message
-          : "Impossible de verifier la session Stripe.";
+          : "Impossible de vérifier le paiement.";
     }
   }
 
@@ -51,7 +51,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     <AuthPageShell>
       <div className="card form">
         <span className="brand-chip">PAIEMENT</span>
-        <h1>{verified ? "Paiement confirme" : "Verification en cours"}</h1>
+        <h1>{verified ? "Paiement confirmé" : "Vérification en cours"}</h1>
 
         {verified ? (
           <>
@@ -66,25 +66,26 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
               .
             </p>
             <p className="muted">
-              Tu vas recevoir un email avec un lien de confirmation (envoi automatique apres
-              paiement). Clique dessus : ton email sera pre-rempli et tu choisiras ton mot de passe.
+              Tu vas recevoir un <strong>email avec un lien</strong> sur l&apos;adresse utilisée au
+              paiement. Clique dessus pour choisir ton mot de passe, puis complète ton profil pour
+              débloquer les offres.
             </p>
             <p className="muted" style={{ fontSize: "0.9rem" }}>
-              Pas recu sous 2 min ? Verifie les spams ou utilise le secours ci-dessous (meme adresse
-              Stripe).
+              Pas reçu sous 2&nbsp;min ? Vérifie tes spams ou crée ton mot de passe ci-dessous (même
+              email qu&apos;au paiement).
             </p>
             <Link href={signupHref} className="button-link secondary-link">
-              Choisir mon mot de passe (sans email)
+              Créer mon mot de passe
             </Link>
             <Link href={loginHref} className="button-link secondary-link">
-              J&apos;ai deja un compte
+              J&apos;ai déjà un compte
             </Link>
           </>
         ) : (
           <>
             <p className="error">{error ?? "Une erreur est survenue."}</p>
             <Link href="/subscribe" className="button-link secondary-link">
-              Retour a l&apos;abonnement
+              Retour à l&apos;abonnement
             </Link>
           </>
         )}

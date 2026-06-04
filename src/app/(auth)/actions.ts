@@ -51,7 +51,7 @@ export async function signupAction(
   if (!(await userHasBillingAccess(email))) {
     return {
       error:
-        "Aucun abonnement actif pour cet email. Paie d'abord sur la landing, puis utilise le lien reçu par email.",
+        "Aucun abonnement actif pour cet email. Souscris d'abord, puis utilise le lien reçu par email ou crée ton mot de passe ici.",
     };
   }
 
@@ -72,7 +72,7 @@ export async function signupAction(
       } catch {
         return {
           error:
-            "Ce compte existe déjà. Connecte-toi ou ouvre le lien reçu par email après ton paiement.",
+            "Ce compte existe déjà. Connecte-toi ou ouvre le lien dans ton email après ton paiement.",
         };
       }
     }
@@ -124,7 +124,7 @@ export async function finishSignupAction(
 
   if (!user?.email) {
     return {
-      error: "Session invalide. Ouvre le lien reçu par email après ton paiement.",
+      error: "Session invalide. Ouvre le lien dans ton email après ton paiement.",
     };
   }
 
@@ -173,7 +173,8 @@ export async function loginAction(
     const billingStatus = await getBillingStatusByEmail(email);
     if (billingStatus === "active") {
       return {
-        error: "Identifiants incorrects. Ouvre le lien reçu par email.",
+        error:
+          "Identifiants incorrects. Ouvre le lien dans ton email pour créer ton mot de passe.",
       };
     }
     return { error: "Identifiants incorrects." };
@@ -181,14 +182,14 @@ export async function loginAction(
 
   const user = data.user;
   if (!user?.email) {
-    return { error: "Impossible de recuperer la session utilisateur" };
+    return { error: "Impossible de récupérer la session utilisateur." };
   }
 
   if (!(await userHasBillingAccess(user.email))) {
     await supabase.auth.signOut();
     return {
       error:
-        "Aucun abonnement actif pour cet email. Souscris d'abord, ou attends la confirmation Stripe puis reconnecte-toi.",
+        "Aucun abonnement actif pour cet email. Finalise ton paiement ou patiente quelques instants, puis réessaie.",
     };
   }
 
@@ -208,7 +209,7 @@ export async function resendSetupEmailAction(
 
   if (!(await userHasBillingAccess(email))) {
     return {
-      error: "Aucun abonnement actif pour cet email. Souscris d'abord sur la landing.",
+      error: "Aucun abonnement actif pour cet email. Souscris d'abord pour accéder à l'espace.",
     };
   }
 

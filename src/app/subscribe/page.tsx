@@ -24,32 +24,33 @@ export default async function SubscribePage() {
     <AuthPageShell>
       <div className="card form">
         <span className="brand-chip">ABONNEMENT</span>
-        <h1>Acces ARTEMSI</h1>
+        <h1>Accès ARTEMSI</h1>
 
         {alreadyActive ? (
           <>
-            <p className="muted">Ton abonnement est actif. Tu peux acceder a ton espace.</p>
+            <p className="muted">Ton abonnement est actif. Tu peux ouvrir ton espace candidat.</p>
             <Link href="/dashboard" className="button-link">
-              Ouvrir le dashboard
+              Ouvrir mon espace
             </Link>
             <ManageSubscriptionButton className="button-link secondary-link" />
           </>
         ) : (
           <>
             <p className="muted">
-              L&apos;espace candidat est reserve aux abonnes. Souscris a{" "}
-              <strong>19,90&nbsp;EUR TTC / mois</strong> (paiement securise Stripe). Apres paiement,
-              tu recevras un <strong>email avec un lien</strong> pour choisir ton mot de passe
-              (meme adresse que sur Stripe).
+              Pour accéder aux offres ciblées, au suivi des candidatures et à l&apos;accompagnement,
+              souscris à <strong>19,90&nbsp;EUR TTC / mois</strong>. Paiement sécurisé. Après
+              validation, tu reçois un <strong>email avec un lien</strong> pour choisir ton mot de
+              passe (même adresse qu&apos;au paiement).
             </p>
 
-            <SubscribeButton className="button-link">S&apos;abonner — 19,90&nbsp;EUR / mois</SubscribeButton>
+            <SubscribeButton className="button-link">
+              S&apos;abonner — 19,90&nbsp;EUR / mois
+            </SubscribeButton>
 
             {user ? (
               <>
                 <p className="muted">
-                  Deja paye ? Attends quelques secondes que le paiement soit confirme, puis
-                  rafraichis cette page.
+                  Déjà payé ? Patiente quelques secondes, puis actualise cette page.
                 </p>
                 <form action={logoutToLoginAction}>
                   <button type="submit" className="button-link secondary-link">
@@ -60,24 +61,22 @@ export default async function SubscribePage() {
               </>
             ) : (
               <p className="muted">
-                Deja abonne ?{" "}
-                <Link href="/login">Connecte-toi</Link> (email + mot de passe). Pas encore de mot de
-                passe ? Ouvre le lien dans ton email ou{" "}
-                <Link href="/signup">choisis-le ici</Link>.
+                Déjà abonné ? <Link href="/login">Connecte-toi</Link>. Pas encore de mot de passe ?{" "}
+                <Link href="/signup">Crée-le ici</Link>.
               </p>
             )}
 
             <p className="muted">
               <Link href={legalRoutes.terms}>CGU & CGV</Link>
               {" · "}
-              <Link href={legalRoutes.privacy}>Confidentialite</Link>
+              <Link href={legalRoutes.privacy}>Confidentialité</Link>
             </p>
           </>
         )}
 
         {!enforced ? (
           <p className="muted">
-            Configuration Stripe incomplete. En local :{" "}
+            Configuration Stripe incomplète. En local :{" "}
             <a href="/api/stripe/status" target="_blank" rel="noreferrer">
               diagnostic
             </a>
@@ -87,7 +86,7 @@ export default async function SubscribePage() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              creer une cle sk_test_
+              créer une clé sk_test_
             </a>
             {" · "}
             voir <code>docs/STRIPE_SETUP.md</code>

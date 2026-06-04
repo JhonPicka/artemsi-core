@@ -31,7 +31,10 @@ export async function POST() {
   const customerId = profile?.stripe_customer_id;
   if (!customerId) {
     return NextResponse.json(
-      { error: "Aucun abonnement Stripe lie a ce compte. Utilise le meme email qu au paiement." },
+      {
+        error:
+          "Aucun abonnement Stripe lié à ce compte. Utilise le même email qu'au paiement.",
+      },
       { status: 400 },
     );
   }

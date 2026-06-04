@@ -41,9 +41,9 @@ export function LoginForm({ initialEmail, initialError }: Props) {
       </button>
 
       <p className="muted auth-form-footer">
-        Deja paye ?{" "}
+        Déjà payé ?{" "}
         <Link href="/signup" className="inline-link">
-          Creer mon compte
+          Créer mon compte
         </Link>
       </p>
     </form>

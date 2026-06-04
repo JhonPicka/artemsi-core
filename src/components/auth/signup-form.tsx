@@ -27,12 +27,12 @@ export function SignupForm({ initialEmail }: Props) {
   return (
     <>
       <form className="card form" action={action}>
-        <span className="brand-chip">SECOURS</span>
-        <h1>Choisir mon mot de passe</h1>
+        <span className="brand-chip">COMPTE</span>
+        <h1>Crée ton mot de passe</h1>
         <p className="muted">
-          Parcours normal : ouvre le <strong>lien dans l&apos;email</strong> reçu après paiement.
-          Cette page sert si tu n&apos;as pas reçu l&apos;email — utilise le{" "}
-          <strong>meme email</strong> que sur Stripe.
+          Après ton paiement, tu reçois un <strong>email avec un lien</strong> pour activer ton
+          espace. Pas reçu ? Choisis ton mot de passe ici avec le <strong>même email</strong> qu&apos;au
+          paiement.
         </p>
 
         <label htmlFor="email">Email</label>
@@ -77,17 +77,17 @@ export function SignupForm({ initialEmail }: Props) {
         {state.success ? <p className="success">{state.success}</p> : null}
 
         <button type="submit" disabled={pending}>
-          {pending ? "Enregistrement..." : "Creer mon compte"}
+          {pending ? "Enregistrement..." : "Créer mon compte"}
         </button>
 
         <p className="muted">
-          Deja un mot de passe ? <Link href="/login">Se connecter</Link>
+          Déjà un mot de passe ? <Link href="/login">Se connecter</Link>
         </p>
       </form>
 
       {initialEmail ? (
         <form className="card form auth-resend-form" action={resendAction}>
-          <p className="muted">Pas recu l&apos;email de confirmation ?</p>
+          <p className="muted">Pas reçu l&apos;email ?</p>
           <input type="hidden" name="email" value={initialEmail} />
           {resendState.error ? <p className="error">{resendState.error}</p> : null}
           {resendState.success ? <p className="success">{resendState.success}</p> : null}
@@ -98,8 +98,10 @@ export function SignupForm({ initialEmail }: Props) {
       ) : null}
 
       <p className="muted auth-form-footer">
-        Pas encore abonne ?{" "}
-        <SubscribeButton className="inline-link-button">Souscrire — 19,90&nbsp;EUR / mois</SubscribeButton>
+        Pas encore abonné ?{" "}
+        <SubscribeButton className="inline-link-button">
+          S&apos;abonner — 19,90&nbsp;EUR / mois
+        </SubscribeButton>
       </p>
     </>
   );

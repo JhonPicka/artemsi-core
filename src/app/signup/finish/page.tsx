@@ -9,7 +9,9 @@ export default async function SignupFinishPage() {
   const user = await getCurrentUser();
 
   if (!user?.email) {
-    redirect("/login?error=connecte-toi-via-le-lien-recu-par-email");
+    redirect(
+      `/login?error=${encodeURIComponent("Ouvre le lien dans ton email pour activer ton compte.")}`,
+    );
   }
 
   if (!needsPasswordSetup(user)) {

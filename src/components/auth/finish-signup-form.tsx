@@ -20,8 +20,8 @@ export function FinishSignupForm({ email }: Props) {
       <span className="brand-chip">ACTIVATION</span>
       <h1>Choisis ton mot de passe</h1>
       <p className="muted">
-        Ton email est confirmé. Définis le mot de passe de ton espace ARTEMSI (utilise le même
-        email que lors du paiement Stripe).
+        Dernière étape : choisis le mot de passe de ton espace ARTEMSI. Tu pourras ensuite compléter
+        ton profil et accéder aux offres.
       </p>
 
       <label htmlFor="email">Email</label>
