@@ -187,6 +187,17 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
+      <section className="landing-section landing-social-proof">
+        <div className="landing-container">
+          <div className="landing-section-head">
+            <span className="landing-kicker">Avis candidats</span>
+            <p className="landing-social-proof-trust">BUT info, école de commerce — alternance et stage</p>
+            <h2 className="landing-section-title">Des retours concrets sur l&apos;accompagnement</h2>
+          </div>
+          <LandingTestimonialsCarousel />
+        </div>
+      </section>
+
       <section id="landing-candidatures" className="landing-section landing-how landing-scroll-target">
         <div className="landing-container">
           <div className="landing-section-head">
@@ -454,17 +465,6 @@ export default async function Home({ searchParams }: HomeProps) {
               <span className="landing-offers-badge">Exemple ARTEMSI</span>
             </li>
           </ul>
-        </div>
-      </section>
-
-      <section className="landing-section landing-social-proof">
-        <div className="landing-container">
-          <div className="landing-section-head">
-            <span className="landing-kicker">Avis candidats</span>
-            <p className="landing-social-proof-trust">BUT info, école de commerce — alternance et stage</p>
-            <h2 className="landing-section-title">Des retours concrets sur l&apos;accompagnement</h2>
-          </div>
-          <LandingTestimonialsCarousel />
         </div>
       </section>
 
