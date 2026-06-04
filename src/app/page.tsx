@@ -468,8 +468,6 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
-      <LandingPricingShowcase />
-
       <section id="landing-faq" className="landing-section landing-faq landing-scroll-target">
         <div className="landing-container">
           <div className="landing-section-head">
@@ -569,6 +567,8 @@ export default async function Home({ searchParams }: HomeProps) {
           </div>
         </div>
       </section>
+
+      <LandingPricingShowcase />
 
       <section className="landing-section landing-cta-final">
         <div className="landing-container">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Testimonial = {
   id: string;
@@ -32,30 +32,66 @@ const TESTIMONIALS: Testimonial[] = [
   },
 ];
 
+const SCROLL_EDGE_THRESHOLD = 12;
+
 function scrollTrack(track: HTMLUListElement, direction: -1 | 1) {
   const card = track.querySelector<HTMLElement>(".landing-testimonial");
-  const gap = Number.parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 16;
-  const step = (card?.offsetWidth ?? track.clientWidth * 0.85) + gap;
+  const gap = Number.parseFloat(getComputedStyle(track).gap) || 16;
+  const step = (card?.offsetWidth ?? track.clientWidth) + gap;
   track.scrollBy({ left: direction * step, behavior: "smooth" });
 }
 
 export function LandingTestimonialsCarousel() {
   const trackRef = useRef<HTMLUListElement>(null);
+  const hasMultiple = TESTIMONIALS.length > 1;
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const track = trackRef.current;
+    if (!track || !hasMultiple) {
+      setCanScrollPrev(false);
+      setCanScrollNext(false);
+      return;
+    }
+
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    if (maxScroll <= SCROLL_EDGE_THRESHOLD) {
+      setCanScrollPrev(false);
+      setCanScrollNext(false);
+      return;
+    }
+
+    setCanScrollPrev(track.scrollLeft > SCROLL_EDGE_THRESHOLD);
+    setCanScrollNext(track.scrollLeft < maxScroll - SCROLL_EDGE_THRESHOLD);
+  }, [hasMultiple]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    updateScrollState();
+
+    track.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(updateScrollState)
+        : null;
+    observer?.observe(track);
+
+    return () => {
+      track.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+      observer?.disconnect();
+    };
+  }, [updateScrollState]);
+
+  const showControls = hasMultiple && (canScrollPrev || canScrollNext);
 
   return (
     <div className="landing-testimonials-carousel">
-      <button
-        type="button"
-        className="landing-testimonials-nav landing-testimonials-nav--prev"
-        aria-label="Avis précédents"
-        onClick={() => {
-          const track = trackRef.current;
-          if (track) scrollTrack(track, -1);
-        }}
-      >
-        <span aria-hidden="true">←</span>
-      </button>
-
       <ul ref={trackRef} className="landing-testimonials">
         {TESTIMONIALS.map((item) => (
           <li key={item.id} className="landing-testimonial">
@@ -81,17 +117,36 @@ export function LandingTestimonialsCarousel() {
         ))}
       </ul>
 
-      <button
-        type="button"
-        className="landing-testimonials-nav landing-testimonials-nav--next"
-        aria-label="Avis suivants"
-        onClick={() => {
-          const track = trackRef.current;
-          if (track) scrollTrack(track, 1);
-        }}
-      >
-        <span aria-hidden="true">→</span>
-      </button>
+      {showControls ? (
+        <div className="landing-testimonials-controls">
+          {canScrollPrev ? (
+            <button
+              type="button"
+              className="landing-testimonials-nav landing-testimonials-nav--prev"
+              aria-label="Avis précédent"
+              onClick={() => {
+                const track = trackRef.current;
+                if (track) scrollTrack(track, -1);
+              }}
+            >
+              <span aria-hidden="true">←</span>
+            </button>
+          ) : null}
+          {canScrollNext ? (
+            <button
+              type="button"
+              className="landing-testimonials-nav landing-testimonials-nav--next"
+              aria-label="Avis suivant"
+              onClick={() => {
+                const track = trackRef.current;
+                if (track) scrollTrack(track, 1);
+              }}
+            >
+              <span aria-hidden="true">→</span>
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

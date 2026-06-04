@@ -8,8 +8,8 @@ const SECTION_ORDER = [
   "landing-candidatures",
   "landing-audit",
   "landing-offres",
-  "landing-prix",
   "landing-faq",
+  "landing-prix",
 ] as const;
 
 const NAV_LINKS: { id: (typeof SECTION_ORDER)[number]; label: string }[] = [
@@ -17,8 +17,8 @@ const NAV_LINKS: { id: (typeof SECTION_ORDER)[number]; label: string }[] = [
   { id: "landing-candidatures", label: "Candidatures" },
   { id: "landing-audit", label: "Audit" },
   { id: "landing-offres", label: "Offres" },
-  { id: "landing-prix", label: "Tarif" },
   { id: "landing-faq", label: "FAQ" },
+  { id: "landing-prix", label: "Tarif" },
 ];
 
 function isSectionId(value: string): value is (typeof SECTION_ORDER)[number] {

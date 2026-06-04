@@ -1387,10 +1387,53 @@ html:has(.landing-shell) {
 }
 
 .landing-testimonials-carousel {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
   gap: 0.65rem;
+}
+
+@media (min-width: 720px) {
+  .landing-testimonials-carousel {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .landing-testimonials {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .landing-testimonials-controls {
+    display: contents;
+  }
+
+  .landing-testimonials-nav--prev {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .landing-testimonials-nav--next {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+.landing-testimonials-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.5rem;
+}
+
+.landing-testimonials-controls:has(.landing-testimonials-nav--prev:only-child) {
+  justify-content: flex-start;
+}
+
+.landing-testimonials-controls:has(.landing-testimonials-nav--next:only-child) {
+  justify-content: flex-end;
 }
 
 .landing-testimonials-nav {
@@ -1418,7 +1461,7 @@ html:has(.landing-shell) {
 .landing-testimonials {
   list-style: none;
   margin: 0;
-  padding: 0.15rem 0.1rem;
+  padding: 0.15rem 0;
   display: flex;
   flex-direction: row;
   gap: 1rem;
@@ -1427,7 +1470,10 @@ html:has(.landing-shell) {
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
   scrollbar-width: none;
+  min-width: 0;
 }
 
 .landing-testimonials::-webkit-scrollbar {
@@ -1436,8 +1482,9 @@ html:has(.landing-shell) {
 
 .landing-testimonial {
   margin: 0;
-  flex: 0 0 min(100%, 22rem);
-  scroll-snap-align: start;
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  box-sizing: border-box;
   padding: 1.25rem 1.35rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
@@ -1449,7 +1496,8 @@ html:has(.landing-shell) {
 
 @media (min-width: 720px) {
   .landing-testimonial {
-    flex-basis: min(42vw, 26rem);
+    flex: 0 0 min(42vw, 26rem);
+    scroll-snap-align: start;
   }
 }
 
