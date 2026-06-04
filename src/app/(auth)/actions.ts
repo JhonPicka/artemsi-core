@@ -14,8 +14,6 @@ import { loginSchema, setPasswordSchema, signupSchema } from "@/lib/validation";
 export type AuthFormState = {
   error?: string;
   success?: string;
-  /** Connexion : proposer l'abonnement si aucun compte actif pour cet email. */
-  showSubscribe?: boolean;
 };
 
 function normalizeEmail(email: string) {
@@ -178,10 +176,7 @@ export async function loginAction(
         error: "Identifiants incorrects. Ouvre le lien reçu par email.",
       };
     }
-    return {
-      error: "Identifiants incorrects.",
-      showSubscribe: true,
-    };
+    return { error: "Identifiants incorrects." };
   }
 
   const user = data.user;
@@ -194,7 +189,6 @@ export async function loginAction(
     return {
       error:
         "Aucun abonnement actif pour cet email. Souscris d'abord, ou attends la confirmation Stripe puis reconnecte-toi.",
-      showSubscribe: true,
     };
   }
 

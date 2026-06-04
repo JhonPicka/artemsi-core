@@ -3058,6 +3058,27 @@ input:disabled {
   margin-top: 0.25rem;
 }
 
+.auth-form-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.auth-form-footer .muted {
+  margin: 0;
+}
+
+.auth-form-footer .inline-link {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .inline-link-button {
   background: none;
   border: none;

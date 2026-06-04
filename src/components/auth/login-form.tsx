@@ -41,12 +41,19 @@ export function LoginForm({ initialEmail, initialError }: Props) {
         {pending ? "Connexion..." : "Se connecter"}
       </button>
 
-      {state.showSubscribe ? (
-        <p className="muted auth-form-footer">
-          Pas encore de compte ?{" "}
-          <SubscribeButton className="inline-link-button">S&apos;abonner</SubscribeButton>
+      <div className="auth-form-footer">
+        <p className="muted">Pas encore de compte ?</p>
+        <SubscribeButton className="button-link secondary-link">
+          S&apos;abonner — 19,90&nbsp;EUR / mois
+        </SubscribeButton>
+        <p className="muted">
+          Deja paye ?{" "}
+          <Link href="/signup" className="inline-link">
+            Creer mon compte
+          </Link>{" "}
+          (meme email que sur Stripe).
         </p>
-      ) : null}
+      </div>
     </form>
   );
 }
