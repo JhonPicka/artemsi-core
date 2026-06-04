@@ -1386,23 +1386,58 @@ html:has(.landing-shell) {
   color: var(--muted-strong);
 }
 
+.landing-testimonials-carousel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.landing-testimonials-nav {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  color: var(--foreground);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.landing-testimonials-nav:hover {
+  border-color: var(--primary-soft-strong);
+  background: var(--primary-soft);
+}
+
 .landing-testimonials {
   list-style: none;
   margin: 0;
-  padding: 0;
-  display: grid;
+  padding: 0.15rem 0.1rem;
+  display: flex;
+  flex-direction: row;
   gap: 1rem;
-  grid-template-columns: 1fr;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
-@media (min-width: 720px) {
-  .landing-testimonials {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.landing-testimonials::-webkit-scrollbar {
+  display: none;
 }
 
 .landing-testimonial {
   margin: 0;
+  flex: 0 0 min(100%, 22rem);
+  scroll-snap-align: start;
   padding: 1.25rem 1.35rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
@@ -1410,6 +1445,12 @@ html:has(.landing-shell) {
   box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   display: grid;
   gap: 0.85rem;
+}
+
+@media (min-width: 720px) {
+  .landing-testimonial {
+    flex-basis: min(42vw, 26rem);
+  }
 }
 
 .landing-testimonial-stars {
@@ -3059,17 +3100,10 @@ input:disabled {
 }
 
 .auth-form-footer {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.65rem;
   margin-top: 0.35rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
-}
-
-.auth-form-footer .muted {
-  margin: 0;
+  text-align: center;
 }
 
 .auth-form-footer .inline-link {

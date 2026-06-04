@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { loginAction, type AuthFormState } from "@/app/(auth)/actions";
-import { SubscribeButton } from "@/components/billing/subscribe-button";
 
 const initialState: AuthFormState = {};
 
@@ -41,19 +40,12 @@ export function LoginForm({ initialEmail, initialError }: Props) {
         {pending ? "Connexion..." : "Se connecter"}
       </button>
 
-      <div className="auth-form-footer">
-        <p className="muted">Pas encore de compte ?</p>
-        <SubscribeButton className="button-link secondary-link">
-          S&apos;abonner — 19,90&nbsp;EUR / mois
-        </SubscribeButton>
-        <p className="muted">
-          Deja paye ?{" "}
-          <Link href="/signup" className="inline-link">
-            Creer mon compte
-          </Link>{" "}
-          (meme email que sur Stripe).
-        </p>
-      </div>
+      <p className="muted auth-form-footer">
+        Deja paye ?{" "}
+        <Link href="/signup" className="inline-link">
+          Creer mon compte
+        </Link>
+      </p>
     </form>
   );
 }

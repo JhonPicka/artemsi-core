@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { LandingPricingShowcase } from "@/components/landing/landing-pricing-showcase";
+import { LandingTestimonialsCarousel } from "@/components/landing/landing-testimonials-carousel";
 import { LandingTabs } from "@/components/landing/landing-tabs";
 import { LegalFooterLinks } from "@/components/legal/legal-footer-links";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -463,57 +464,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <p className="landing-social-proof-trust">BUT info, école de commerce — alternance et stage</p>
             <h2 className="landing-section-title">Des retours concrets sur l&apos;accompagnement</h2>
           </div>
-          <ul className="landing-testimonials">
-            <li className="landing-testimonial">
-              <div
-                className="landing-testimonial-stars"
-                aria-label="Note 5 sur 5"
-                title="5 sur 5"
-              >
-                <span aria-hidden="true">★★★★★</span>
-              </div>
-              <blockquote className="landing-testimonial-quote">
-                « En BUT informatique, je postulais au hasard. Les offres proposées collaient enfin
-                au dev / data, et après un RDV d&apos;accompagnement j&apos;ai structuré mon CV et mes
-                projets GitHub. Alternance signée chez un éditeur SaaS en un peu plus d&apos;un mois. »
-              </blockquote>
-              <p className="landing-testimonial-source">
-                <span className="landing-testimonial-avatar" aria-hidden="true">
-                  T
-                </span>
-                <span>
-                  <strong className="landing-testimonial-name">Thomas L.</strong>
-                  <span className="landing-testimonial-meta">BUT informatique</span>
-                  <span className="landing-testimonial-via">Alternance signée</span>
-                </span>
-              </p>
-            </li>
-            <li className="landing-testimonial">
-              <div
-                className="landing-testimonial-stars"
-                aria-label="Note 5 sur 5"
-                title="5 sur 5"
-              >
-                <span aria-hidden="true">★★★★★</span>
-              </div>
-              <blockquote className="landing-testimonial-quote">
-                « En école de commerce (M1), je cherchais un stage marketing. ARTEMSI m&apos;a évité
-                les annonces hors sujet : offres ciblées, suivi des relances et retours concrets sur
-                ma lettre. Stage de 6 mois en communication digitale, obtenu après plusieurs
-                entretiens. »
-              </blockquote>
-              <p className="landing-testimonial-source">
-                <span className="landing-testimonial-avatar" aria-hidden="true">
-                  C
-                </span>
-                <span>
-                  <strong className="landing-testimonial-name">Camille D.</strong>
-                  <span className="landing-testimonial-meta">École de commerce</span>
-                  <span className="landing-testimonial-via">Stage trouvé</span>
-                </span>
-              </p>
-            </li>
-          </ul>
+          <LandingTestimonialsCarousel />
         </div>
       </section>
 
