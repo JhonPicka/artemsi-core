@@ -163,24 +163,24 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </section>
 
-      <section className="landing-stats" aria-label="Chiffres ARTEMSI">
+      <section className="landing-stats" aria-label="Points clés ARTEMSI">
         <div className="landing-container landing-stats-grid">
           <div className="landing-stat">
-            <span className="landing-stat-value">+20%</span>
+            <span className="landing-stat-value">1 h</span>
             <span className="landing-stat-label">
-              d&apos;entretiens apres l&apos;accompagnement personnalise
+              par rendez-vous d&apos;accompagnement (échange en direct)
             </span>
           </div>
           <div className="landing-stat">
-            <span className="landing-stat-value">+5</span>
+            <span className="landing-stat-value">+10</span>
             <span className="landing-stat-label">
-              entretiens en plus après le premier mois
+              offres ciblées ajoutées par jour selon ton profil
             </span>
           </div>
           <div className="landing-stat">
-            <span className="landing-stat-value">90%</span>
+            <span className="landing-stat-value">×3</span>
             <span className="landing-stat-label">
-              d&apos;offres compatibles avec ton profil
+              plus de chances de décrocher un entretien avec un meilleur CV
             </span>
           </div>
         </div>
@@ -191,10 +191,11 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className="landing-section-head">
             <span className="landing-kicker">Comment ca marche</span>
             <h2 className="landing-section-title">
-              3 étapes pour décrocher ton alternance
+              3 étapes pour décrocher ton alternance ou ton stage
             </h2>
             <p className="landing-section-lead">
-              Un parcours simple : paiement, activation, profil, offres et accompagnement.
+              Paiement, activation, profil, offres ciblées puis rendez-vous d&apos;accompagnement si
+              tu en as besoin.
             </p>
           </div>
 
@@ -217,10 +218,10 @@ export default async function Home({ searchParams }: HomeProps) {
             </li>
             <li className="landing-step">
               <span className="landing-step-num">03</span>
-              <h3 className="landing-step-title">Prends un rendez-vous d&apos;accompagnement</h3>
+              <h3 className="landing-step-title">Réserve un accompagnement (1 h)</h3>
               <p className="landing-step-text">
-                Tu peux réserver un rendez-vous pour améliorer ton CV, tes candidatures et ta
-                posture en entretien.
+                Choisis un créneau dans l&apos;app : un expert relit ton CV et ta lettre, te donne
+                des retours actionnables et t&apos;aide sur ta posture en entretien.
               </p>
             </li>
           </ol>
@@ -298,8 +299,8 @@ export default async function Home({ searchParams }: HomeProps) {
               </span>
               <h3 className="landing-bento-title">Accompagnement personnalisé</h3>
               <p className="landing-bento-text">
-                Réserve un rendez-vous pour améliorer ton CV, tes candidatures et ton approche
-                des entretiens.
+                Créneau d&apos;1 h en direct : relecture CV / lettre, cohérence avec ton objectif
+                (alternance ou stage) et plan d&apos;action pour la suite.
               </p>
             </article>
 
@@ -332,13 +333,40 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className="landing-container">
           <div className="landing-section-head">
             <span className="landing-kicker">Accompagnement personnalisé</span>
-            <h2 className="landing-section-title">Un rendez-vous pour booster ton dossier</h2>
+            <h2 className="landing-section-title">Un rendez-vous d&apos;1 h pour booster ton dossier</h2>
             <p className="landing-section-lead">
-              L&apos;accompagnement personnalisé se réserve directement dans ton espace ARTEMSI. Tu
-              choisis un créneau, l&apos;équipe confirme, puis un expert t&apos;aide à améliorer ton CV,
-              tes candidatures et ton positionnement.
+              Réservé depuis ton espace ARTEMSI : un échange en direct (pas un score automatique).
+              Que tu sois en BUT info, école de commerce ou autre, l&apos;objectif est le même — un
+              dossier clair pour une alternance ou un stage.
             </p>
           </div>
+
+          <aside className="landing-audit-practical" aria-label="Détails de l'accompagnement">
+            <h3 className="landing-audit-practical-title">En pratique</h3>
+            <ul className="landing-audit-practical-list">
+              <li>
+                <strong>Format :</strong> échange en direct d&apos;1 h avec un expert ARTEMSI (visio
+                ou téléphone selon confirmation).
+              </li>
+              <li>
+                <strong>Offres :</strong> environ 10 nouvelles offres ciblées par jour dans ton espace,
+                selon ton métier et ta région.
+              </li>
+              <li>
+                <strong>Inclus :</strong> relecture CV et lettre, cohérence métier / secteur, conseils
+                entretien et priorités pour postuler.
+              </li>
+              <li>
+                <strong>Hors scope :</strong> pas de rédaction intégrale de CV ou LM à ta place — tu
+                repars avec des corrections et une feuille de route.
+              </li>
+              <li>
+                <strong>Confirmation :</strong> l&apos;équipe valide ou propose un autre créneau sous 48 h,
+                puis compte rendu visible dans l&apos;app.
+              </li>
+            </ul>
+          </aside>
+
           <ol className="landing-audit-timeline">
             <li className="landing-audit-step">
               <span className="landing-audit-step-num" aria-hidden="true">
@@ -347,8 +375,8 @@ export default async function Home({ searchParams }: HomeProps) {
               <div className="landing-audit-step-body">
                 <h3 className="landing-audit-step-title">Réservation</h3>
                 <p className="landing-audit-step-text">
-                  Tu choisis un créneau depuis l&apos;app : calendrier semaine (18h-22h) et week-end
-                  (10h-14h). La demande part a l&apos;equipe ARTEMSI.
+                  Tu choisis un créneau dans le calendrier de l&apos;app (7 jours à l&apos;avance). La
+                  demande part à l&apos;équipe ARTEMSI avec tes notes éventuelles.
                 </p>
               </div>
             </li>
@@ -357,10 +385,11 @@ export default async function Home({ searchParams }: HomeProps) {
                 2
               </span>
               <div className="landing-audit-step-body">
-                <h3 className="landing-audit-step-title">Analyse</h3>
+                <h3 className="landing-audit-step-title">Échange</h3>
                 <p className="landing-audit-step-text">
-                  Passage en revue de ton CV, de tes lettres de motivation et de la cohérence
-                  avec ton objectif alternance.
+                  Pendant 1 h : ton CV, ta lettre, ton objectif (alternance ou stage) et tes
+                  candidatures en cours — avec des exemples concrets selon ton profil (tech, commerce,
+                  etc.).
                 </p>
               </div>
             </li>
@@ -369,18 +398,14 @@ export default async function Home({ searchParams }: HomeProps) {
                 3
               </span>
               <div className="landing-audit-step-body">
-                <h3 className="landing-audit-step-title">Feedback</h3>
+                <h3 className="landing-audit-step-title">Compte rendu</h3>
                 <p className="landing-audit-step-text">
-                  Conseils actionnables : formulation, structure, mots-clés et posture candidat.
-                  Tu repars avec une feuille de route claire.
+                  Formulation, structure, mots-clés et posture candidat : tu repars avec des actions
+                  prioritaires et un retour rédigé dans l&apos;app après le rendez-vous.
                 </p>
               </div>
             </li>
           </ol>
-          <p className="landing-audit-note">
-            La validation du créneau se fait par l&apos;équipe ; tu reçois une confirmation ou un
-            contre-projet par email, puis un rappel dans l&apos;app.
-          </p>
         </div>
       </section>
 
@@ -435,37 +460,56 @@ export default async function Home({ searchParams }: HomeProps) {
         <div className="landing-container">
           <div className="landing-section-head">
             <span className="landing-kicker">Avis candidats</span>
-            <p className="landing-social-proof-trust">Ils te racontent ce que ça change</p>
+            <p className="landing-social-proof-trust">BUT info, école de commerce — alternance et stage</p>
             <h2 className="landing-section-title">Des retours concrets sur l&apos;accompagnement</h2>
           </div>
           <ul className="landing-testimonials">
             <li className="landing-testimonial">
+              <div
+                className="landing-testimonial-stars"
+                aria-label="Note 5 sur 5"
+                title="5 sur 5"
+              >
+                <span aria-hidden="true">★★★★★</span>
+              </div>
               <blockquote className="landing-testimonial-quote">
-                « L&apos;année dernière, j&apos;étais perdu sur mes candidatures. Avec les conseils
-                d&apos;accompagnement, j&apos;ai clarifié mon CV et j&apos;ai enfin trouvé mon alternance. »
+                « En BUT informatique, je postulais au hasard. Les offres proposées collaient enfin
+                au dev / data, et après un RDV d&apos;accompagnement j&apos;ai structuré mon CV et mes
+                projets GitHub. Alternance signée chez un éditeur SaaS en un peu plus d&apos;un mois. »
               </blockquote>
               <p className="landing-testimonial-source">
                 <span className="landing-testimonial-avatar" aria-hidden="true">
-                  R
+                  T
                 </span>
                 <span>
-                  <strong className="landing-testimonial-name">Rexer R</strong>
-                  <span className="landing-testimonial-via"> · Alternance trouvée</span>
+                  <strong className="landing-testimonial-name">Thomas L.</strong>
+                  <span className="landing-testimonial-meta">BUT informatique</span>
+                  <span className="landing-testimonial-via">Alternance signée</span>
                 </span>
               </p>
             </li>
             <li className="landing-testimonial">
+              <div
+                className="landing-testimonial-stars"
+                aria-label="Note 5 sur 5"
+                title="5 sur 5"
+              >
+                <span aria-hidden="true">★★★★★</span>
+              </div>
               <blockquote className="landing-testimonial-quote">
-                « Les offres que je reçois sont plus pertinentes et j&apos;ai beaucoup plus
-                d&apos;entretiens qu&apos;avant grâce aux conseils. J&apos;ai vraiment senti la progression. »
+                « En école de commerce (M1), je cherchais un stage marketing. ARTEMSI m&apos;a évité
+                les annonces hors sujet : offres ciblées, suivi des relances et retours concrets sur
+                ma lettre. Stage de 6 mois en communication digitale, obtenu après plusieurs
+                entretiens. »
               </blockquote>
               <p className="landing-testimonial-source">
                 <span className="landing-testimonial-avatar" aria-hidden="true">
-                  L
+                  C
                 </span>
                 <span>
-                  <strong className="landing-testimonial-name">Linda M</strong>
-                  <span className="landing-testimonial-via"> · Plus d&apos;entretiens</span>
+                  <strong className="landing-testimonial-name">Camille D.</strong>
+                  <span className="landing-testimonial-meta">École de commerce</span>
+                  <span className="landing-testimonial-via">Stage trouvé</span>
                 </span>
               </p>
             </li>
@@ -483,51 +527,92 @@ export default async function Home({ searchParams }: HomeProps) {
           </div>
           <div className="landing-faq-list">
             <details className="landing-faq-item">
-              <summary>Pourquoi payer sans essai gratuit ?</summary>
+              <summary>Comment accéder à mon espace après le paiement ?</summary>
               <p>
-                L&apos;accès aux offres poussées, au matching et au suivi est actif dès la souscription :
-                pas de démo gratuite. Tu paies pour gagner du temps tout de suite. Tu peux résilier ton
-                abonnement à tout moment ; les modalités de facturation et de rétractation sont celles
-                indiquées au paiement (Stripe) et dans les conditions contractuelles.
+                Après la souscription (Stripe), tu reçois un <strong>email avec un lien</strong> sur
+                l&apos;adresse utilisée au paiement. Tu cliques, tu choisis ton mot de passe, puis tu
+                complètes ton profil (école, métier visé, région, type de contrat). Ensuite : offres,
+                suivi des candidatures et réservation d&apos;accompagnement. Pas reçu l&apos;email ? Vérifie
+                les spams ou utilise la page d&apos;inscription secours avec le <strong>même email</strong> que
+                sur Stripe.
+              </p>
+            </details>
+            <details className="landing-faq-item">
+              <summary>Je cherche une alternance ou un stage : ARTEMSI est fait pour moi ?</summary>
+              <p>
+                Oui. L&apos;outil s&apos;adapte à ton objectif dès l&apos;onboarding (alternance, stage, durée de
+                contrat). Les offres et le matching tiennent compte de ton niveau (BUT informatique,
+                école de commerce, licence, etc.) et de ta région — que tu vises la tech, le marketing,
+                la finance ou un autre secteur.
               </p>
             </details>
             <details className="landing-faq-item">
               <summary>Comment fonctionnent les offres ciblées ?</summary>
               <p>
-                ARTEMSI te propose des offres ciblées puis les classe selon ton profil : métier
-                cible, région, type de contrat, domaine d&apos;études et centres d&apos;intérêt.
-                Tu retrouves un lien clair pour postuler rapidement.
+                Tu renseignes ton profil une fois : métier cible, régions, domaine d&apos;études, type de
+                contrat. ARTEMSI te propose ensuite des offres filtrées et classées pour toi — environ{" "}
+                <strong>10 nouvelles offres pertinentes par jour</strong>, avec un lien direct pour
+                postuler. Tu gardes aussi un tableau de bord pour suivre ce que tu as envoyé, les
+                relances et les réponses.
+              </p>
+            </details>
+            <details className="landing-faq-item">
+              <summary>En quoi ARTEMSI est différent d&apos;un job board classique ?</summary>
+              <p>
+                Sur un site d&apos;annonces, tu cherches et tu tries seul des centaines d&apos;offres. Ici,
+                c&apos;est l&apos;inverse : les opportunités viennent à toi selon ton profil, avec un suivi
+                intégré et un accompagnement humain (relecture CV / lettre, entretiens). L&apos;objectif
+                n&apos;est pas de « voir plus d&apos;annonces », mais de <strong>postuler mieux et plus vite</strong>{" "}
+                sur ce qui compte vraiment pour toi.
               </p>
             </details>
             <details className="landing-faq-item">
               <summary>Comment se déroule l&apos;accompagnement personnalisé ?</summary>
               <p>
-                L&apos;accompagnement se réserve depuis l&apos;espace ARTEMSI : tu choisis un créneau,
-                l&apos;équipe confirme ou propose un autre horaire, puis un expert t&apos;aide à
-                améliorer ton CV et tes candidatures.
+                Depuis ton espace, tu réserves un créneau d&apos;<strong>1 h en direct</strong> avec un
+                expert ARTEMSI. Il relit ton CV et ta lettre, vérifie la cohérence avec ton objectif
+                (alternance ou stage) et te donne des actions concrètes pour tes prochaines
+                candidatures. L&apos;équipe confirme le créneau (ou te propose un autre) ; un compte rendu
+                est disponible dans l&apos;app après le rendez-vous. Ce n&apos;est pas une rédaction complète de
+                documents à ta place.
               </p>
             </details>
             <details className="landing-faq-item">
-              <summary>Combien de temps faut-il pour trouver une alternance ?</summary>
+              <summary>J&apos;ai payé mais je n&apos;arrive pas à me connecter</summary>
               <p>
-                Ça dépend fortement du profil, du secteur et du marché : il n&apos;y a pas de délai
-                universel. ARTEMSI aide surtout à gagner du temps sur le tri des offres, la
-                préparation du dossier et le suivi des candidatures.
+                La connexion se fait avec l&apos;<strong>email du paiement</strong> et le mot de passe que tu
+                as choisi via le lien reçu par email. Si tu n&apos;as pas encore créé de mot de passe, le
+                login affichera « identifiants incorrects » : ouvre le lien dans ton email, ou passe par
+                l&apos;inscription secours avec le même email que Stripe. Une fois connecté, pense à finir
+                l&apos;onboarding pour débloquer les offres.
               </p>
             </details>
             <details className="landing-faq-item">
-              <summary>Puis-je annuler mon abonnement à tout moment ?</summary>
+              <summary>Pourquoi pas d&apos;essai gratuit ?</summary>
               <p>
-                Oui, tu peux annuler ton abonnement à tout moment sans frais supplémentaires.
-                Ton accès aux services reste actif jusqu&apos;à la fin de ta période de facturation.
+                Dès la souscription, le matching, les offres et le suivi sont actifs — ce sont des
+                services réels, pas une démo limitée. Tu paies pour un gain de temps immédiat (tri,
+                dossier, candidatures). Tu peux résilier selon les{" "}
+                <Link href="/cgu">CGU</Link> ; la gestion de l&apos;abonnement se fait depuis ton profil
+                (portail Stripe sécurisé).
               </p>
             </details>
             <details className="landing-faq-item">
-              <summary>Quels domaines couvre ARTEMSI ?</summary>
+              <summary>Combien de temps pour décrocher une alternance ou un stage ?</summary>
               <p>
-                L&apos;objectif est de couvrir les principaux domaines d&apos;alternance : tech, marketing,
-                finance, RH, ingénierie, commerce, communication et fonctions support. La pertinence
-                dépend ensuite des offres disponibles et de ton profil.
+                Il n&apos;y a pas de délai garanti : tout dépend de ton secteur, de ton niveau et du
+                marché local. ARTEMSI accélère surtout les étapes où les candidats perdent le plus de
+                temps — trouver les bonnes offres, structurer le CV, suivre les candidatures et
+                préparer les entretiens. Plus ton profil est complet et plus tu postules régulièrement,
+                plus tu maximises tes chances.
+              </p>
+            </details>
+            <details className="landing-faq-item">
+              <summary>Puis-je annuler mon abonnement ?</summary>
+              <p>
+                Oui, à tout moment depuis ton espace candidat (section profil → gestion
+                d&apos;abonnement). Tu es redirigé vers le portail Stripe pour annuler ou mettre à jour ta
+                facturation. L&apos;accès reste actif jusqu&apos;à la fin de la période déjà payée.
               </p>
             </details>
           </div>

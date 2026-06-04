@@ -1412,6 +1412,13 @@ html:has(.landing-shell) {
   gap: 0.85rem;
 }
 
+.landing-testimonial-stars {
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: #f5c542;
+}
+
 .landing-testimonial-quote {
   margin: 0;
   font-size: 0.95rem;
@@ -1427,6 +1434,26 @@ html:has(.landing-shell) {
   gap: 0.55rem;
   font-size: 0.82rem;
   color: var(--muted);
+}
+
+.landing-testimonial-source > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.landing-testimonial-meta {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.landing-testimonial-via {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-2);
 }
 
 .landing-testimonial-avatar {
@@ -1446,11 +1473,6 @@ html:has(.landing-shell) {
 .landing-testimonial-name {
   font-weight: 700;
   color: var(--foreground);
-}
-
-.landing-testimonial-via {
-  font-weight: 500;
-  color: var(--muted);
 }
 
 .landing-offers-list {
@@ -1510,6 +1532,36 @@ html:has(.landing-shell) {
 .landing-audit-explainer {
   border-top: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(124, 92, 255, 0.06), transparent 42%);
+}
+
+.landing-audit-practical {
+  margin: 0 0 1.5rem;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid rgba(124, 92, 255, 0.22);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(165deg, rgba(124, 92, 255, 0.1), rgba(255, 255, 255, 0.04));
+}
+
+.landing-audit-practical-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.landing-audit-practical-list {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  display: grid;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--muted-strong);
+}
+
+.landing-audit-practical-list strong {
+  color: var(--foreground-soft);
+  font-weight: 600;
 }
 
 .landing-audit-timeline {
@@ -2979,6 +3031,13 @@ textarea:focus {
   border-color: var(--primary-2);
   box-shadow: 0 0 0 4px var(--ring);
   outline: none;
+}
+
+input:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+  background: var(--surface-soft-strong);
+  color: var(--muted-strong);
 }
 
 .subscribe-button-wrap {

@@ -25,8 +25,9 @@ const GROUPS: PricingGroup[] = [
   {
     title: "Profil & accompagnement",
     items: [
-      "Accompagnement personnalisé avec rendez-vous CV/candidatures",
-      "Conseils actionnables pour progresser plus vite",
+      "Rendez-vous d'1 h en direct (CV, lettre, entretiens)",
+      "Environ 10 offres ciblées ajoutées par jour",
+      "Confirmation équipe + compte rendu dans l'app",
     ],
   },
 ];

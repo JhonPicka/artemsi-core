@@ -45,6 +45,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   }
 
   const signupHref = email ? `/signup?email=${encodeURIComponent(email)}` : "/signup";
+  const loginHref = email ? `/login?email=${encodeURIComponent(email)}` : "/login";
 
   return (
     <AuthPageShell>
@@ -65,13 +66,17 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
               .
             </p>
             <p className="muted">
-              Etape suivante : cree ton compte (ou connecte-toi) avec{" "}
-              <strong>exactement le meme email</strong> que sur Stripe.
+              Tu vas recevoir un email avec un lien de confirmation (envoi automatique apres
+              paiement). Clique dessus : ton email sera pre-rempli et tu choisiras ton mot de passe.
             </p>
-            <Link href={signupHref} className="button-link">
-              Creer mon compte
+            <p className="muted" style={{ fontSize: "0.9rem" }}>
+              Pas recu sous 2 min ? Verifie les spams ou utilise le secours ci-dessous (meme adresse
+              Stripe).
+            </p>
+            <Link href={signupHref} className="button-link secondary-link">
+              Choisir mon mot de passe (sans email)
             </Link>
-            <Link href="/login" className="button-link secondary-link">
+            <Link href={loginHref} className="button-link secondary-link">
               J&apos;ai deja un compte
             </Link>
           </>

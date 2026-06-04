@@ -37,8 +37,9 @@ export default async function SubscribePage() {
           <>
             <p className="muted">
               L&apos;espace candidat est reserve aux abonnes. Souscris a{" "}
-              <strong>19,90&nbsp;EUR TTC / mois</strong> (paiement securise Stripe), puis cree ton
-              compte avec <strong>le meme email</strong> que lors du paiement.
+              <strong>19,90&nbsp;EUR TTC / mois</strong> (paiement securise Stripe). Apres paiement,
+              tu recevras un <strong>email avec un lien</strong> pour choisir ton mot de passe
+              (meme adresse que sur Stripe).
             </p>
 
             <SubscribeButton className="button-link">S&apos;abonner — 19,90&nbsp;EUR / mois</SubscribeButton>
@@ -54,8 +55,9 @@ export default async function SubscribePage() {
             ) : (
               <p className="muted">
                 Deja abonne ?{" "}
-                <Link href="/login">Connecte-toi</Link> ou{" "}
-                <Link href="/signup">cree ton compte</Link> avec l&apos;email utilise au paiement.
+                <Link href="/login">Connecte-toi</Link> (email + mot de passe). Pas encore de mot de
+                passe ? Ouvre le lien dans ton email ou{" "}
+                <Link href="/signup">choisis-le ici</Link>.
               </p>
             )}
 

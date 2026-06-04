@@ -18,22 +18,26 @@ function calendarDateYyyyMmDdSchema(message: string) {
     .refine((s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && isValidYyyyMmDdDate(s), { message });
 }
 
+const passwordFieldSchema = z
+  .string()
+  .min(8, "Le mot de passe doit faire au moins 8 caractères")
+  .regex(/[a-z]/, "Le mot de passe doit contenir une minuscule")
+  .regex(/[A-Z]/, "Le mot de passe doit contenir une majuscule")
+  .regex(/[0-9]/, "Le mot de passe doit contenir un chiffre");
+
+const legalConsentSchema = z
+  .string()
+  .optional()
+  .refine((v) => v === "on", {
+    message: "Tu dois accepter les CGU et la politique de confidentialité.",
+  });
+
 export const signupSchema = z
   .object({
     email: z.email("Email invalide"),
-    password: z
-      .string()
-      .min(8, "Le mot de passe doit faire au moins 8 caractères")
-      .regex(/[a-z]/, "Le mot de passe doit contenir une minuscule")
-      .regex(/[A-Z]/, "Le mot de passe doit contenir une majuscule")
-      .regex(/[0-9]/, "Le mot de passe doit contenir un chiffre"),
+    password: passwordFieldSchema,
     confirmPassword: z.string(),
-    acceptLegal: z
-      .string()
-      .optional()
-      .refine((v) => v === "on", {
-        message: "Tu dois accepter les CGU et la politique de confidentialité.",
-      }),
+    acceptLegal: legalConsentSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Les mots de passe ne correspondent pas",
@@ -44,6 +48,17 @@ export const loginSchema = z.object({
   email: z.email("Email invalide"),
   password: z.string().min(1, "Mot de passe requis"),
 });
+
+export const setPasswordSchema = z
+  .object({
+    password: passwordFieldSchema,
+    confirmPassword: z.string(),
+    acceptLegal: legalConsentSchema,
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
 
 export const onboardingSchema = z.object({
   fullName: z.string().min(2, "Nom complet requis"),

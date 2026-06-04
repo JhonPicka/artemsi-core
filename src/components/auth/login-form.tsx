@@ -4,35 +4,49 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { loginAction, type AuthFormState } from "@/app/(auth)/actions";
+import { SubscribeButton } from "@/components/billing/subscribe-button";
 
 const initialState: AuthFormState = {};
 
-export function LoginForm() {
+type Props = {
+  initialEmail?: string;
+  initialError?: string;
+};
+
+export function LoginForm({ initialEmail, initialError }: Props) {
   const [state, action, pending] = useActionState(loginAction, initialState);
+  const displayError = state.error ?? initialError;
 
   return (
     <form className="card form" action={action}>
       <span className="brand-chip">CONNEXION</span>
       <h1>Connexion</h1>
-      <p className="muted">Accede a ton espace candidat ARTEMSI.</p>
 
       <label htmlFor="email">Email</label>
-      <input id="email" name="email" type="email" required />
+      <input
+        id="email"
+        name="email"
+        type="email"
+        required
+        defaultValue={initialEmail ?? ""}
+        autoComplete="email"
+      />
 
       <label htmlFor="password">Mot de passe</label>
-      <input id="password" name="password" type="password" required />
+      <input id="password" name="password" type="password" required autoComplete="current-password" />
 
-      {state.error ? <p className="error">{state.error}</p> : null}
+      {displayError ? <p className="error">{displayError}</p> : null}
 
       <button type="submit" disabled={pending}>
         {pending ? "Connexion..." : "Se connecter"}
       </button>
 
-      <p className="muted auth-form-footer">
-        Pas encore inscrit ? <Link href="/signup">Creer un compte</Link>
-        {" · "}
-        <Link href="/subscribe">Abonnement</Link>
-      </p>
+      {state.showSubscribe ? (
+        <p className="muted auth-form-footer">
+          Pas encore de compte ?{" "}
+          <SubscribeButton className="inline-link-button">S&apos;abonner</SubscribeButton>
+        </p>
+      ) : null}
     </form>
   );
 }

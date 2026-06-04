@@ -18,18 +18,3 @@ export async function requireUser() {
   }
   return user;
 }
-
-export async function getProfileCompletionState(userId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("onboarding_completed")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return Boolean(data?.onboarding_completed);
-}

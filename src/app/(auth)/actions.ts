@@ -2,16 +2,37 @@
 
 import { redirect } from "next/navigation";
 
-import { getPostLoginPath, isAdminUser } from "@/lib/admin-auth";
-import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
+import {
+  markPasswordSetupComplete,
+  redirectAfterAuth,
+} from "@/lib/auth-session";
+import { sendAccountSetupEmail } from "@/lib/account-setup";
+import { getBillingStatusByEmail, userHasBillingAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
-import { loginSchema, signupSchema } from "@/lib/validation";
+import { loginSchema, setPasswordSchema, signupSchema } from "@/lib/validation";
 
 export type AuthFormState = {
   error?: string;
   success?: string;
+  /** Connexion : proposer l'abonnement si aucun compte actif pour cet email. */
+  showSubscribe?: boolean;
 };
 
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function isUserAlreadyRegisteredError(message: string) {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("already") ||
+    lower.includes("registered") ||
+    lower.includes("exists") ||
+    lower.includes("duplicate")
+  );
+}
+
+/** Inscription manuelle (secours) — parcours principal = email après paiement. */
 export async function signupAction(
   _prevState: AuthFormState,
   formData: FormData,
@@ -27,9 +48,89 @@ export async function signupAction(
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
   }
 
+  const email = normalizeEmail(parsed.data.email);
+
+  if (!(await userHasBillingAccess(email))) {
+    return {
+      error:
+        "Aucun abonnement actif pour cet email. Paie d'abord sur la landing, puis utilise le lien reçu par email.",
+    };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
+    email,
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    if (isUserAlreadyRegisteredError(error.message)) {
+      try {
+        await sendAccountSetupEmail(email);
+        return {
+          success:
+            "Un compte existe déjà pour cet email. Nous t'avons renvoyé un lien pour choisir ou réinitialiser ton mot de passe.",
+        };
+      } catch {
+        return {
+          error:
+            "Ce compte existe déjà. Connecte-toi ou ouvre le lien reçu par email après ton paiement.",
+        };
+      }
+    }
+    return { error: error.message };
+  }
+
+  if (data.session && data.user) {
+    await supabase.auth.updateUser({
+      data: { password_setup_pending: false, password_set: true },
+    });
+    const {
+      data: { user: refreshed },
+    } = await supabase.auth.getUser();
+    if (refreshed) {
+      return redirectAfterAuth(refreshed);
+    }
+  }
+
+  try {
+    await sendAccountSetupEmail(email);
+  } catch (cause) {
+    console.error("[signupAction] setup email", cause);
+  }
+
+  return {
+    success:
+      "Vérifie ta boîte mail : un lien te permet de confirmer ton email et activer ton compte.",
+  };
+}
+
+export async function finishSignupAction(
+  _prevState: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const parsed = setPasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+    acceptLegal: formData.get("acceptLegal")?.toString(),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.email) {
+    return {
+      error: "Session invalide. Ouvre le lien reçu par email après ton paiement.",
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({
     password: parsed.data.password,
   });
 
@@ -37,21 +138,17 @@ export async function signupAction(
     return { error: error.message };
   }
 
-  if (data.session && data.user?.email) {
-    if (isAdminUser(data.user)) {
-      redirect(getPostLoginPath(data.user));
-    }
-    await syncUserBilling(data.user);
-    if (!(await userHasBillingAccess(data.user.email))) {
-      redirect("/subscribe");
-    }
-    redirect("/onboarding");
+  await markPasswordSetupComplete(user);
+
+  const {
+    data: { user: refreshed },
+  } = await supabase.auth.getUser();
+
+  if (!refreshed) {
+    return { error: "Session perdue après enregistrement. Reconnecte-toi." };
   }
 
-  return {
-    success:
-      "Compte créé. Vérifie ta boîte mail si la confirmation email est activée.",
-  };
+  return redirectAfterAuth(refreshed);
 }
 
 export async function loginAction(
@@ -67,42 +164,60 @@ export async function loginAction(
     return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
   }
 
+  const email = normalizeEmail(parsed.data.email);
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email,
+    email,
     password: parsed.data.password,
   });
 
   if (error) {
-    return { error: "Email ou mot de passe incorrect" };
+    const billingStatus = await getBillingStatusByEmail(email);
+    if (billingStatus === "active") {
+      return {
+        error: "Identifiants incorrects. Ouvre le lien reçu par email.",
+      };
+    }
+    return {
+      error: "Identifiants incorrects.",
+      showSubscribe: true,
+    };
   }
 
   const user = data.user;
-  const userId = user?.id;
-  if (!userId || !user?.email) {
+  if (!user?.email) {
     return { error: "Impossible de recuperer la session utilisateur" };
   }
 
-  if (isAdminUser(user)) {
-    redirect(getPostLoginPath(user));
+  return redirectAfterAuth(user);
+}
+
+export async function resendSetupEmailAction(
+  _prevState: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const raw = formData.get("email");
+  if (typeof raw !== "string" || !raw.includes("@")) {
+    return { error: "Email invalide" };
   }
 
-  await syncUserBilling(user);
-  if (!(await userHasBillingAccess(user.email))) {
-    redirect("/subscribe");
+  const email = normalizeEmail(raw);
+
+  if (!(await userHasBillingAccess(email))) {
+    return {
+      error: "Aucun abonnement actif pour cet email. Souscris d'abord sur la landing.",
+    };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("onboarding_completed")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (!profile?.onboarding_completed) {
-    redirect("/onboarding");
+  try {
+    await sendAccountSetupEmail(email);
+    return {
+      success: "Si un compte existe pour cet email, un nouveau lien vient d'être envoyé.",
+    };
+  } catch (cause) {
+    console.error("[resendSetupEmailAction]", cause);
+    return { error: "Impossible d'envoyer l'email pour le moment. Réessaie plus tard." };
   }
-
-  redirect("/dashboard");
 }
 
 export async function logoutAction() {
