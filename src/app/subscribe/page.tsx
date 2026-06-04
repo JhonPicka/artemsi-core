@@ -7,6 +7,7 @@ import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
 import { userHasBillingAccess } from "@/lib/billing";
 import { isBillingEnforced } from "@/lib/stripe";
+import { logoutToLoginAction } from "@/app/(auth)/actions";
 import { getCurrentUser } from "@/lib/auth";
 import { legalRoutes } from "@/lib/legal-config";
 
@@ -50,6 +51,11 @@ export default async function SubscribePage() {
                   Deja paye ? Attends quelques secondes que le paiement soit confirme, puis
                   rafraichis cette page.
                 </p>
+                <form action={logoutToLoginAction}>
+                  <button type="submit" className="button-link secondary-link">
+                    Se connecter avec un autre compte
+                  </button>
+                </form>
                 <ManageSubscriptionButton className="button-link secondary-link" />
               </>
             ) : (

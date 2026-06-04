@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { LoginForm } from "@/components/auth/login-form";
-import { needsPasswordSetup, resolvePostAuthRedirect } from "@/lib/auth-session";
+import { resolveLoginPageRedirect } from "@/lib/auth-session";
 import { getCurrentUser } from "@/lib/auth";
+import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
 
 type Props = {
   searchParams: Promise<{ email?: string; error?: string }>;
@@ -11,11 +12,21 @@ type Props = {
 
 export default async function LoginPage({ searchParams }: Props) {
   const user = await getCurrentUser();
+
   if (user) {
-    if (needsPasswordSetup(user)) {
-      redirect("/signup/finish");
+    const target = await resolveLoginPageRedirect(user);
+    if (target) {
+      redirect(target);
     }
-    redirect(await resolvePostAuthRedirect(user));
+
+    if (user.email) {
+      await syncUserBilling(user);
+      if (!(await userHasBillingAccess(user.email))) {
+        redirect(
+          `/api/auth/reset-session?email=${encodeURIComponent(user.email)}`,
+        );
+      }
+    }
   }
 
   const { email, error } = await searchParams;

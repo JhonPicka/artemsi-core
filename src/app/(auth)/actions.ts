@@ -189,6 +189,15 @@ export async function loginAction(
     return { error: "Impossible de recuperer la session utilisateur" };
   }
 
+  if (!(await userHasBillingAccess(user.email))) {
+    await supabase.auth.signOut();
+    return {
+      error:
+        "Aucun abonnement actif pour cet email. Souscris d'abord, ou attends la confirmation Stripe puis reconnecte-toi.",
+      showSubscribe: true,
+    };
+  }
+
   return redirectAfterAuth(user);
 }
 
@@ -224,4 +233,10 @@ export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/");
+}
+
+export async function logoutToLoginAction() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
 }
