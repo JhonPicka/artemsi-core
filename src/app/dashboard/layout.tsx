@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-
 import { logoutAction } from "@/app/(auth)/actions";
+import { BrandMark } from "@/components/brand/brand-mark";
 import { DashboardBottomNav } from "@/components/dashboard/dashboard-bottom-nav";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { LegalFooterLinks } from "@/components/legal/legal-footer-links";
@@ -36,17 +34,7 @@ export default async function DashboardLayout({
   return (
     <main className="page-shell page-shell--wide">
       <header className="top-nav">
-        <Link href="/dashboard" className="brand-link" aria-label="Retour a l'accueil">
-          <Image
-            src="/artemsi-logo.png"
-            alt="Logo Artemsi"
-            width={32}
-            height={32}
-            className="brand-logo"
-            priority
-          />
-          <span className="brand-name">ARTEMSI</span>
-        </Link>
+        <BrandMark href="/dashboard" />
 
         <DashboardTabs />
 

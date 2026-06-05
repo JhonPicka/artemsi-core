@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import { BrandMark } from "@/components/brand/brand-mark";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { LandingPricingShowcase } from "@/components/landing/landing-pricing-showcase";
 import { LandingTestimonialsCarousel } from "@/components/landing/landing-testimonials-carousel";
@@ -27,17 +27,11 @@ export default async function Home({ searchParams }: HomeProps) {
 
       <header className="landing-nav">
         <div className="landing-container landing-nav-inner">
-          <Link href="/" className="brand-link" aria-label="Accueil ARTEMSI">
-            <Image
-              src="/artemsi-logo.png"
-              alt="Logo Artemsi"
-              width={40}
-              height={40}
-              className="brand-logo landing-brand-logo"
-              priority
-            />
-            <span className="brand-name">ARTEMSI</span>
-          </Link>
+          <BrandMark
+            href="/"
+            size={40}
+            logoClassName="brand-logo landing-brand-logo"
+          />
 
           <LandingTabs />
 

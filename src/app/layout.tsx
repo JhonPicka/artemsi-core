@@ -18,9 +18,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ARTEMSI — Trouve ton alternance et profite de l'été",
+  title: {
+    default: "ARTEMSI — Trouve ton alternance et profite de l'été",
+    template: "%s — ARTEMSI",
+  },
   description:
     "Trouve ton alternance plus vite : offres ciblées, suivi des candidatures et accompagnement personnalisé dans un seul espace.",
+  icons: {
+    icon: [{ url: "/artemsi-logo.png", type: "image/png" }],
+    apple: "/artemsi-logo.png",
+  },
   other: {
     google: "notranslate",
   },
