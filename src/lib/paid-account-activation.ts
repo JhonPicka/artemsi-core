@@ -1,4 +1,4 @@
-import type { EmailOtpType } from "@supabase/supabase-js";
+import type { EmailOtpType, SupabaseClient } from "@supabase/supabase-js";
 
 import { userNeedsPasswordSetup } from "@/lib/account-setup";
 import { userHasBillingAccess } from "@/lib/billing";
@@ -71,10 +71,11 @@ export type PaidAccountActivationResult =
 
 /**
  * Démarre une session pour un payeur sans passer par l'email Supabase.
- * Vérifie l'abonnement actif, puis valide un lien d'activation côté serveur.
+ * Passe un client lié à la réponse HTTP (route handler) pour persister les cookies.
  */
 export async function startPaidAccountSession(
   email: string,
+  supabaseClient?: SupabaseClient,
 ): Promise<PaidAccountActivationResult> {
   const normalized = normalizeEmail(email);
 
@@ -105,7 +106,7 @@ export async function startPaidAccountSession(
 
   await markPasswordSetupPending(user.id);
 
-  const supabase = await createClient();
+  const supabase = supabaseClient ?? (await createClient());
   const { error } = await supabase.auth.verifyOtp({
     type: verificationType as EmailOtpType,
     token_hash: tokenHash,

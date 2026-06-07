@@ -1,24 +1,15 @@
-"use client";
-
-import { useActionState } from "react";
-
-import { activatePaidAccountAction, type AuthFormState } from "@/app/(auth)/actions";
-
-const initialState: AuthFormState = {};
-
 type Props = {
   email: string;
+  returnTo: string;
 };
 
-export function ActivatePaidAccountButton({ email }: Props) {
-  const [state, action, pending] = useActionState(activatePaidAccountAction, initialState);
-
+export function ActivatePaidAccountButton({ email, returnTo }: Props) {
   return (
-    <form action={action} className="activate-paid-account-form">
+    <form action="/api/account/activate" method="post" className="activate-paid-account-form">
       <input type="hidden" name="email" value={email} />
-      {state.error ? <p className="error">{state.error}</p> : null}
-      <button type="submit" className="button-link" disabled={pending}>
-        {pending ? "Activation..." : "Créer mon compte sans email"}
+      <input type="hidden" name="return_to" value={returnTo} />
+      <button type="submit" className="button-link">
+        Créer mon compte sans email
       </button>
     </form>
   );

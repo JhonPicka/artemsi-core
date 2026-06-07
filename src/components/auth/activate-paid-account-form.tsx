@@ -1,22 +1,16 @@
-"use client";
-
 import Link from "next/link";
-import { useActionState } from "react";
 
-import { activatePaidAccountAction, type AuthFormState } from "@/app/(auth)/actions";
 import { getFreshLoginPath } from "@/lib/auth-paths";
-
-const initialState: AuthFormState = {};
 
 type Props = {
   initialEmail?: string;
+  initialError?: string;
 };
 
-export function ActivatePaidAccountForm({ initialEmail }: Props) {
-  const [state, action, pending] = useActionState(activatePaidAccountAction, initialState);
-
+export function ActivatePaidAccountForm({ initialEmail, initialError }: Props) {
   return (
-    <form className="card form" action={action}>
+    <form className="card form" action="/api/account/activate" method="post">
+      <input type="hidden" name="return_to" value="/activer-mon-compte" />
       <span className="brand-chip">ACTIVATION</span>
       <h1>Activer mon compte</h1>
 
@@ -36,12 +30,9 @@ export function ActivatePaidAccountForm({ initialEmail }: Props) {
         autoComplete="email"
       />
 
-      {state.error ? <p className="error">{state.error}</p> : null}
-      {state.success ? <p className="success">{state.success}</p> : null}
+      {initialError ? <p className="error">{initialError}</p> : null}
 
-      <button type="submit" disabled={pending}>
-        {pending ? "Activation..." : "Créer mon compte sans email"}
-      </button>
+      <button type="submit">Créer mon compte sans email</button>
 
       <p className="muted auth-form-footer" style={{ fontSize: "0.9rem" }}>
         Tu préfères recevoir un email ? Depuis la page de confirmation de paiement, utilise

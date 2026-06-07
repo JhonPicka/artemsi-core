@@ -6,7 +6,7 @@ import { needsPasswordSetup, resolvePostAuthRedirect } from "@/lib/auth-session"
 import { getCurrentUser } from "@/lib/auth";
 
 type Props = {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ email?: string; error?: string }>;
 };
 
 export default async function ActivatePaidAccountPage({ searchParams }: Props) {
@@ -19,12 +19,13 @@ export default async function ActivatePaidAccountPage({ searchParams }: Props) {
     redirect(await resolvePostAuthRedirect(user));
   }
 
-  const { email } = await searchParams;
+  const { email, error } = await searchParams;
   const initialEmail = typeof email === "string" ? email : undefined;
+  const initialError = typeof error === "string" ? decodeURIComponent(error) : undefined;
 
   return (
     <AuthPageShell>
-      <ActivatePaidAccountForm initialEmail={initialEmail} />
+      <ActivatePaidAccountForm initialEmail={initialEmail} initialError={initialError} />
     </AuthPageShell>
   );
 }

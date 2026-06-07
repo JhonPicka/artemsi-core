@@ -8,11 +8,13 @@ import { emailFromCheckoutSession, finalizePaidCheckoutSession } from "@/lib/bil
 import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
 
 type Props = {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string; error?: string }>;
 };
 
 export default async function CheckoutSuccessPage({ searchParams }: Props) {
-  const { session_id: sessionId } = await searchParams;
+  const { session_id: sessionId, error: activateError } = await searchParams;
+  const activationError =
+    typeof activateError === "string" ? decodeURIComponent(activateError) : null;
 
   let email: string | null = null;
   let needsPasswordSetup: boolean | null = null;
@@ -84,10 +86,14 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
                   Pas reçu sous 2&nbsp;min ? Vérifie tes spams, puis renvoie l&apos;email ou
                   crée ton compte directement.
                 </p>
-                {email ? (
+                {activationError ? <p className="error">{activationError}</p> : null}
+                {email && sessionId ? (
                   <div className="checkout-success-actions">
                     <ResendEmailButton email={email} />
-                    <ActivatePaidAccountButton email={email} />
+                    <ActivatePaidAccountButton
+                      email={email}
+                      returnTo={`/checkout/success?session_id=${encodeURIComponent(sessionId)}`}
+                    />
                   </div>
                 ) : null}
                 {email ? (

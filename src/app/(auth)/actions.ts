@@ -42,7 +42,8 @@ export async function finishSignupAction(
 
   if (!user?.email) {
     return {
-      error: "Session invalide. Ouvre le lien dans ton email après ton paiement.",
+      error:
+        "Session expirée. Retourne sur « Activer mon compte » et relance la création avant de choisir ton mot de passe.",
     };
   }
 
