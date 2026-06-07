@@ -13,7 +13,8 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const { session_id: sessionId } = await searchParams;
 
   let email: string | null = null;
-  let isNewAccount: boolean | null = null;
+  let needsPasswordSetup: boolean | null = null;
+  let setupEmailSent = false;
   let verified = false;
   let error: string | null = null;
 
@@ -36,7 +37,8 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
           lastEventId: `success:${session.id}`,
         });
         email = result.email ?? email;
-        isNewAccount = result.isNewAccount ?? null;
+        needsPasswordSetup = result.needsPasswordSetup ?? null;
+        setupEmailSent = result.setupEmailSent ?? false;
         verified = true;
       }
     } catch (cause) {
@@ -59,12 +61,21 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
               <strong>{email ?? "ton adresse email"}</strong>.
             </p>
 
-            {isNewAccount ? (
+            {needsPasswordSetup ? (
               <>
                 <p className="muted">
-                  Un <strong>email avec un lien</strong> vient d&apos;être envoyé à cette
-                  adresse. Clique dessus pour choisir ton mot de passe, puis complète ton
-                  profil pour débloquer les offres.
+                  {setupEmailSent ? (
+                    <>
+                      Un <strong>email avec un lien</strong> vient d&apos;être envoyé à cette
+                      adresse. Clique dessus pour choisir ton mot de passe, puis complète ton
+                      profil pour débloquer les offres.
+                    </>
+                  ) : (
+                    <>
+                      Ton paiement est actif, mais l&apos;email d&apos;activation n&apos;a pas pu
+                      partir automatiquement. Utilise le bouton ci-dessous pour recevoir le lien.
+                    </>
+                  )}
                 </p>
                 <p className="muted" style={{ fontSize: "0.9rem" }}>
                   Pas reçu sous 2&nbsp;min ? Vérifie tes spams, puis utilise le bouton

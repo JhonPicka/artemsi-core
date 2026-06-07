@@ -37,7 +37,12 @@ export async function finalizePaidCheckoutSession(
 ) {
   const email = emailFromCheckoutSession(session);
   if (!email) {
-    return { email: null as string | null, activated: false, setupEmailSent: false };
+    return {
+      email: null as string | null,
+      activated: false,
+      setupEmailSent: false,
+      needsPasswordSetup: false,
+    };
   }
 
   const admin = createAdminClient();
@@ -57,7 +62,7 @@ export async function finalizePaidCheckoutSession(
     !wasAlreadyActive && (!alreadyProcessed || options.forceSetupEmail === true);
 
   if (!shouldSendSetupEmail) {
-    return { email, activated: true, setupEmailSent: false, isNewAccount: false };
+    return { email, activated: true, setupEmailSent: false, needsPasswordSetup: false };
   }
 
   const { sendAccountSetupEmail } = await import("@/lib/account-setup");
@@ -66,12 +71,17 @@ export async function finalizePaidCheckoutSession(
     return {
       email,
       activated: true,
-      setupEmailSent: result.isNewAccount,
-      isNewAccount: result.isNewAccount,
+      setupEmailSent: result.emailSent,
+      needsPasswordSetup: result.needsPasswordSetup,
     };
   } catch (error) {
     console.error("[billing] setup email failed", error);
-    return { email, activated: true, setupEmailSent: false, isNewAccount: false };
+    return {
+      email,
+      activated: true,
+      setupEmailSent: false,
+      needsPasswordSetup: true,
+    };
   }
 }
 

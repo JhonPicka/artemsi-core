@@ -129,7 +129,7 @@ export async function resendSetupEmailAction(
 
   try {
     const result = await resendActivationEmail(email);
-    if (!result.isNewAccount) {
+    if (!result.needsPasswordSetup) {
       return {
         success:
           "Un compte existe déjà pour cet email. Connecte-toi sur /login avec ton mot de passe.",
