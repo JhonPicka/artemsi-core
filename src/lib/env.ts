@@ -19,10 +19,8 @@ if (!required.success) {
 }
 
 const optionalEnvSchema = z.object({
-  RESEND_API_KEY: z.string().optional(),
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_USER_ID: z.uuid().optional(),
-  MAIL_FROM: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
@@ -33,10 +31,8 @@ const optionalEnvSchema = z.object({
 });
 
 const optional = optionalEnvSchema.parse({
-  RESEND_API_KEY: process.env.RESEND_API_KEY,
   ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   ADMIN_USER_ID: process.env.ADMIN_USER_ID,
-  MAIL_FROM: process.env.MAIL_FROM,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,

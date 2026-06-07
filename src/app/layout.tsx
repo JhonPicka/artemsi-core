@@ -25,8 +25,12 @@ export const metadata: Metadata = {
   description:
     "Trouve ton alternance plus vite : offres ciblées, suivi des candidatures et accompagnement personnalisé dans un seul espace.",
   icons: {
-    icon: [{ url: "/artemsi-logo.png", type: "image/png" }],
+    icon: [
+      { url: "/icon.png", type: "image/jpeg" },
+      { url: "/artemsi-logo.png", type: "image/jpeg" },
+    ],
     apple: "/artemsi-logo.png",
+    shortcut: "/artemsi-logo.png",
   },
   other: {
     google: "notranslate",

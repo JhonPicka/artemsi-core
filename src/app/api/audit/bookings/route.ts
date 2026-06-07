@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getAdminAuditsPath, getAdminUserId } from "@/lib/admin-auth";
 import { isSlotAllowed } from "@/lib/audit-slots";
 import { hasApiBillingAccess } from "@/lib/billing";
-import { getAdminAuditsPath } from "@/lib/admin-auth";
-import { getAdminEmail, getAppUrl, sendEmail } from "@/lib/email";
+import { getAppUrl } from "@/lib/email";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const bookingSchema = z.object({
@@ -74,37 +75,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const adminEmail = getAdminEmail();
-  if (adminEmail) {
-    const baseUrl = getAppUrl();
-    const dashboardUrl = `${baseUrl}${getAdminAuditsPath()}`;
-    const confirmUrl = `${baseUrl}/admin/audit/${booking.id}?token=${booking.admin_token}&action=confirm`;
-    const declineUrl = `${baseUrl}/admin/audit/${booking.id}?token=${booking.admin_token}&action=decline`;
+  const adminUserId = getAdminUserId();
+  if (adminUserId) {
     const slotLabel = new Date(booking.slot_start).toLocaleString("fr-FR", {
       timeZone: "Europe/Paris",
       dateStyle: "full",
       timeStyle: "short",
     });
-
-    await sendEmail({
-      to: adminEmail,
-      subject: `Demande d'audit - ${slotLabel}`,
-      html: `
-        <p>Nouvelle demande de reservation d'audit :</p>
-        <ul>
-          <li><strong>Utilisateur :</strong> ${user.email}</li>
-          <li><strong>Creneau :</strong> ${slotLabel}</li>
-          <li><strong>Notes :</strong> ${parsed.data.notes ?? "-"}</li>
-        </ul>
-        <p>
-          <a href="${dashboardUrl}"><strong>Traiter dans le tableau de bord</strong></a>
-          (connecte-toi avec ton compte admin)
-        </p>
-        <p style="margin-top:12px;font-size:14px;color:#666;">
-          Liens directs : <a href="${confirmUrl}">Confirmer</a> &nbsp;|&nbsp;
-          <a href="${declineUrl}">Refuser</a>
-        </p>
-      `,
+    const admin = createAdminClient();
+    await admin.from("notifications").insert({
+      user_id: adminUserId,
+      type: "audit_request",
+      title: "Nouvelle demande d'audit",
+      message: `${user.email ?? "Utilisateur"} — ${slotLabel}${parsed.data.notes ? ` — ${parsed.data.notes}` : ""}`,
+      link: `${getAppUrl()}${getAdminAuditsPath()}`,
     });
   }
 
