@@ -2,8 +2,9 @@
 
 import { useActionState } from "react";
 
+import Link from "next/link";
+
 import { loginAction, type AuthFormState } from "@/app/(auth)/actions";
-import { getFreshLoginPath } from "@/lib/auth-paths";
 
 const initialState: AuthFormState = {};
 
@@ -47,19 +48,14 @@ export function LoginForm({ initialEmail, initialError }: Props) {
       </button>
 
       <p className="muted auth-form-footer">
-        <a href={getFreshLoginPath()} className="inline-link">
-          Changer d&apos;email / effacer la session
-        </a>
-        <br />
         Tu viens de payer ?{" "}
-        <a href="/activer-mon-compte" className="inline-link">
+        <Link href="/activer-mon-compte" className="inline-link">
           Activer mon compte
-        </a>
+        </Link>
         <br />
-        Pas encore abonné ?{" "}
-        <a href="/#tarif" className="inline-link">
-          Voir les offres
-        </a>
+        <Link href="/subscribe" className="inline-link">
+          S&apos;abonner à 19,90&nbsp;€
+        </Link>
       </p>
     </form>
   );
