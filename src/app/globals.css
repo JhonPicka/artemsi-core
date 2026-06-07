@@ -3198,6 +3198,24 @@ input:disabled {
   text-underline-offset: 2px;
 }
 
+.checkout-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+.checkout-success-actions form,
+.checkout-success-actions .activate-paid-account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.checkout-success-actions .button-link {
+  width: 100%;
+}
+
 .inline-link-button {
   background: none;
   border: none;

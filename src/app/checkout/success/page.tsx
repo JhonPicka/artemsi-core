@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
+import { ActivatePaidAccountButton } from "@/components/billing/activate-paid-account-button";
 import { ResendEmailButton } from "@/components/billing/resend-email-button";
 import { emailFromCheckoutSession, finalizePaidCheckoutSession } from "@/lib/billing";
 import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
@@ -78,19 +79,25 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
                   )}
                 </p>
                 <p className="muted" style={{ fontSize: "0.9rem" }}>
-                  Pas reçu sous 2&nbsp;min ? Vérifie tes spams, puis utilise le bouton
-                  ci-dessous.
+                  Pas reçu sous 2&nbsp;min ? Vérifie tes spams, puis renvoie l&apos;email ou
+                  crée ton compte directement.
                 </p>
-                {email ? <ResendEmailButton email={email} /> : null}
+                {email ? (
+                  <div className="checkout-success-actions">
+                    <ResendEmailButton email={email} />
+                    <ActivatePaidAccountButton email={email} />
+                  </div>
+                ) : null}
                 {email ? (
                   <p className="muted auth-form-footer" style={{ fontSize: "0.9rem" }}>
-                    L&apos;email ne marche pas ?{" "}
+                    L&apos;email ne marche toujours pas ? Tu peux aussi passer par{" "}
                     <Link
                       href={`/activer-mon-compte?email=${encodeURIComponent(email)}`}
                       className="inline-link"
                     >
-                      Créer mon compte sans email
+                      la page d&apos;activation
                     </Link>
+                    .
                   </p>
                 ) : null}
               </>
