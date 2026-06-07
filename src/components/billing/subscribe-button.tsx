@@ -7,6 +7,8 @@ type Props = {
   className?: string;
   email?: string;
   disabled?: boolean;
+  /** Affiche un champ email obligatoire avant redirection Stripe. */
+  collectEmail?: boolean;
 };
 
 async function parseCheckoutResponse(response: Response) {
@@ -27,18 +29,33 @@ async function parseCheckoutResponse(response: Response) {
   }
 }
 
-export function SubscribeButton({ children, className, email, disabled }: Props) {
+export function SubscribeButton({
+  children,
+  className,
+  email: emailProp,
+  disabled,
+  collectEmail = true,
+}: Props) {
+  const [emailInput, setEmailInput] = useState(emailProp ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const showEmailField = collectEmail && !emailProp;
+
   async function handleClick() {
+    const email = (emailProp ?? emailInput).trim().toLowerCase();
+    if (!email.includes("@")) {
+      setError("Entre ton email (celui de ton futur compte ARTEMSI).");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(email ? { email } : {}),
+        body: JSON.stringify({ email }),
       });
       const payload = await parseCheckoutResponse(response);
       if (!response.ok || !payload.url) {
@@ -53,6 +70,21 @@ export function SubscribeButton({ children, className, email, disabled }: Props)
 
   return (
     <span className="subscribe-button-wrap">
+      {showEmailField ? (
+        <label className="subscribe-checkout-email-label">
+          <span className="subscribe-checkout-email-caption">Email pour ton compte</span>
+          <input
+            type="email"
+            name="checkout-email"
+            className="subscribe-checkout-email-input"
+            value={emailInput}
+            onChange={(event) => setEmailInput(event.target.value)}
+            placeholder="ex. prenom@gmail.com"
+            autoComplete="email"
+            required
+          />
+        </label>
+      ) : null}
       <button
         type="button"
         className={className}

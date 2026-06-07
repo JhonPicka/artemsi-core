@@ -22,12 +22,58 @@ function pickStripeId(value: string | { id: string } | null | undefined) {
 }
 
 export function emailFromCheckoutSession(session: Stripe.Checkout.Session) {
-  const raw = session.customer_details?.email ?? session.customer_email ?? null;
+  const metaEmail = session.metadata?.checkout_email;
+  const raw =
+    session.customer_details?.email ??
+    session.customer_email ??
+    (typeof metaEmail === "string" ? metaEmail : null);
   return raw ? normalizeEmail(raw) : null;
 }
 
+/** Active l'abonnement puis envoie l'email d'activation si besoin (page succès ou webhook). */
+export async function finalizePaidCheckoutSession(
+  session: Stripe.Checkout.Session,
+  options: { lastEventId: string; forceSetupEmail?: boolean },
+) {
+  const email = emailFromCheckoutSession(session);
+  if (!email) {
+    return { email: null as string | null, activated: false, setupEmailSent: false };
+  }
+
+  const admin = createAdminClient();
+  const { data: existing } = await admin
+    .from("billing_customers")
+    .select("subscription_status, last_event_id")
+    .eq("email", email)
+    .maybeSingle();
+
+  const alreadyProcessed = existing?.last_event_id === options.lastEventId;
+  const wasAlreadyActive = existing?.subscription_status === "active";
+
+  await activateBillingFromCheckoutSession(session, options.lastEventId);
+
+  const shouldSendSetupEmail =
+    options.forceSetupEmail || (!alreadyProcessed && !wasAlreadyActive);
+
+  if (!shouldSendSetupEmail) {
+    return { email, activated: true, setupEmailSent: false };
+  }
+
+  const { sendAccountSetupEmail } = await import("@/lib/account-setup");
+  try {
+    await sendAccountSetupEmail(email);
+    return { email, activated: true, setupEmailSent: true };
+  } catch (error) {
+    console.error("[billing] setup email failed", error);
+    return { email, activated: true, setupEmailSent: false };
+  }
+}
+
 /** Active l'abonnement en base (webhook ou page succes checkout). */
-export async function activateBillingFromCheckoutSession(session: Stripe.Checkout.Session) {
+export async function activateBillingFromCheckoutSession(
+  session: Stripe.Checkout.Session,
+  lastEventId?: string,
+) {
   const email = emailFromCheckoutSession(session);
   if (!email) return false;
 
@@ -39,7 +85,7 @@ export async function activateBillingFromCheckoutSession(session: Stripe.Checkou
     stripe_subscription_id: pickStripeId(session.subscription),
     stripe_checkout_session_id: session.id,
     last_event_type: "checkout.session.completed",
-    last_event_id: session.id,
+    last_event_id: lastEventId ?? session.id,
     updated_at: new Date().toISOString(),
   };
 

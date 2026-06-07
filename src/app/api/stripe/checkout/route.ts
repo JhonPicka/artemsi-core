@@ -66,6 +66,13 @@ export async function POST(request: Request) {
       ? body.email.trim().toLowerCase()
       : undefined;
 
+  if (!email) {
+    return NextResponse.json(
+      { error: "Email requis avant le paiement (meme adresse que ton futur compte)." },
+      { status: 400 },
+    );
+  }
+
   const baseUrl = getAppBaseUrl();
   const stripe = getStripeClient();
 
@@ -76,14 +83,16 @@ export async function POST(request: Request) {
       line_items: [{ price: env.STRIPE_PRICE_ID!, quantity: 1 }],
       success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/checkout/cancel`,
-      ...(email ? { customer_email: email } : {}),
+      customer_email: email,
       subscription_data: {
         metadata: {
           product: "artemsi_alternance_monthly",
+          checkout_email: email,
         },
       },
       metadata: {
         product: "artemsi_alternance_monthly",
+        checkout_email: email,
       },
     });
 

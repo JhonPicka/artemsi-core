@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
-import { activateBillingFromCheckoutSession } from "@/lib/billing";
+import { emailFromCheckoutSession, finalizePaidCheckoutSession } from "@/lib/billing";
 import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
 
 type Props = {
@@ -13,6 +13,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
 
   let email: string | null = null;
   let verified = false;
+  let setupEmailSent = false;
   let error: string | null = null;
 
   if (!isStripeConfigured()) {
@@ -29,11 +30,14 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
       if (!paid) {
         error = "Le paiement n'est pas encore confirmé. Réessaie dans quelques instants.";
       } else {
-        await activateBillingFromCheckoutSession(session);
+        email = emailFromCheckoutSession(session);
+        const result = await finalizePaidCheckoutSession(session, {
+          lastEventId: `success:${session.id}`,
+          forceSetupEmail: true,
+        });
+        email = result.email ?? email;
+        setupEmailSent = result.setupEmailSent;
         verified = true;
-        const details = session.customer_details;
-        email =
-          (details?.email ?? session.customer_email ?? null)?.toLowerCase() ?? null;
       }
     } catch (cause) {
       console.error("[checkout/success]", cause);
@@ -66,12 +70,21 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
               .
             </p>
             <p className="muted">
-              Tu vas recevoir un <strong>email avec un lien</strong> sur l&apos;adresse utilisée au
-              paiement. Clique dessus pour choisir ton mot de passe, puis complète ton profil pour
-              débloquer les offres.
+              {setupEmailSent ? (
+                <>
+                  Un <strong>email avec un lien</strong> vient d&apos;être envoyé à cette adresse.
+                  Clique dessus pour choisir ton mot de passe, puis complète ton profil pour
+                  débloquer les offres.
+                </>
+              ) : (
+                <>
+                  Utilise le bouton ci-dessous pour choisir ton mot de passe avec{" "}
+                  <strong>exactement le même email</strong>.
+                </>
+              )}
             </p>
             <p className="muted" style={{ fontSize: "0.9rem" }}>
-              Pas reçu sous 2&nbsp;min ? Vérifie tes spams.
+              Pas reçu sous 2&nbsp;min ? Vérifie tes spams ou utilise le bouton secours.
             </p>
             <Link href={signupHref} className="button-link secondary-link">
               Créer mon mot de passe (même email qu&apos;au paiement)

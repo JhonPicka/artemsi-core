@@ -3150,6 +3150,29 @@ input:disabled {
   gap: 0.35rem;
 }
 
+.subscribe-checkout-email-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.15rem;
+}
+
+.subscribe-checkout-email-caption {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.subscribe-checkout-email-input {
+  width: 100%;
+  min-width: 14rem;
+  max-width: 22rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
 .subscribe-button-wrap > .button-link {
   width: 100%;
 }

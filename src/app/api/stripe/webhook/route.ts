@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
-import { sendAccountSetupEmail } from "@/lib/account-setup";
-import { syncBillingEmailToProfiles } from "@/lib/billing";
+import {
+  emailFromCheckoutSession,
+  finalizePaidCheckoutSession,
+  syncBillingEmailToProfiles,
+} from "@/lib/billing";
 import { env } from "@/lib/env";
 import { getStripeClient } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -56,42 +59,11 @@ export async function POST(request: Request) {
   try {
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object as unknown as Record<string, unknown>;
-        const customerDetails = session.customer_details as { email?: string | null } | undefined;
-        const rawEmail =
-          (customerDetails?.email as string | undefined) ??
-          (session.customer_email as string | null | undefined) ??
-          null;
-        const email = rawEmail ? rawEmail.toLowerCase() : null;
+        const session = event.data.object as Stripe.Checkout.Session;
+        const email = emailFromCheckoutSession(session);
         if (!email) break;
 
-        const { data: existing, error: existingError } = await admin
-          .from("billing_customers")
-          .select("subscription_status, last_event_id")
-          .eq("email", email)
-          .maybeSingle();
-        if (existingError) throw new Error(existingError.message);
-
-        const values = {
-          email,
-          subscription_status: "active",
-          stripe_customer_id: pickId(session.customer),
-          stripe_subscription_id: pickId(session.subscription),
-          stripe_checkout_session_id: session.id as string,
-          last_event_type: event.type,
-          last_event_id: event.id,
-          updated_at: new Date().toISOString(),
-        };
-
-        const { error } = await admin.from("billing_customers").upsert(values, { onConflict: "email" });
-        if (error) throw new Error(error.message);
-        await afterBillingUpsert(email);
-
-        const alreadyProcessedThisEvent = existing?.last_event_id === event.id;
-        const wasAlreadyActive = existing?.subscription_status === "active";
-        if (!alreadyProcessedThisEvent && !wasAlreadyActive) {
-          await sendAccountSetupEmail(email);
-        }
+        await finalizePaidCheckoutSession(session, { lastEventId: event.id });
         break;
       }
 
