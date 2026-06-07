@@ -16,9 +16,8 @@ function normalizeEmail(email: string) {
 }
 
 function finishRedirectUrl() {
-  const next = encodeURIComponent("/signup/finish");
   const appUrl = env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  return `${appUrl}/auth/callback?next=${next}`;
+  return `${appUrl}/auth/callback`;
 }
 
 function createAnonClient() {
