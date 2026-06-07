@@ -24,7 +24,7 @@ function createAnonClient() {
   return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
-function userNeedsPasswordSetup(user: User): boolean {
+export function userNeedsPasswordSetup(user: User): boolean {
   if (user.user_metadata?.password_setup_pending === true) return true;
   if (user.user_metadata?.password_set === true) return false;
   // Invited account: no sign-in yet → password not chosen.

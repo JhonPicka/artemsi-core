@@ -40,6 +40,11 @@ export function LoginForm({ initialEmail, initialError }: Props) {
       </button>
 
       <p className="muted auth-form-footer">
+        Tu viens de payer ?{" "}
+        <a href="/activer-mon-compte" className="inline-link">
+          Activer mon compte
+        </a>
+        <br />
         Pas encore abonné ?{" "}
         <a href="/#tarif" className="inline-link">
           Voir les offres

@@ -82,6 +82,17 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
                   ci-dessous.
                 </p>
                 {email ? <ResendEmailButton email={email} /> : null}
+                {email ? (
+                  <p className="muted auth-form-footer" style={{ fontSize: "0.9rem" }}>
+                    L&apos;email ne marche pas ?{" "}
+                    <Link
+                      href={`/activer-mon-compte?email=${encodeURIComponent(email)}`}
+                      className="inline-link"
+                    >
+                      Créer mon compte sans email
+                    </Link>
+                  </p>
+                ) : null}
               </>
             ) : (
               <>

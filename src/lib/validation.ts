@@ -37,6 +37,10 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Mot de passe requis"),
 });
 
+export const activatePaidAccountSchema = z.object({
+  email: z.email("Email invalide"),
+});
+
 export const setPasswordSchema = z
   .object({
     password: passwordFieldSchema,
