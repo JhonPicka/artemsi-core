@@ -10,8 +10,8 @@ import { updateSession } from "@/lib/supabase/proxy";
 
 const PROTECTED_ROUTES = ["/dashboard", "/onboarding", "/admin"];
 
-/** Routes auth exactes (pas /signup/finish). */
-const AUTH_ENTRY_ROUTES = ["/login", "/signup"];
+/** Routes auth exactes. */
+const AUTH_ENTRY_ROUTES = ["/login"];
 
 function isRouteMatch(pathname: string, routes: string[]) {
   return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));

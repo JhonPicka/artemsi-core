@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
+import { ResendEmailButton } from "@/components/billing/resend-email-button";
 import { emailFromCheckoutSession, finalizePaidCheckoutSession } from "@/lib/billing";
 import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
 
@@ -12,8 +13,8 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const { session_id: sessionId } = await searchParams;
 
   let email: string | null = null;
+  let isNewAccount: boolean | null = null;
   let verified = false;
-  let setupEmailSent = false;
   let error: string | null = null;
 
   if (!isStripeConfigured()) {
@@ -33,23 +34,17 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         email = emailFromCheckoutSession(session);
         const result = await finalizePaidCheckoutSession(session, {
           lastEventId: `success:${session.id}`,
-          forceSetupEmail: true,
         });
         email = result.email ?? email;
-        setupEmailSent = result.setupEmailSent;
+        isNewAccount = result.isNewAccount ?? null;
         verified = true;
       }
     } catch (cause) {
       console.error("[checkout/success]", cause);
       error =
-        cause instanceof Error
-          ? cause.message
-          : "Impossible de vérifier le paiement.";
+        cause instanceof Error ? cause.message : "Impossible de vérifier le paiement.";
     }
   }
-
-  const signupHref = email ? `/signup?email=${encodeURIComponent(email)}` : "/signup";
-  const loginHref = email ? `/login?email=${encodeURIComponent(email)}` : "/login";
 
   return (
     <AuthPageShell>
@@ -60,38 +55,34 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         {verified ? (
           <>
             <p className="muted">
-              Merci ! Ton abonnement ARTEMSI est actif
-              {email ? (
-                <>
-                  {" "}
-                  pour <strong>{email}</strong>
-                </>
-              ) : null}
-              .
+              Merci ! Ton abonnement ARTEMSI est actif pour{" "}
+              <strong>{email ?? "ton adresse email"}</strong>.
             </p>
-            <p className="muted">
-              {setupEmailSent ? (
-                <>
-                  Un <strong>email avec un lien</strong> vient d&apos;être envoyé à cette adresse.
-                  Clique dessus pour choisir ton mot de passe, puis complète ton profil pour
-                  débloquer les offres.
-                </>
-              ) : (
-                <>
-                  Utilise le bouton ci-dessous pour choisir ton mot de passe avec{" "}
-                  <strong>exactement le même email</strong>.
-                </>
-              )}
-            </p>
-            <p className="muted" style={{ fontSize: "0.9rem" }}>
-              Pas reçu sous 2&nbsp;min ? Vérifie tes spams ou utilise le bouton secours.
-            </p>
-            <Link href={signupHref} className="button-link secondary-link">
-              Créer mon mot de passe (même email qu&apos;au paiement)
-            </Link>
-            <Link href={loginHref} className="button-link secondary-link">
-              J&apos;ai déjà un compte
-            </Link>
+
+            {isNewAccount ? (
+              <>
+                <p className="muted">
+                  Un <strong>email avec un lien</strong> vient d&apos;être envoyé à cette
+                  adresse. Clique dessus pour choisir ton mot de passe, puis complète ton
+                  profil pour débloquer les offres.
+                </p>
+                <p className="muted" style={{ fontSize: "0.9rem" }}>
+                  Pas reçu sous 2&nbsp;min ? Vérifie tes spams, puis utilise le bouton
+                  ci-dessous.
+                </p>
+                {email ? <ResendEmailButton email={email} /> : null}
+              </>
+            ) : (
+              <>
+                <p className="muted">
+                  Tu as déjà un compte ARTEMSI. Connecte-toi directement avec ton mot de
+                  passe habituel.
+                </p>
+                <Link href="/login" className="button-link">
+                  Se connecter
+                </Link>
+              </>
+            )}
           </>
         ) : (
           <>

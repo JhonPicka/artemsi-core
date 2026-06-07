@@ -52,20 +52,26 @@ export async function finalizePaidCheckoutSession(
 
   await activateBillingFromCheckoutSession(session, options.lastEventId);
 
+  // Ne pas envoyer d'email si l'abonnement était déjà actif (re-abonnement) ou déjà traité
   const shouldSendSetupEmail =
-    options.forceSetupEmail || (!alreadyProcessed && !wasAlreadyActive);
+    !wasAlreadyActive && (!alreadyProcessed || options.forceSetupEmail === true);
 
   if (!shouldSendSetupEmail) {
-    return { email, activated: true, setupEmailSent: false };
+    return { email, activated: true, setupEmailSent: false, isNewAccount: false };
   }
 
   const { sendAccountSetupEmail } = await import("@/lib/account-setup");
   try {
-    await sendAccountSetupEmail(email);
-    return { email, activated: true, setupEmailSent: true };
+    const result = await sendAccountSetupEmail(email);
+    return {
+      email,
+      activated: true,
+      setupEmailSent: result.isNewAccount,
+      isNewAccount: result.isNewAccount,
+    };
   } catch (error) {
     console.error("[billing] setup email failed", error);
-    return { email, activated: true, setupEmailSent: false };
+    return { email, activated: true, setupEmailSent: false, isNewAccount: false };
   }
 }
 

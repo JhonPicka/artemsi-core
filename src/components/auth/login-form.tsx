@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
 
 import { loginAction, type AuthFormState } from "@/app/(auth)/actions";
@@ -41,11 +40,10 @@ export function LoginForm({ initialEmail, initialError }: Props) {
       </button>
 
       <p className="muted auth-form-footer">
-        Déjà payé ?{" "}
-        <Link href="/signup" className="inline-link">
-          Créer mon compte
-        </Link>{" "}
-        avec le même email qu&apos;au paiement.
+        Pas encore abonné ?{" "}
+        <a href="/#tarif" className="inline-link">
+          Voir les offres
+        </a>
       </p>
     </form>
   );

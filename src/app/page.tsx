@@ -428,10 +428,7 @@ export default async function Home({ searchParams }: HomeProps) {
                 Après la souscription (Stripe), tu reçois un <strong>email avec un lien</strong> sur
                 l&apos;adresse utilisée au paiement. Tu cliques, tu choisis ton mot de passe, puis tu
                 complètes ton profil (école, métier visé, région, type de contrat). Ensuite : offres,
-                suivi des candidatures et réservation d&apos;accompagnement. Pas reçu l&apos;email ? Vérifie
-                les spams ou{" "}
-                <Link href="/signup">crée ton mot de passe ici</Link> avec le <strong>même email</strong>{" "}
-                qu&apos;au paiement.
+                suivi des candidatures et réservation d&apos;accompagnement.                 Pas reçu l&apos;email ? Vérifie les spams — le lien arrive sous 2&nbsp;min.
               </p>
             </details>
             <details className="landing-faq-item">
@@ -477,10 +474,9 @@ export default async function Home({ searchParams }: HomeProps) {
             <details className="landing-faq-item">
               <summary>J&apos;ai payé mais je n&apos;arrive pas à me connecter</summary>
               <p>
-                La connexion se fait avec l&apos;<strong>email du paiement</strong> et le mot de passe choisi
-                via le lien reçu par email. Pas encore de mot de passe ? Ouvre ce lien, ou{" "}
-                <Link href="/signup">crée-le ici</Link> avec le même email qu&apos;au paiement. Une fois
-                connecté, complète ton profil pour débloquer les offres.
+                La connexion se fait avec l&apos;<strong>email du paiement</strong> et le mot de passe
+                choisi via le lien reçu par email après ton abonnement. Pas reçu ? Vérifie
+                les spams — si le problème persiste, contacte-nous.
               </p>
             </details>
             <details className="landing-faq-item">

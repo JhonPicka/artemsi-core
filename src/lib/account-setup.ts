@@ -1,6 +1,5 @@
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -22,30 +21,14 @@ async function markPasswordSetupPending(userId: string) {
   });
 }
 
-function isAlreadyRegistered(message: string) {
-  const lower = message.toLowerCase();
-  return (
-    lower.includes("already") ||
-    lower.includes("registered") ||
-    lower.includes("exists")
-  );
-}
-
-async function markPendingByEmail(email: string) {
-  const admin = createAdminClient();
-  const recovery = await admin.auth.admin.generateLink({
-    type: "recovery",
-    email,
-    options: { redirectTo: finishRedirectUrl() },
-  });
-  const userId = recovery.data.user?.id;
-  if (userId) {
-    await markPasswordSetupPending(userId);
-  }
-}
-
-/** Envoi du lien d'activation via Supabase Auth (invite ou reset password). */
-export async function sendAccountSetupEmail(email: string) {
+/**
+ * Envoie le lien d'activation via Supabase Auth.
+ * - Nouveau compte : invite email
+ * - Compte existant : ne rien envoyer (l'utilisateur se connecte sur /login)
+ */
+export async function sendAccountSetupEmail(
+  email: string,
+): Promise<{ ok: true; isNewAccount: boolean }> {
   const normalized = normalizeEmail(email);
   const redirectTo = finishRedirectUrl();
   const admin = createAdminClient();
@@ -59,25 +42,56 @@ export async function sendAccountSetupEmail(email: string) {
     if (userId) {
       await markPasswordSetupPending(userId);
     }
-    return { ok: true, method: "invite" as const };
+    return { ok: true, isNewAccount: true };
   }
 
-  if (!isAlreadyRegistered(invite.error.message)) {
+  const message = invite.error.message.toLowerCase();
+  const alreadyRegistered =
+    message.includes("already") ||
+    message.includes("registered") ||
+    message.includes("exists");
+
+  if (!alreadyRegistered) {
     console.error("[account-setup] invite failed", invite.error.message);
     throw new Error(invite.error.message);
   }
 
-  await markPendingByEmail(normalized);
+  // Compte existant — on ne renvoie pas d'email, l'utilisateur se connecte sur /login
+  return { ok: true, isNewAccount: false };
+}
 
-  const supabase = await createClient();
-  const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalized, {
+/**
+ * Renvoi manuel du lien (bouton page succès).
+ * Uniquement pour les nouveaux comptes — si le compte existe déjà, on pointe vers /login.
+ */
+export async function resendActivationEmail(
+  email: string,
+): Promise<{ ok: true; isNewAccount: boolean }> {
+  const normalized = normalizeEmail(email);
+  const admin = createAdminClient();
+  const redirectTo = finishRedirectUrl();
+
+  const invite = await admin.auth.admin.inviteUserByEmail(normalized, {
     redirectTo,
   });
 
-  if (resetError) {
-    console.error("[account-setup] reset password email failed", resetError.message);
-    throw new Error(resetError.message);
+  if (!invite.error) {
+    const userId = invite.data.user?.id;
+    if (userId) {
+      await markPasswordSetupPending(userId);
+    }
+    return { ok: true, isNewAccount: true };
   }
 
-  return { ok: true, method: "recovery" as const };
+  const message = invite.error.message.toLowerCase();
+  const alreadyRegistered =
+    message.includes("already") ||
+    message.includes("registered") ||
+    message.includes("exists");
+
+  if (!alreadyRegistered) {
+    throw new Error(invite.error.message);
+  }
+
+  return { ok: true, isNewAccount: false };
 }
