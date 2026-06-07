@@ -9,9 +9,13 @@ export async function GET(request: Request) {
 
   const requestUrl = new URL(request.url);
   const email = requestUrl.searchParams.get("email");
+  const error = requestUrl.searchParams.get("error");
   const loginUrl = new URL("/login", request.url);
   if (email) {
     loginUrl.searchParams.set("email", email);
+  }
+  if (error) {
+    loginUrl.searchParams.set("error", error);
   }
 
   return NextResponse.redirect(loginUrl);

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { activatePaidAccountAction, type AuthFormState } from "@/app/(auth)/actions";
+import { getFreshLoginPath } from "@/lib/auth-paths";
 
 const initialState: AuthFormState = {};
 
@@ -47,7 +48,7 @@ export function ActivatePaidAccountForm({ initialEmail }: Props) {
         le bouton «&nbsp;Renvoyer l&apos;email&nbsp;».
         <br />
         Déjà un mot de passe ?{" "}
-        <Link href="/login" className="inline-link">
+        <Link href={getFreshLoginPath()} className="inline-link">
           Se connecter
         </Link>
       </p>

@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { loginAction, type AuthFormState } from "@/app/(auth)/actions";
+import { getFreshLoginPath } from "@/lib/auth-paths";
 
 const initialState: AuthFormState = {};
 
@@ -16,7 +17,7 @@ export function LoginForm({ initialEmail, initialError }: Props) {
   const displayError = state.error ?? initialError;
 
   return (
-    <form className="card form" action={action}>
+    <form className="card form" action={action} autoComplete="off">
       <span className="brand-chip">CONNEXION</span>
       <h1>Connexion</h1>
 
@@ -27,11 +28,17 @@ export function LoginForm({ initialEmail, initialError }: Props) {
         type="email"
         required
         defaultValue={initialEmail ?? ""}
-        autoComplete="email"
+        autoComplete="username"
       />
 
       <label htmlFor="password">Mot de passe</label>
-      <input id="password" name="password" type="password" required autoComplete="current-password" />
+      <input
+        id="password"
+        name="password"
+        type="password"
+        required
+        autoComplete="current-password"
+      />
 
       {displayError ? <p className="error">{displayError}</p> : null}
 
@@ -40,6 +47,10 @@ export function LoginForm({ initialEmail, initialError }: Props) {
       </button>
 
       <p className="muted auth-form-footer">
+        <a href={getFreshLoginPath()} className="inline-link">
+          Changer d&apos;email / effacer la session
+        </a>
+        <br />
         Tu viens de payer ?{" "}
         <a href="/activer-mon-compte" className="inline-link">
           Activer mon compte

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { finishSignupAction, type AuthFormState } from "@/app/(auth)/actions";
+import { getFreshLoginPath } from "@/lib/auth-paths";
 import { legalRoutes } from "@/lib/legal-config";
 
 const initialState: AuthFormState = {};
@@ -62,7 +63,7 @@ export function FinishSignupForm({ email }: Props) {
       </button>
 
       <p className="muted auth-form-footer">
-        Déjà un mot de passe ? <Link href="/login">Se connecter</Link>
+        Déjà un mot de passe ? <Link href={getFreshLoginPath()}>Se connecter</Link>
       </p>
     </form>
   );

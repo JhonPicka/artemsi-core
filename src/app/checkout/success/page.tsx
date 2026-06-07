@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { ActivatePaidAccountButton } from "@/components/billing/activate-paid-account-button";
 import { ResendEmailButton } from "@/components/billing/resend-email-button";
+import { getFreshLoginPath } from "@/lib/auth-paths";
 import { emailFromCheckoutSession, finalizePaidCheckoutSession } from "@/lib/billing";
 import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
 
@@ -108,7 +109,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
                   Tu as déjà un compte ARTEMSI. Connecte-toi directement avec ton mot de
                   passe habituel.
                 </p>
-                <Link href="/login" className="button-link">
+                <Link href={getFreshLoginPath()} className="button-link">
                   Se connecter
                 </Link>
               </>

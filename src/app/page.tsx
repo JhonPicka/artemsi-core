@@ -7,6 +7,7 @@ import { LandingTestimonialsCarousel } from "@/components/landing/landing-testim
 import { LandingTabs } from "@/components/landing/landing-tabs";
 import { LegalFooterLinks } from "@/components/legal/legal-footer-links";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { getFreshLoginPath } from "@/lib/auth-paths";
 import { legalConfig } from "@/lib/legal-config";
 
 type HomeProps = {
@@ -36,7 +37,7 @@ export default async function Home({ searchParams }: HomeProps) {
           <LandingTabs />
 
           <nav className="landing-nav-links" aria-label="Navigation principale">
-            <Link href="/login" className="landing-nav-link">
+            <Link href={getFreshLoginPath()} className="landing-nav-link">
               Connexion
             </Link>
             <SubscribeButton className="button-link landing-nav-cta">

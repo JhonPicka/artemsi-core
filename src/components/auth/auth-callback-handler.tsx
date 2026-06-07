@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { EmailOtpType } from "@supabase/supabase-js";
 
+import { getFreshLoginPath } from "@/lib/auth-paths";
 import { createClient } from "@/lib/supabase/client";
 
 const OTP_TYPES: EmailOtpType[] = ["invite", "signup", "recovery", "magiclink", "email"];
@@ -34,7 +35,9 @@ export function AuthCallbackHandler() {
     }
 
     function fail() {
-      router.replace(`/login?error=${encodeURIComponent("Lien invalide ou expiré.")}`);
+      router.replace(
+        getFreshLoginPath({ error: "Lien invalide ou expiré." }),
+      );
     }
 
     async function handle() {

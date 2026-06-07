@@ -9,6 +9,7 @@ import { userHasBillingAccess } from "@/lib/billing";
 import { isBillingEnforced } from "@/lib/stripe";
 import { logoutToLoginAction } from "@/app/(auth)/actions";
 import { getCurrentUser } from "@/lib/auth";
+import { getFreshLoginPath } from "@/lib/auth-paths";
 import { legalRoutes } from "@/lib/legal-config";
 
 export default async function SubscribePage() {
@@ -61,7 +62,7 @@ export default async function SubscribePage() {
               </>
             ) : (
               <p className="muted">
-                Déjà abonné ? <Link href="/login">Connecte-toi</Link>.
+                Déjà abonné ? <Link href={getFreshLoginPath()}>Connecte-toi</Link>.
               </p>
             )}
 

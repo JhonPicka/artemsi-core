@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { FinishSignupForm } from "@/components/auth/finish-signup-form";
+import { getFreshLoginPath } from "@/lib/auth-paths";
 import { needsPasswordSetup, resolvePostAuthRedirect } from "@/lib/auth-session";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -10,7 +11,9 @@ export default async function SignupFinishPage() {
 
   if (!user?.email) {
     redirect(
-      `/login?error=${encodeURIComponent("Ouvre le lien dans ton email pour activer ton compte.")}`,
+      getFreshLoginPath({
+        error: "Ouvre le lien dans ton email pour activer ton compte.",
+      }),
     );
   }
 

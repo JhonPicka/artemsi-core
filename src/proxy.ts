@@ -1,11 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { User } from "@supabase/supabase-js";
 
-import {
-  needsPasswordSetup,
-  resolveLoginPageRedirect,
-  resolvePostAuthRedirect,
-} from "@/lib/auth-session";
+import { needsPasswordSetup, resolvePostAuthRedirect } from "@/lib/auth-session";
 import { updateSession } from "@/lib/supabase/proxy";
 
 const PROTECTED_ROUTES = ["/dashboard", "/onboarding", "/admin"];
@@ -53,14 +49,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (user && isAuthEntry) {
-    if (pathname === "/login") {
-      const loginTarget = await resolveLoginPageRedirect(user);
-      if (loginTarget) {
-        return NextResponse.redirect(new URL(loginTarget, request.url));
-      }
-      return response;
-    }
+  if (user && isAuthEntry && pathname !== "/login") {
     return redirectForAuthenticatedUser(request, user);
   }
 

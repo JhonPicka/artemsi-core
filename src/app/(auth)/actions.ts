@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { getFreshLoginPath } from "@/lib/auth-paths";
 import { markPasswordSetupComplete, redirectAfterAuth } from "@/lib/auth-session";
 import { resendActivationEmail } from "@/lib/account-setup";
 import { getBillingStatusByEmail, userHasBillingAccess } from "@/lib/billing";
@@ -173,7 +174,7 @@ export async function activatePaidAccountAction(
   }
 
   if (result.mode === "login") {
-    redirect(`/login?email=${encodeURIComponent(email)}`);
+    redirect(getFreshLoginPath({ email }));
   }
 
   redirect("/signup/finish");
@@ -222,5 +223,5 @@ export async function logoutAction() {
 export async function logoutToLoginAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/login");
+  redirect(getFreshLoginPath());
 }
