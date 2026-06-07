@@ -67,7 +67,6 @@ async function generateActivationLink(email: string) {
 
 export type PaidAccountActivationResult =
   | { ok: true; mode: "password-setup" }
-  | { ok: true; mode: "login" }
   | { ok: false; error: string };
 
 /**
@@ -97,7 +96,11 @@ export async function startPaidAccountSession(
   }
 
   if (!userNeedsPasswordSetup(user)) {
-    return { ok: true, mode: "login" };
+    return {
+      ok: false,
+      error:
+        "Un compte existe déjà pour cet email. Connecte-toi avec ton mot de passe sur la page Connexion.",
+    };
   }
 
   await markPasswordSetupPending(user.id);

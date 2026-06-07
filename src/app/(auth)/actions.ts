@@ -173,10 +173,6 @@ export async function activatePaidAccountAction(
     return { error: result.error };
   }
 
-  if (result.mode === "login") {
-    redirect(getFreshLoginPath({ email }));
-  }
-
   redirect("/signup/finish");
 }
 
