@@ -1,27 +1,69 @@
-import type { EmailOtpType, SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { userNeedsPasswordSetup } from "@/lib/account-setup";
 import { userHasBillingAccess } from "@/lib/billing";
-import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { createSetupToken, verifySetupToken } from "@/lib/setup-token";
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-function finishRedirectUrl() {
-  const appUrl = env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  return `${appUrl}/auth/confirm`;
+async function findAuthUserByEmail(email: string) {
+  const admin = createAdminClient();
+  const normalized = normalizeEmail(email);
+  let page = 1;
+
+  while (page <= 10) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const match = data.users.find((user) => user.email?.toLowerCase() === normalized);
+    if (match) {
+      return match;
+    }
+
+    if (data.users.length < 200) {
+      break;
+    }
+    page += 1;
+  }
+
+  return null;
 }
 
-function isUserNotFoundError(message: string) {
-  const normalized = message.toLowerCase();
-  return (
-    normalized.includes("not found") ||
-    normalized.includes("no user") ||
-    normalized.includes("user_not_found")
-  );
+async function ensureAuthUser(email: string) {
+  const admin = createAdminClient();
+  const normalized = normalizeEmail(email);
+  const existing = await findAuthUserByEmail(normalized);
+  if (existing) {
+    return existing;
+  }
+
+  const invite = await admin.auth.admin.inviteUserByEmail(normalized, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://artemsi.fr"}/auth/confirm`,
+  });
+
+  if (!invite.error && invite.data.user) {
+    return invite.data.user;
+  }
+
+  const message = invite.error?.message.toLowerCase() ?? "";
+  if (
+    message.includes("already") ||
+    message.includes("registered") ||
+    message.includes("exists")
+  ) {
+    return findAuthUserByEmail(normalized);
+  }
+
+  if (invite.error) {
+    throw new Error(invite.error.message);
+  }
+
+  return null;
 }
 
 async function markPasswordSetupPending(userId: string) {
@@ -34,48 +76,15 @@ async function markPasswordSetupPending(userId: string) {
   });
 }
 
-async function generateActivationLink(email: string) {
-  const admin = createAdminClient();
-  const redirectTo = finishRedirectUrl();
-
-  const recovery = await admin.auth.admin.generateLink({
-    type: "recovery",
-    email,
-    options: { redirectTo },
-  });
-
-  if (!recovery.error) {
-    return recovery;
-  }
-
-  if (!isUserNotFoundError(recovery.error.message)) {
-    throw new Error(recovery.error.message);
-  }
-
-  const invite = await admin.auth.admin.generateLink({
-    type: "invite",
-    email,
-    options: { redirectTo },
-  });
-
-  if (invite.error) {
-    throw new Error(invite.error.message);
-  }
-
-  return invite;
-}
-
 export type PaidAccountActivationResult =
-  | { ok: true; mode: "password-setup" }
+  | { ok: true; setupToken: string; email: string }
   | { ok: false; error: string };
 
 /**
- * Démarre une session pour un payeur sans passer par l'email Supabase.
- * Passe un client lié à la réponse HTTP (route handler) pour persister les cookies.
+ * Prépare la création de mot de passe pour un payeur (sans dépendre des cookies session).
  */
-export async function startPaidAccountSession(
+export async function preparePaidAccountPasswordSetup(
   email: string,
-  supabaseClient?: SupabaseClient,
 ): Promise<PaidAccountActivationResult> {
   const normalized = normalizeEmail(email);
 
@@ -87,12 +96,8 @@ export async function startPaidAccountSession(
     };
   }
 
-  const link = await generateActivationLink(normalized);
-  const tokenHash = link.data?.properties?.hashed_token;
-  const verificationType = link.data?.properties?.verification_type;
-  const user = link.data?.user;
-
-  if (!tokenHash || !verificationType || !user) {
+  const user = await ensureAuthUser(normalized);
+  if (!user?.id || !user.email) {
     return { ok: false, error: "Impossible de préparer l'activation du compte." };
   }
 
@@ -106,30 +111,63 @@ export async function startPaidAccountSession(
 
   await markPasswordSetupPending(user.id);
 
-  const supabase = supabaseClient ?? (await createClient());
-  const { error } = await supabase.auth.verifyOtp({
-    type: verificationType as EmailOtpType,
-    token_hash: tokenHash,
+  return {
+    ok: true,
+    setupToken: createSetupToken({ email: user.email, userId: user.id }),
+    email: user.email,
+  };
+}
+
+/** @deprecated Conservé pour compat — préférer preparePaidAccountPasswordSetup */
+export async function startPaidAccountSession(
+  email: string,
+  _supabaseClient?: SupabaseClient,
+): Promise<{ ok: true; mode: "password-setup" } | { ok: false; error: string }> {
+  const result = await preparePaidAccountPasswordSetup(email);
+  if (!result.ok) {
+    return result;
+  }
+  return { ok: true, mode: "password-setup" };
+}
+
+export type FinishSignupWithTokenResult =
+  | { ok: true; email: string }
+  | { ok: false; error: string };
+
+/** Définit le mot de passe via admin API puis ouvre une session (cookies sur la réponse). */
+export async function finishSignupWithToken(
+  params: { setupToken: string; password: string },
+  supabase: SupabaseClient,
+): Promise<FinishSignupWithTokenResult> {
+  const payload = verifySetupToken(params.setupToken);
+  if (!payload) {
+    return { ok: false, error: "Lien d'activation expiré. Relance « Activer mon compte »." };
+  }
+
+  const admin = createAdminClient();
+  const { error: updateError } = await admin.auth.admin.updateUserById(payload.userId, {
+    password: params.password,
+    user_metadata: {
+      password_setup_pending: false,
+      password_set: true,
+    },
   });
 
-  if (error) {
-    console.error("[paid-account-activation] verifyOtp", error.message);
+  if (updateError) {
+    return { ok: false, error: updateError.message };
+  }
+
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: payload.email,
+    password: params.password,
+  });
+
+  if (signInError) {
     return {
       ok: false,
-      error: "Activation impossible pour le moment. Réessaie ou contacte le support.",
+      error: "Mot de passe enregistré, mais connexion impossible. Réessaie de te connecter.",
     };
   }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.user?.email) {
-    return {
-      ok: false,
-      error: "Session non créée. Réessaie l'activation.",
-    };
-  }
-
-  return { ok: true, mode: "password-setup" };
+  return { ok: true, email: payload.email };
 }

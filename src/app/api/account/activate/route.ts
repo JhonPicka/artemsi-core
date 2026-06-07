@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { startPaidAccountSession } from "@/lib/paid-account-activation";
+import { preparePaidAccountPasswordSetup } from "@/lib/paid-account-activation";
 import { getRequestKey, takeRateLimit } from "@/lib/rate-limit";
-import { createClientFromRequest } from "@/lib/supabase/route-handler";
 import { activatePaidAccountSchema } from "@/lib/validation";
 
 function safeReturnPath(raw: string | null, fallback: string) {
@@ -68,18 +67,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  let response = NextResponse.redirect(new URL("/signup/finish", request.url));
-  const supabase = createClientFromRequest(request, response);
-
   try {
-    const result = await startPaidAccountSession(email, supabase);
+    const result = await preparePaidAccountPasswordSetup(email);
     if (!result.ok) {
       const url = new URL(returnTo, request.url);
       url.searchParams.set("email", email);
       url.searchParams.set("error", result.error);
       return NextResponse.redirect(url);
     }
-    return response;
+
+    const finishUrl = new URL("/signup/finish", request.url);
+    finishUrl.searchParams.set("setup_token", result.setupToken);
+    return NextResponse.redirect(finishUrl);
   } catch (cause) {
     console.error("[api/account/activate]", cause);
     const url = new URL(returnTo, request.url);

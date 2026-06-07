@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 
+import { userNeedsPasswordSetup } from "@/lib/account-setup";
 import { getFreshLoginPath } from "@/lib/auth-paths";
+import { createSetupToken } from "@/lib/setup-token";
 import { createClientFromRequest } from "@/lib/supabase/route-handler";
 
 const OTP_TYPES: EmailOtpType[] = ["invite", "signup", "recovery", "magiclink", "email"];
@@ -11,6 +13,30 @@ function safeNextPath(raw: string | null) {
     return "/signup/finish";
   }
   return raw;
+}
+
+async function redirectAfterOtpSuccess(
+  request: NextRequest,
+  response: NextResponse,
+  supabase: ReturnType<typeof createClientFromRequest>,
+  next: string,
+) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user?.email && user.id && userNeedsPasswordSetup(user)) {
+    const token = createSetupToken({ email: user.email, userId: user.id });
+    const finishUrl = new URL("/signup/finish", request.url);
+    finishUrl.searchParams.set("setup_token", token);
+    return NextResponse.redirect(finishUrl);
+  }
+
+  if (next !== "/signup/finish") {
+    return NextResponse.redirect(new URL(next, request.url));
+  }
+
+  return response;
 }
 
 /** Callback serveur : échange token_hash/code et persiste les cookies de session. */
@@ -32,7 +58,7 @@ export async function GET(request: NextRequest) {
         token_hash: tokenHash,
       });
       if (!error) {
-        return response;
+        return redirectAfterOtpSuccess(request, response, supabase, next);
       }
     }
   }
@@ -40,7 +66,7 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return response;
+      return redirectAfterOtpSuccess(request, response, supabase, next);
     }
   }
 

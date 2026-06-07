@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getFreshLoginPath } from "@/lib/auth-paths";
 import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
 import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
+import { finishSignupWithToken } from "@/lib/paid-account-activation";
 import {
   createClientFromRequest,
   redirectWithCookies,
@@ -40,8 +41,26 @@ async function resolveRedirectAfterPassword(
   return "/dashboard";
 }
 
+function finishErrorRedirect(
+  request: NextRequest,
+  message: string,
+  setupToken?: string | null,
+) {
+  const url = new URL("/signup/finish", request.url);
+  url.searchParams.set("error", message);
+  if (setupToken) {
+    url.searchParams.set("setup_token", setupToken);
+  }
+  return NextResponse.redirect(url);
+}
+
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
+  const setupToken =
+    typeof formData.get("setup_token") === "string"
+      ? (formData.get("setup_token") as string)
+      : null;
+
   const parsed = setPasswordSchema.safeParse({
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
@@ -49,13 +68,44 @@ export async function POST(request: NextRequest) {
   });
 
   if (!parsed.success) {
-    const url = new URL("/signup/finish", request.url);
-    url.searchParams.set("error", parsed.error.issues[0]?.message ?? "Formulaire invalide");
-    return NextResponse.redirect(url);
+    return finishErrorRedirect(
+      request,
+      parsed.error.issues[0]?.message ?? "Formulaire invalide",
+      setupToken,
+    );
   }
 
   let response = NextResponse.redirect(new URL("/signup/finish", request.url));
   const supabase = createClientFromRequest(request, response);
+
+  if (setupToken) {
+    const result = await finishSignupWithToken(
+      { setupToken, password: parsed.data.password },
+      supabase,
+    );
+
+    if (!result.ok) {
+      return finishErrorRedirect(request, result.error, setupToken);
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
+      return NextResponse.redirect(
+        new URL(
+          getFreshLoginPath({
+            error: "Mot de passe enregistré. Connecte-toi avec ton nouveau mot de passe.",
+          }),
+          request.url,
+        ),
+      );
+    }
+
+    const target = await resolveRedirectAfterPassword(user, supabase);
+    return redirectWithCookies(request, response, target);
+  }
 
   const {
     data: { user },
@@ -78,9 +128,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (passwordError) {
-    const url = new URL("/signup/finish", request.url);
-    url.searchParams.set("error", passwordError.message);
-    return NextResponse.redirect(url);
+    return finishErrorRedirect(request, passwordError.message);
   }
 
   const { error: metadataError } = await supabase.auth.updateUser({
@@ -91,9 +139,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (metadataError) {
-    const url = new URL("/signup/finish", request.url);
-    url.searchParams.set("error", metadataError.message);
-    return NextResponse.redirect(url);
+    return finishErrorRedirect(request, metadataError.message);
   }
 
   const {

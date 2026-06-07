@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { getFreshLoginPath } from "@/lib/auth-paths";
 import { redirectAfterAuth } from "@/lib/auth-session";
-import { resendActivationEmail } from "@/lib/account-setup";
+import { getPaidAccountSetupStatus, resendActivationEmail } from "@/lib/account-setup";
 import { getBillingStatusByEmail, userHasBillingAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema } from "@/lib/validation";
@@ -41,10 +41,14 @@ export async function loginAction(
   if (error) {
     const billingStatus = await getBillingStatusByEmail(email);
     if (billingStatus === "active") {
-      return {
-        error:
-          "Identifiants incorrects. Si tu viens de payer, active ton compte sur /activer-mon-compte.",
-      };
+      const setupStatus = await getPaidAccountSetupStatus(email);
+      if (setupStatus.needsPasswordSetup) {
+        return {
+          error:
+            "Tu n'as pas encore créé ton mot de passe. Va sur Activer mon compte pour finaliser ton inscription.",
+        };
+      }
+      return { error: "Identifiants incorrects." };
     }
     return { error: "Identifiants incorrects." };
   }

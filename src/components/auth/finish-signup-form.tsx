@@ -5,12 +5,14 @@ import { legalRoutes } from "@/lib/legal-config";
 
 type Props = {
   email: string;
+  setupToken?: string;
   initialError?: string;
 };
 
-export function FinishSignupForm({ email, initialError }: Props) {
+export function FinishSignupForm({ email, setupToken, initialError }: Props) {
   return (
     <form className="card form" action="/api/account/finish-signup" method="post">
+      {setupToken ? <input type="hidden" name="setup_token" value={setupToken} /> : null}
       <span className="brand-chip">ACTIVATION</span>
       <h1>Choisis ton mot de passe</h1>
       <p className="muted">
