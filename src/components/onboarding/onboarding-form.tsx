@@ -4,8 +4,6 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  CONTRACT_DURATION_LABEL,
-  CONTRACT_DURATIONS,
   CONTRACT_TYPE_LABEL,
   CONTRACT_TYPES,
   REGIONS,
@@ -13,7 +11,6 @@ import {
   STUDY_DOMAINS,
   STUDY_LEVEL_LABEL,
   STUDY_LEVEL_OPTIONS,
-  type ContractDuration,
   type ContractType,
   type StudyDomain,
   type StudyLevel,
@@ -23,7 +20,6 @@ import { onboardingSchema } from "@/lib/validation";
 type OnboardingFormProps = {
   initialValues: {
     fullName: string;
-    phone: string;
     schoolName: string;
     studyLevel: StudyLevel;
     studyDomain: StudyDomain;
@@ -31,25 +27,19 @@ type OnboardingFormProps = {
     regions: string[];
     startDate: string;
     contractType: ContractType;
-    contractDuration: ContractDuration;
   };
 };
 
-const totalSteps = 3;
+const totalSteps = 2;
 
 export function OnboardingForm({ initialValues }: OnboardingFormProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [cvFile, setCvFile] = useState<File | null>(null);
-  const [coverLetterFile, setCoverLetterFile] = useState<File | null>(null);
   const [values, setValues] = useState(initialValues);
 
   const progress = useMemo(() => Math.round((step / totalSteps) * 100), [step]);
-
-  const canGoPrevious = step > 1;
-  const canGoNext = step < totalSteps;
 
   function update<K extends keyof typeof values>(key: K, value: (typeof values)[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -62,22 +52,6 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
         ? current.regions.filter((item) => item !== region)
         : [...current.regions, region],
     }));
-  }
-
-  async function uploadDocument(documentType: "cv" | "cover_letter", file: File) {
-    const formData = new FormData();
-    formData.append("documentType", documentType);
-    formData.append("file", file);
-
-    const response = await fetch("/api/documents", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      throw new Error(body.error ?? "Echec upload document");
-    }
   }
 
   async function submit() {
@@ -101,13 +75,6 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
         throw new Error(body.error ?? "Echec sauvegarde du profil");
       }
 
-      if (cvFile) {
-        await uploadDocument("cv", cvFile);
-      }
-      if (coverLetterFile) {
-        await uploadDocument("cover_letter", coverLetterFile);
-      }
-
       router.push("/dashboard");
       router.refresh();
     } catch (submissionError) {
@@ -124,32 +91,32 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
   return (
     <div className="card form">
       <span className="brand-chip">ONBOARDING</span>
-      <h1>Finalise ton profil candidat</h1>
+      <h1>Finalise ton profil</h1>
       <p className="muted">
-        Étape {step} / {totalSteps} — progression {progress}%
+        Étape {step} sur {totalSteps} — {progress}% complété
       </p>
 
       {step === 1 ? (
         <>
+          <p className="muted" style={{ marginBottom: "0.5rem" }}>
+            Quelques infos sur toi pour personnaliser tes offres.
+          </p>
+
           <label htmlFor="fullName">Nom complet</label>
           <input
             id="fullName"
             value={values.fullName}
             onChange={(event) => update("fullName", event.target.value)}
+            placeholder="Prénom Nom"
+            autoComplete="name"
           />
 
-          <label htmlFor="phone">Téléphone</label>
-          <input
-            id="phone"
-            value={values.phone}
-            onChange={(event) => update("phone", event.target.value)}
-          />
-
-          <label htmlFor="schoolName">Nom de l&apos;école</label>
+          <label htmlFor="schoolName">École / Établissement</label>
           <input
             id="schoolName"
             value={values.schoolName}
             onChange={(event) => update("schoolName", event.target.value)}
+            placeholder="ex. ESGI, Université Paris-Saclay…"
           />
 
           <label htmlFor="studyLevel">Niveau d&apos;étude</label>
@@ -184,19 +151,16 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
 
       {step === 2 ? (
         <>
-          <label htmlFor="targetJob">Poste recherché</label>
+          <p className="muted" style={{ marginBottom: "0.5rem" }}>
+            Ce que tu recherches — on s&apos;en sert pour cibler tes offres.
+          </p>
+
+          <label htmlFor="targetJob">Poste visé</label>
           <input
             id="targetJob"
             value={values.targetJob}
             onChange={(event) => update("targetJob", event.target.value)}
-          />
-
-          <label htmlFor="startDate">Date de début souhaitée</label>
-          <input
-            id="startDate"
-            type="date"
-            value={values.startDate}
-            onChange={(event) => update("startDate", event.target.value)}
+            placeholder="ex. Développeur web, Chargé de marketing…"
           />
 
           <label htmlFor="contractType">Type de contrat</label>
@@ -214,23 +178,16 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
             ))}
           </select>
 
-          <label htmlFor="contractDuration">Durée du contrat</label>
-          <select
-            id="contractDuration"
-            value={values.contractDuration}
-            onChange={(event) =>
-              update("contractDuration", event.target.value as ContractDuration)
-            }
-          >
-            {CONTRACT_DURATIONS.map((duration) => (
-              <option key={duration} value={duration}>
-                {CONTRACT_DURATION_LABEL[duration]}
-              </option>
-            ))}
-          </select>
+          <label htmlFor="startDate">Date de début souhaitée</label>
+          <input
+            id="startDate"
+            type="date"
+            value={values.startDate}
+            onChange={(event) => update("startDate", event.target.value)}
+          />
 
           <fieldset className="regions-grid">
-            <legend>Régions ciblées</legend>
+            <legend>Régions ciblées <span className="muted">(une ou plusieurs)</span></legend>
             {REGIONS.map((region) => (
               <label key={region} className="checkbox-line">
                 <input
@@ -242,31 +199,9 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
               </label>
             ))}
           </fieldset>
-        </>
-      ) : null}
 
-      {step === 3 ? (
-        <>
-          <label htmlFor="cvUpload">CV (optionnel, PDF ou DOC/DOCX)</label>
-          <input
-            id="cvUpload"
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={(event) => setCvFile(event.target.files?.[0] ?? null)}
-          />
-
-          <label htmlFor="coverLetterUpload">
-            Lettre de motivation (optionnel, PDF ou DOC/DOCX)
-          </label>
-          <input
-            id="coverLetterUpload"
-            type="file"
-            accept=".pdf,.doc,.docx"
-            onChange={(event) => setCoverLetterFile(event.target.files?.[0] ?? null)}
-          />
-
-          <p className="muted">
-            Tu peux aussi ajouter ou remplacer ces documents plus tard dans ton espace.
+          <p className="muted" style={{ fontSize: "0.85rem" }}>
+            Tu pourras ajouter ton CV et ta lettre depuis ton espace, à tout moment.
           </p>
         </>
       ) : null}
@@ -274,7 +209,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
       {error ? <p className="error">{error}</p> : null}
 
       <div className="form-actions">
-        {canGoPrevious ? (
+        {step > 1 ? (
           <button type="button" className="secondary" onClick={() => setStep(step - 1)}>
             Retour
           </button>
@@ -282,13 +217,13 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
           <span />
         )}
 
-        {canGoNext ? (
+        {step < totalSteps ? (
           <button type="button" onClick={() => setStep(step + 1)}>
             Continuer
           </button>
         ) : (
           <button type="button" onClick={submit} disabled={loading}>
-            {loading ? "Enregistrement..." : "Terminer mon inscription"}
+            {loading ? "Enregistrement..." : "Accéder à mon espace"}
           </button>
         )}
       </div>

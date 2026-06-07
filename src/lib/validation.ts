@@ -62,15 +62,15 @@ export const setPasswordSchema = z
 
 export const onboardingSchema = z.object({
   fullName: z.string().min(2, "Nom complet requis"),
-  phone: z.string().min(8, "Téléphone invalide"),
+  phone: z.string().optional().default(""),
   schoolName: z.string().min(2, "Nom de l'école requis"),
   studyLevel: z.enum(STUDY_LEVELS),
   studyDomain: z.enum(STUDY_DOMAINS),
-  targetJob: z.string().min(2, "Poste recherché requis"),
+  targetJob: z.string().min(2, "Poste visé requis"),
   regions: z.array(z.enum(REGIONS)).min(1, "Sélectionne au moins une région"),
   startDate: calendarDateYyyyMmDdSchema("Date invalide"),
   contractType: z.enum(CONTRACT_TYPES),
-  contractDuration: z.enum(CONTRACT_DURATIONS),
+  contractDuration: z.enum(CONTRACT_DURATIONS).optional().default("12_MONTHS"),
 });
 
 export const documentUploadSchema = z.object({

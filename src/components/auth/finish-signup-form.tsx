@@ -24,8 +24,9 @@ export function FinishSignupForm({ email }: Props) {
         ton profil et accéder aux offres.
       </p>
 
-      <label htmlFor="email">Email</label>
-      <input id="email" name="email" type="email" value={email} readOnly disabled />
+      <p className="muted" style={{ fontSize: "0.85rem", marginBottom: "0.25rem" }}>
+        Email de ton compte : <strong>{email}</strong>
+      </p>
 
       <label htmlFor="password">Mot de passe</label>
       <input id="password" name="password" type="password" required autoComplete="new-password" />
