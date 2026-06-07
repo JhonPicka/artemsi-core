@@ -5,9 +5,11 @@ import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
 import { requireActiveSubscription } from "@/lib/billing";
 import { requireUser } from "@/lib/auth";
 import {
+  CONTRACT_DURATIONS,
   CONTRACT_TYPES,
   STUDY_DOMAINS,
   STUDY_LEVEL_OPTIONS,
+  type ContractDuration,
   type ContractType,
   type StudyDomain,
   type StudyLevel,
@@ -25,7 +27,7 @@ export default async function OnboardingPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, school_name, study_level, study_domain, target_job, regions, start_date, contract_type, onboarding_completed",
+      "full_name, phone, school_name, study_level, study_domain, target_job, regions, start_date, contract_type, contract_duration, onboarding_completed",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -52,11 +54,18 @@ export default async function OnboardingPage() {
     ? (profile?.contract_type as ContractType)
     : CONTRACT_TYPES[0];
 
+  const contractDuration: ContractDuration = CONTRACT_DURATIONS.includes(
+    (profile?.contract_duration ?? "") as ContractDuration,
+  )
+    ? (profile?.contract_duration as ContractDuration)
+    : "12_MONTHS";
+
   return (
     <main className="centered-page">
       <OnboardingForm
         initialValues={{
           fullName: profile?.full_name ?? "",
+          phone: profile?.phone ?? "",
           schoolName: profile?.school_name ?? "",
           studyLevel,
           studyDomain,
@@ -64,6 +73,7 @@ export default async function OnboardingPage() {
           regions: (profile?.regions as string[]) ?? [],
           startDate: profile?.start_date ?? "",
           contractType,
+          contractDuration,
         }}
       />
     </main>
