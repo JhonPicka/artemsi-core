@@ -122,3 +122,21 @@ export async function sendAccountSetupEmail(email: string): Promise<AccountSetup
 export async function resendActivationEmail(email: string): Promise<AccountSetupResult> {
   return sendAccountSetupEmail(email);
 }
+
+/** État réel du compte auth pour afficher la bonne page après paiement. */
+export async function getPaidAccountSetupStatus(email: string): Promise<{
+  needsPasswordSetup: boolean;
+  hasAuthUser: boolean;
+}> {
+  const normalized = normalizeEmail(email);
+  const user = await findAuthUserByEmail(normalized);
+
+  if (!user) {
+    return { needsPasswordSetup: true, hasAuthUser: false };
+  }
+
+  return {
+    needsPasswordSetup: userNeedsPasswordSetup(user),
+    hasAuthUser: true,
+  };
+}

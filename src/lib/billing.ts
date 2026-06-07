@@ -57,22 +57,41 @@ export async function finalizePaidCheckoutSession(
 
   await activateBillingFromCheckoutSession(session, options.lastEventId);
 
-  // Ne pas envoyer d'email si l'abonnement était déjà actif (re-abonnement) ou déjà traité
+  const { getPaidAccountSetupStatus, sendAccountSetupEmail } = await import(
+    "@/lib/account-setup"
+  );
+  const setupStatus = await getPaidAccountSetupStatus(email);
+
+  // Le webhook peut activer l'abonnement avant la page succès : on se base sur l'état auth réel.
+  if (!setupStatus.needsPasswordSetup) {
+    return {
+      email,
+      activated: true,
+      setupEmailSent: false,
+      needsPasswordSetup: false,
+    };
+  }
+
+  // Ne pas renvoyer d'email auto si déjà actif (webhook) ou déjà traité — les boutons restent visibles.
   const shouldSendSetupEmail =
     !wasAlreadyActive && (!alreadyProcessed || options.forceSetupEmail === true);
 
   if (!shouldSendSetupEmail) {
-    return { email, activated: true, setupEmailSent: false, needsPasswordSetup: false };
+    return {
+      email,
+      activated: true,
+      setupEmailSent: false,
+      needsPasswordSetup: true,
+    };
   }
 
-  const { sendAccountSetupEmail } = await import("@/lib/account-setup");
   try {
     const result = await sendAccountSetupEmail(email);
     return {
       email,
       activated: true,
       setupEmailSent: result.emailSent,
-      needsPasswordSetup: result.needsPasswordSetup,
+      needsPasswordSetup: true,
     };
   } catch (error) {
     console.error("[billing] setup email failed", error);

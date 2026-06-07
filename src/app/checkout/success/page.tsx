@@ -73,8 +73,9 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
                     </>
                   ) : (
                     <>
-                      Ton paiement est actif, mais l&apos;email d&apos;activation n&apos;a pas pu
-                      partir automatiquement. Utilise le bouton ci-dessous pour recevoir le lien.
+                      Ton paiement est confirmé. Choisis ton mot de passe pour accéder à
+                      ARTEMSI&nbsp;: renvoie l&apos;email ou crée ton compte directement
+                      ci-dessous.
                     </>
                   )}
                 </p>
