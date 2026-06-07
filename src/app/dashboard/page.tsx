@@ -30,11 +30,16 @@ function formatNextAudit(
   const start = new Date(row.slot_start);
   const isPending = row.status === "pending";
   const day = start.toLocaleDateString("fr-FR", {
+    timeZone: "Europe/Paris",
     weekday: "long",
     day: "numeric",
     month: "long",
   });
-  const time = start.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const time = start.toLocaleTimeString("fr-FR", {
+    timeZone: "Europe/Paris",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   return {
     label: isPending ? "En attente de confirmation" : "Confirmé",
     detail: `Prochain audit : ${day} à ${time} (${isPending ? "en attente" : "confirmé"}).`,

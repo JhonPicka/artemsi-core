@@ -8,6 +8,7 @@ import {
   type AdminAuditRow,
   type AuditBookingStatus,
 } from "@/lib/admin-audit";
+import { parisDatetimeLocalToISO } from "@/lib/dates-fr";
 
 type Tab = "pending" | "history";
 
@@ -150,7 +151,7 @@ function AuditEditor({
             onClick={() =>
               onPatch(row.id, {
                 action: "reschedule",
-                slotStart: new Date(slotLocal).toISOString(),
+                slotStart: parisDatetimeLocalToISO(slotLocal),
                 adminNotes,
               })
             }

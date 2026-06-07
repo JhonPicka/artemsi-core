@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { AuditDay } from "@/lib/audit-slots";
+import { yyyyMmDdFromLocalDate } from "@/lib/dates-fr";
 
 type Props = {
   days: AuditDay[];
@@ -17,8 +18,7 @@ function parseYMDLocal(iso: string): Date {
 }
 
 function localMidnightToDateISO(d: Date): string {
-  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-  return x.toISOString().slice(0, 10);
+  return yyyyMmDdFromLocalDate(d);
 }
 
 function startOfWeekMondayLocal(d: Date): Date {
