@@ -6,6 +6,7 @@ import { DashboardBottomNav } from "@/components/dashboard/dashboard-bottom-nav"
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { LegalFooterLinks } from "@/components/legal/legal-footer-links";
 import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
+import { needsPasswordSetup } from "@/lib/auth-session";
 import { requireActiveSubscription } from "@/lib/billing";
 import { requireUser } from "@/lib/auth";
 import { legalConfig } from "@/lib/legal-config";
@@ -17,6 +18,9 @@ export default async function DashboardLayout({
   const user = await requireUser();
   if (isAdminUser(user)) {
     redirect(getAdminHomePath());
+  }
+  if (needsPasswordSetup(user)) {
+    redirect("/signup/finish");
   }
   await requireActiveSubscription(user);
   const supabase = await createClient();

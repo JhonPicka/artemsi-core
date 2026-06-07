@@ -1,23 +1,16 @@
-"use client";
-
 import Link from "next/link";
-import { useActionState } from "react";
 
-import { finishSignupAction, type AuthFormState } from "@/app/(auth)/actions";
 import { getFreshLoginPath } from "@/lib/auth-paths";
 import { legalRoutes } from "@/lib/legal-config";
 
-const initialState: AuthFormState = {};
-
 type Props = {
   email: string;
+  initialError?: string;
 };
 
-export function FinishSignupForm({ email }: Props) {
-  const [state, action, pending] = useActionState(finishSignupAction, initialState);
-
+export function FinishSignupForm({ email, initialError }: Props) {
   return (
-    <form className="card form" action={action}>
+    <form className="card form" action="/api/account/finish-signup" method="post">
       <span className="brand-chip">ACTIVATION</span>
       <h1>Choisis ton mot de passe</h1>
       <p className="muted">
@@ -56,14 +49,19 @@ export function FinishSignupForm({ email }: Props) {
         </span>
       </label>
 
-      {state.error ? <p className="error">{state.error}</p> : null}
+      {initialError ? <p className="error">{initialError}</p> : null}
 
-      <button type="submit" disabled={pending}>
-        {pending ? "Enregistrement..." : "Activer mon compte"}
-      </button>
+      <button type="submit">Activer mon compte</button>
 
       <p className="muted auth-form-footer">
-        Déjà un mot de passe ? <Link href={getFreshLoginPath()}>Se connecter</Link>
+        Problème de session ?{" "}
+        <Link href="/activer-mon-compte" className="inline-link">
+          Réactiver mon compte
+        </Link>
+        {" · "}
+        <Link href={getFreshLoginPath()} className="inline-link">
+          Se connecter
+        </Link>
       </p>
     </form>
   );

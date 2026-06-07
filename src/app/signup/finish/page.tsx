@@ -6,7 +6,12 @@ import { getFreshLoginPath } from "@/lib/auth-paths";
 import { needsPasswordSetup, resolvePostAuthRedirect } from "@/lib/auth-session";
 import { getCurrentUser } from "@/lib/auth";
 
-export default async function SignupFinishPage() {
+type Props = {
+  searchParams: Promise<{ error?: string }>;
+};
+
+export default async function SignupFinishPage({ searchParams }: Props) {
+  const { error } = await searchParams;
   const user = await getCurrentUser();
 
   if (!user?.email) {
@@ -23,7 +28,10 @@ export default async function SignupFinishPage() {
 
   return (
     <AuthPageShell>
-      <FinishSignupForm email={user.email} />
+      <FinishSignupForm
+        email={user.email}
+        initialError={typeof error === "string" ? decodeURIComponent(error) : undefined}
+      />
     </AuthPageShell>
   );
 }

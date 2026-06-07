@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
 import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
+import { needsPasswordSetup } from "@/lib/auth-session";
 import { requireActiveSubscription } from "@/lib/billing";
 import { requireUser } from "@/lib/auth";
 import {
@@ -20,6 +21,9 @@ export default async function OnboardingPage() {
   const user = await requireUser();
   if (isAdminUser(user)) {
     redirect(getAdminHomePath());
+  }
+  if (needsPasswordSetup(user)) {
+    redirect("/signup/finish");
   }
   await requireActiveSubscription(user);
   const supabase = await createClient();

@@ -17,7 +17,7 @@ function normalizeEmail(email: string) {
 
 function finishRedirectUrl() {
   const appUrl = env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  return `${appUrl}/auth/callback`;
+  return `${appUrl}/auth/confirm`;
 }
 
 function createAnonClient() {
@@ -25,9 +25,8 @@ function createAnonClient() {
 }
 
 export function userNeedsPasswordSetup(user: User): boolean {
-  if (user.user_metadata?.password_setup_pending === true) return true;
   if (user.user_metadata?.password_set === true) return false;
-  // Invited account: no sign-in yet → password not chosen.
+  if (user.user_metadata?.password_setup_pending === true) return true;
   return !user.last_sign_in_at;
 }
 
@@ -43,21 +42,27 @@ async function markPasswordSetupPending(userId: string) {
 
 async function findAuthUserByEmail(email: string): Promise<User | null> {
   const admin = createAdminClient();
-  const link = await admin.auth.admin.generateLink({
-    type: "recovery",
-    email,
-    options: { redirectTo: finishRedirectUrl() },
-  });
+  const normalized = normalizeEmail(email);
+  let page = 1;
 
-  if (link.error) {
-    const message = link.error.message.toLowerCase();
-    if (message.includes("not found") || message.includes("no user")) {
-      return null;
+  while (page <= 10) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) {
+      throw new Error(error.message);
     }
-    throw new Error(link.error.message);
+
+    const match = data.users.find((user) => user.email?.toLowerCase() === normalized);
+    if (match) {
+      return match;
+    }
+
+    if (data.users.length < 200) {
+      break;
+    }
+    page += 1;
   }
 
-  return link.data.user ?? null;
+  return null;
 }
 
 async function sendRecoverySetupEmail(email: string, userId: string) {

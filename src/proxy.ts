@@ -17,8 +17,15 @@ function isAuthEntryRoute(pathname: string) {
   return AUTH_ENTRY_ROUTES.includes(pathname);
 }
 
-function isPublicAuthFlowRoute(pathname: string) {
-  return pathname === "/signup/finish" || pathname.startsWith("/auth/");
+function isSessionRefreshRoute(pathname: string) {
+  return (
+    pathname === "/signup/finish" ||
+    pathname === "/activer-mon-compte" ||
+    pathname === "/checkout/success" ||
+    pathname === "/subscribe" ||
+    pathname.startsWith("/auth/confirm") ||
+    pathname.startsWith("/auth/callback")
+  );
 }
 
 async function redirectForAuthenticatedUser(request: NextRequest, user: User) {
@@ -30,15 +37,15 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isProtectedRoute = isRouteMatch(pathname, PROTECTED_ROUTES);
   const isAuthEntry = isAuthEntryRoute(pathname);
-  const isPublicAuthFlow = isPublicAuthFlowRoute(pathname);
+  const isSessionRefresh = isSessionRefreshRoute(pathname);
 
-  if (!isProtectedRoute && !isAuthEntry && !isPublicAuthFlow) {
+  if (!isProtectedRoute && !isAuthEntry && !isSessionRefresh) {
     return NextResponse.next();
   }
 
   const { response, user } = await updateSession(request);
 
-  if (isPublicAuthFlow) {
+  if (isSessionRefresh) {
     if (user && pathname === "/signup/finish" && !needsPasswordSetup(user)) {
       return redirectForAuthenticatedUser(request, user);
     }
@@ -65,7 +72,11 @@ export const config = {
     "/login",
     "/signup",
     "/signup/finish",
-    "/auth/:path*",
+    "/activer-mon-compte",
+    "/checkout/success",
+    "/subscribe",
+    "/auth/confirm",
+    "/auth/callback",
     "/dashboard/:path*",
     "/onboarding/:path*",
     "/admin/:path*",

@@ -12,7 +12,7 @@ function normalizeEmail(email: string) {
 
 function finishRedirectUrl() {
   const appUrl = env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  return `${appUrl}/auth/callback`;
+  return `${appUrl}/auth/confirm`;
 }
 
 function isUserNotFoundError(message: string) {
@@ -117,6 +117,17 @@ export async function startPaidAccountSession(
     return {
       ok: false,
       error: "Activation impossible pour le moment. Réessaie ou contacte le support.",
+    };
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user?.email) {
+    return {
+      ok: false,
+      error: "Session non créée. Réessaie l'activation.",
     };
   }
 

@@ -30,6 +30,13 @@ export function AuthCallbackHandler() {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     async function finish() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        fail();
+        return;
+      }
       router.replace(next);
       router.refresh();
     }
@@ -53,8 +60,13 @@ export function AuthCallbackHandler() {
             token_hash: tokenHash,
           });
           if (!error) {
-            await finish();
-            return;
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            if (session) {
+              await finish();
+              return;
+            }
           }
         }
       }
@@ -62,8 +74,13 @@ export function AuthCallbackHandler() {
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
-          await finish();
-          return;
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session) {
+            await finish();
+            return;
+          }
         }
       }
 

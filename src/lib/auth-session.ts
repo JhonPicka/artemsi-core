@@ -1,14 +1,15 @@
 import type { User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
+import { userNeedsPasswordSetup } from "@/lib/account-setup";
 import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
 import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
 
-/** Invite Supabase : mot de passe pas encore choisi sur /signup/finish. */
+/** Mot de passe pas encore choisi sur /signup/finish. */
 export function needsPasswordSetup(user: User | null | undefined): boolean {
   if (!user) return false;
-  return user.user_metadata?.password_setup_pending === true;
+  return userNeedsPasswordSetup(user);
 }
 
 export async function markPasswordSetupComplete(user: User) {

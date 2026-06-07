@@ -25,3 +25,15 @@ export function createClientFromRequest(
     },
   );
 }
+
+export function redirectWithCookies(
+  request: NextRequest,
+  from: NextResponse,
+  pathname: string,
+) {
+  const redirect = NextResponse.redirect(new URL(pathname, request.url));
+  for (const cookie of from.cookies.getAll()) {
+    redirect.cookies.set(cookie);
+  }
+  return redirect;
+}
