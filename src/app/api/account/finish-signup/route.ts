@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getFreshLoginPath } from "@/lib/auth-paths";
-import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
+import { isAdminUser } from "@/lib/admin-auth";
+import { resolveAdminPostAuthPath } from "@/lib/admin-profile";
 import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
 import { finishSignupWithToken } from "@/lib/paid-account-activation";
 import {
@@ -16,7 +17,7 @@ async function resolveRedirectAfterPassword(
   supabase: SupabaseClient,
 ) {
   if (isAdminUser(user)) {
-    return getAdminHomePath();
+    return await resolveAdminPostAuthPath(user);
   }
 
   if (!user.email) {

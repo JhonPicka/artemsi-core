@@ -1,4 +1,4 @@
-import { getAdminEmail } from "@/lib/admin-auth";
+import { getAdminEmail, getAdminUserId } from "@/lib/admin-auth";
 import {
   ACQUISITION_SOURCE_LABEL,
   ALTERNANCE_RHYTHM_LABEL,
@@ -227,11 +227,20 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
   const adminEmail = getAdminEmail();
   const since7d = daysAgoIso(7);
 
+  const adminUserId = getAdminUserId();
+
   const profileFilter = <T>(query: T): T => {
-    return (query as unknown as { neq: (column: string, value: string) => T }).neq(
+    let filtered = (query as unknown as { neq: (column: string, value: string) => T }).neq(
       "email",
       adminEmail,
     );
+    if (adminUserId) {
+      filtered = (filtered as unknown as { neq: (column: string, value: string) => T }).neq(
+        "id",
+        adminUserId,
+      );
+    }
+    return filtered;
   };
 
   const profileSelect =

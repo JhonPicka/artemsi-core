@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
-import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
+import { isAdminUser } from "@/lib/admin-auth";
+import { resolveAdminPostAuthPath } from "@/lib/admin-profile";
 import { userHasBillingAccess } from "@/lib/billing";
 import { isBillingEnforced } from "@/lib/stripe";
 import { logoutToLoginAction } from "@/app/(auth)/actions";
@@ -14,8 +15,8 @@ import { legalRoutes } from "@/lib/legal-config";
 
 export default async function SubscribePage() {
   const user = await getCurrentUser();
-  if (isAdminUser(user)) {
-    redirect(getAdminHomePath());
+  if (user && isAdminUser(user)) {
+    redirect(await resolveAdminPostAuthPath(user));
   }
   const enforced = isBillingEnforced();
 

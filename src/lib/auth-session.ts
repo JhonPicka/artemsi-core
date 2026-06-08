@@ -2,7 +2,8 @@ import type { User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
 import { userNeedsPasswordSetup } from "@/lib/account-setup";
-import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
+import { isAdminUser } from "@/lib/admin-auth";
+import { resolveAdminPostAuthPath } from "@/lib/admin-profile";
 import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,7 +29,7 @@ export async function markPasswordSetupComplete(user: User) {
  */
 export async function resolveLoginPageRedirect(user: User): Promise<string | null> {
   if (isAdminUser(user)) {
-    return getAdminHomePath();
+    return await resolveAdminPostAuthPath(user);
   }
 
   if (needsPasswordSetup(user)) {
@@ -61,7 +62,7 @@ export async function resolveLoginPageRedirect(user: User): Promise<string | nul
 /** Où envoyer un utilisateur déjà authentifié (login, proxy, signup). */
 export async function resolvePostAuthRedirect(user: User): Promise<string> {
   if (isAdminUser(user)) {
-    return getAdminHomePath();
+    return await resolveAdminPostAuthPath(user);
   }
 
   if (!user.email) {

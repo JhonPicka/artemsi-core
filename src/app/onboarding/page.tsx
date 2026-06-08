@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
-import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
+import { isAdminUser } from "@/lib/admin-auth";
+import { resolveAdminPostAuthPath } from "@/lib/admin-profile";
 import { needsPasswordSetup } from "@/lib/auth-session";
 import { requireActiveSubscription } from "@/lib/billing";
 import { requireUser } from "@/lib/auth";
@@ -34,7 +35,7 @@ function pickEnum<T extends string>(value: string | null | undefined, allowed: r
 export default async function OnboardingPage() {
   const user = await requireUser();
   if (isAdminUser(user)) {
-    redirect(getAdminHomePath());
+    redirect(await resolveAdminPostAuthPath(user));
   }
   if (needsPasswordSetup(user)) {
     redirect("/signup/finish");

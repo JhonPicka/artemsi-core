@@ -5,7 +5,8 @@ import { BrandMark } from "@/components/brand/brand-mark";
 import { DashboardBottomNav } from "@/components/dashboard/dashboard-bottom-nav";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { LegalFooterLinks } from "@/components/legal/legal-footer-links";
-import { getAdminHomePath, isAdminUser } from "@/lib/admin-auth";
+import { isAdminUser } from "@/lib/admin-auth";
+import { resolveAdminPostAuthPath } from "@/lib/admin-profile";
 import { needsPasswordSetup } from "@/lib/auth-session";
 import { requireActiveSubscription } from "@/lib/billing";
 import { requireUser } from "@/lib/auth";
@@ -17,7 +18,7 @@ export default async function DashboardLayout({
 }: Readonly<{ children: ReactNode }>) {
   const user = await requireUser();
   if (isAdminUser(user)) {
-    redirect(getAdminHomePath());
+    redirect(await resolveAdminPostAuthPath(user));
   }
   if (needsPasswordSetup(user)) {
     redirect("/signup/finish");

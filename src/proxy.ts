@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { User } from "@supabase/supabase-js";
 
+import { isAdminUser } from "@/lib/admin-auth";
+import { adminNeedsNameSetup, ADMIN_SETUP_PATH } from "@/lib/admin-profile";
 import { needsPasswordSetup, resolvePostAuthRedirect } from "@/lib/auth-session";
 import { updateSession } from "@/lib/supabase/proxy";
 
@@ -62,6 +64,16 @@ export async function proxy(request: NextRequest) {
 
   if (user && isProtectedRoute && needsPasswordSetup(user)) {
     return NextResponse.redirect(new URL("/signup/finish", request.url));
+  }
+
+  if (
+    user &&
+    isAdminUser(user) &&
+    pathname.startsWith("/admin") &&
+    pathname !== ADMIN_SETUP_PATH &&
+    (await adminNeedsNameSetup(user))
+  ) {
+    return NextResponse.redirect(new URL(ADMIN_SETUP_PATH, request.url));
   }
 
   return response;

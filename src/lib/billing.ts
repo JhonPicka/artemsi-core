@@ -2,6 +2,7 @@ import type { User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import type Stripe from "stripe";
 
+import { isAdminUser } from "@/lib/admin-auth";
 import { isBillingBypassEmail } from "@/lib/billing-access";
 import { isBillingEnforced } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -244,6 +245,10 @@ export async function syncUserBilling(user: Pick<User, "id" | "email">) {
 }
 
 export async function requireActiveSubscription(user: Pick<User, "id" | "email">) {
+  if (isAdminUser(user)) {
+    return;
+  }
+
   if (!user.email) {
     redirect("/subscribe");
   }
@@ -265,6 +270,7 @@ export async function requireActiveSubscription(user: Pick<User, "id" | "email">
 
 /** Guard API routes: true when paid access is allowed. */
 export async function hasApiBillingAccess(user: Pick<User, "id" | "email">) {
+  if (isAdminUser(user)) return true;
   if (!user.email) return false;
   if (!isBillingEnforced()) return true;
   if (isBillingBypassEmail(user.email)) {

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 
 import { ActivatePaidAccountForm } from "@/components/auth/activate-paid-account-form";
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
+import { isAdminUser } from "@/lib/admin-auth";
+import { resolveAdminPostAuthPath } from "@/lib/admin-profile";
 import { needsPasswordSetup, resolvePostAuthRedirect } from "@/lib/auth-session";
 import { getCurrentUser } from "@/lib/auth";
 import { preparePaidAccountPasswordSetup } from "@/lib/paid-account-activation";
@@ -14,6 +16,9 @@ export default async function ActivatePaidAccountPage({ searchParams }: Props) {
   const user = await getCurrentUser();
 
   if (user) {
+    if (isAdminUser(user)) {
+      redirect(await resolveAdminPostAuthPath(user));
+    }
     if (needsPasswordSetup(user) && user.email) {
       const setup = await preparePaidAccountPasswordSetup(user.email);
       if (setup.ok) {
