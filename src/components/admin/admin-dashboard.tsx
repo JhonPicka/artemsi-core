@@ -223,7 +223,7 @@ export function AdminDashboard({ stats }: Props) {
           </div>
         </section>
 
-        <section className="card admin-dash-panel admin-dash-recent">
+        <section className="card admin-dash-panel admin-dash-recent admin-candidates-panel">
           <h2 className="admin-dash-panel-title">
             Tous les candidats ({stats.candidates.length})
           </h2>
@@ -233,8 +233,13 @@ export function AdminDashboard({ stats }: Props) {
           {stats.candidates.length === 0 ? (
             <p className="muted small-label">Aucun candidat inscrit pour le moment.</p>
           ) : (
-            <div className="admin-table-wrap admin-table-wrap--wide">
-              <table className="admin-table admin-table--candidates">
+            <>
+              <p className="admin-scroll-hint muted small-label">
+                Tableau défilable — utilise la molette ou fais glisser horizontalement pour voir
+                toutes les colonnes.
+              </p>
+              <div className="admin-candidates-scroll">
+                <table className="admin-table admin-table--candidates">
                 <thead>
                   <tr>
                     <th>Inscription</th>
@@ -296,7 +301,8 @@ export function AdminDashboard({ stats }: Props) {
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </section>
       </div>

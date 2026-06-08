@@ -6971,8 +6971,11 @@ input[type="checkbox"] {
 
 .admin-top-links {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1rem;
   font-size: 0.9rem;
+  min-width: 0;
 }
 
 .admin-top-links__item {
@@ -7737,9 +7740,54 @@ input[type="checkbox"] {
   margin: 0;
 }
 
+/* Admin shell — scroll naturel + pas de contenu coupé */
+.page-shell--admin {
+  width: min(100%, calc(100vw - 1.25rem));
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.admin-page-content {
+  min-width: 0;
+  width: 100%;
+}
+
+.top-nav--admin {
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem 1rem;
+  min-width: 0;
+}
+
+.top-nav-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem 0.75rem;
+  justify-self: end;
+  min-width: 0;
+}
+
+.top-nav-actions .top-nav-logout {
+  justify-self: auto;
+  margin: 0;
+}
+
+.theme-toggle--admin {
+  flex-shrink: 0;
+}
+
+.admin-dashboard,
+.admin-offer-page {
+  min-width: 0;
+  width: 100%;
+}
+
 .admin-dashboard-live {
   display: grid;
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .admin-live-bar {
@@ -7785,21 +7833,70 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
+.admin-scroll-hint {
+  margin: 0 0 0.5rem;
+}
+
+.admin-candidates-panel {
+  min-width: 0;
+}
+
+.admin-candidates-scroll {
+  overflow: auto;
+  max-height: min(70vh, 720px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  -webkit-overflow-scrolling: touch;
+}
+
 .admin-table-wrap--wide {
-  overflow-x: auto;
+  overflow: auto;
 }
 
 .admin-table--candidates {
-  min-width: 1400px;
+  width: max-content;
+  min-width: 100%;
   font-size: 0.78rem;
+}
+
+.admin-table--candidates thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface-strong);
+  box-shadow: 0 1px 0 var(--border);
 }
 
 .admin-table--candidates th,
 .admin-table--candidates td {
-  white-space: nowrap;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  vertical-align: top;
+  min-width: 5.5rem;
+  max-width: 14rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.admin-table--candidates th:nth-child(1),
+.admin-table--candidates td:nth-child(1) {
+  min-width: 7.5rem;
+}
+
+.admin-table--candidates th:nth-child(2),
+.admin-table--candidates td:nth-child(2) {
+  min-width: 10rem;
+  max-width: 16rem;
+}
+
+.admin-table--candidates th:nth-child(8),
+.admin-table--candidates td:nth-child(8),
+.admin-table--candidates th:nth-child(11),
+.admin-table--candidates td:nth-child(11),
+.admin-table--candidates th:nth-child(12),
+.admin-table--candidates td:nth-child(12) {
+  min-width: 8rem;
+  max-width: 18rem;
 }
 
 @media (max-width: 720px) {
