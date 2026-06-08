@@ -1,4 +1,6 @@
 import { getAdminEmail, isAdminUser } from "@/lib/admin-auth";
+import { syncProfileSubscriptionStatus } from "@/lib/billing";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export const ADMIN_SETUP_PATH = "/admin/setup";
@@ -37,17 +39,16 @@ export type AdminProfileUpsertInput = {
 
 /** Profil admin minimal : nom uniquement, pas de parcours candidat. */
 export async function upsertAdminProfile(input: AdminProfileUpsertInput) {
-  const supabase = await createClient();
+  const admin = createAdminClient();
   const fullName = input.fullName.trim();
   const email = input.email.trim().toLowerCase();
 
-  const { error } = await supabase.from("profiles").upsert(
+  const { error } = await admin.from("profiles").upsert(
     {
       id: input.userId,
       email,
       full_name: fullName,
       onboarding_completed: true,
-      subscription_status: "active",
       regions: [],
       updated_at: new Date().toISOString(),
     },
@@ -57,6 +58,8 @@ export async function upsertAdminProfile(input: AdminProfileUpsertInput) {
   if (error) {
     throw new Error(error.message);
   }
+
+  await syncProfileSubscriptionStatus({ userId: input.userId, email });
 
   return { fullName, email: email === getAdminEmail() ? email : input.email };
 }
