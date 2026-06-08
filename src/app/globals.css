@@ -7612,6 +7612,203 @@ input[type="checkbox"] {
 }
 
 /* =====================================================
+   Onboarding progress
+   ===================================================== */
+
+.onboarding-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.onboarding-progress {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.35rem 0 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+}
+
+.onboarding-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.onboarding-progress-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--foreground-soft);
+}
+
+.onboarding-progress-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary-2);
+}
+
+.onboarding-progress-track {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.onboarding-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--primary), var(--primary-2));
+  box-shadow: 0 0 12px rgba(124, 92, 255, 0.35);
+  transition: width 0.35s ease;
+}
+
+.onboarding-progress-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.onboarding-progress-step {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.onboarding-progress-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.onboarding-progress-step-label {
+  font-size: 0.62rem;
+  line-height: 1.2;
+  color: var(--muted);
+}
+
+.onboarding-progress-step--current .onboarding-progress-step-dot {
+  background: var(--primary-2);
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+
+.onboarding-progress-step--current .onboarding-progress-step-label {
+  color: var(--foreground-soft);
+  font-weight: 600;
+}
+
+.onboarding-progress-step--done .onboarding-progress-step-dot {
+  background: var(--success);
+}
+
+.onboarding-step-title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.onboarding-step {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.onboarding-callout {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--primary-soft-strong);
+  background: var(--primary-soft);
+  color: var(--foreground-soft);
+  font-size: 0.9rem;
+}
+
+.onboarding-sectors {
+  margin-top: 0.25rem;
+}
+
+.onboarding-step-error {
+  margin: 0;
+}
+
+.admin-dashboard-live {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-live-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--success-border);
+  background: var(--success-soft);
+  font-size: 0.85rem;
+  color: var(--foreground-soft);
+}
+
+.admin-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 8px var(--success);
+  animation: admin-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes admin-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.admin-live-refresh {
+  margin-left: auto;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground-soft);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.admin-table-wrap--wide {
+  overflow-x: auto;
+}
+
+.admin-table--candidates {
+  min-width: 1400px;
+  font-size: 0.78rem;
+}
+
+.admin-table--candidates th,
+.admin-table--candidates td {
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 720px) {
+  .onboarding-progress-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* =====================================================
    Misc legacy
    ===================================================== */
 

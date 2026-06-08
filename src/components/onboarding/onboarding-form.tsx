@@ -1,41 +1,54 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { OnboardingProgress } from "@/components/onboarding/onboarding-progress";
 import {
+  ACQUISITION_SOURCE_LABEL,
+  ACQUISITION_SOURCES,
+  ALTERNANCE_RHYTHM_LABEL,
+  ALTERNANCE_RHYTHM_OPTIONS,
+  APPLICATIONS_SENT_RANGE_LABEL,
+  APPLICATIONS_SENT_RANGES,
   CONTRACT_DURATION_LABEL,
   CONTRACT_DURATIONS,
   CONTRACT_TYPE_LABEL,
   CONTRACT_TYPES,
+  PREFERRED_SECTOR_LABEL,
+  PREFERRED_SECTORS,
   REGIONS,
+  SEARCH_LEVEL_LABEL,
+  SEARCH_LEVELS,
   STUDY_DOMAIN_LABEL,
   STUDY_DOMAINS,
   STUDY_LEVEL_LABEL,
   STUDY_LEVEL_OPTIONS,
+  type AcquisitionSource,
+  type AlternanceRhythm,
+  type ApplicationsSentRange,
   type ContractDuration,
   type ContractType,
+  type PreferredSector,
+  type SearchLevel,
   type StudyDomain,
   type StudyLevel,
 } from "@/lib/constants";
-import { onboardingSchema } from "@/lib/validation";
+import {
+  normalizeOnboardingPayload,
+  validateOnboardingStep,
+  type OnboardingFormValues,
+} from "@/lib/onboarding-validation";
 
 type OnboardingFormProps = {
-  initialValues: {
-    fullName: string;
-    phone: string;
-    schoolName: string;
-    studyLevel: StudyLevel;
-    studyDomain: StudyDomain;
-    targetJob: string;
-    regions: string[];
-    startDate: string;
-    contractType: ContractType;
-    contractDuration: ContractDuration;
-  };
+  initialValues: OnboardingFormValues;
 };
 
-const totalSteps = 3;
+const totalSteps = 5;
+
+function requiresAlternanceRhythm(contractType: ContractType) {
+  return contractType === "ALTERNANCE" || contractType === "APPRENTISSAGE";
+}
 
 export function OnboardingForm({ initialValues }: OnboardingFormProps) {
   const router = useRouter();
@@ -46,13 +59,13 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
   const [coverLetterFile, setCoverLetterFile] = useState<File | null>(null);
   const [values, setValues] = useState(initialValues);
 
-  const progress = useMemo(() => Math.round((step / totalSteps) * 100), [step]);
-
   const canGoPrevious = step > 1;
   const canGoNext = step < totalSteps;
+  const showAlternanceRhythm = requiresAlternanceRhythm(values.contractType);
 
-  function update<K extends keyof typeof values>(key: K, value: (typeof values)[K]) {
+  function update<K extends keyof OnboardingFormValues>(key: K, value: OnboardingFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
+    setError(null);
   }
 
   function toggleRegion(region: string) {
@@ -62,6 +75,32 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
         ? current.regions.filter((item) => item !== region)
         : [...current.regions, region],
     }));
+    setError(null);
+  }
+
+  function toggleSector(sector: PreferredSector) {
+    setValues((current) => ({
+      ...current,
+      preferredSectors: current.preferredSectors.includes(sector)
+        ? current.preferredSectors.filter((item) => item !== sector)
+        : [...current.preferredSectors, sector],
+    }));
+    setError(null);
+  }
+
+  function goNext() {
+    const stepError = validateOnboardingStep(step, values);
+    if (stepError) {
+      setError(stepError);
+      return;
+    }
+    setError(null);
+    setStep((current) => Math.min(current + 1, totalSteps));
+  }
+
+  function goPrevious() {
+    setError(null);
+    setStep((current) => Math.max(current - 1, 1));
   }
 
   async function uploadDocument(documentType: "cv" | "cover_letter", file: File) {
@@ -82,9 +121,19 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
 
   async function submit() {
     setError(null);
-    const parsed = onboardingSchema.safeParse(values);
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Formulaire invalide");
+
+    for (let checkpoint = 1; checkpoint <= 4; checkpoint += 1) {
+      const stepError = validateOnboardingStep(checkpoint, values);
+      if (stepError) {
+        setStep(checkpoint);
+        setError(stepError);
+        return;
+      }
+    }
+
+    const payload = normalizeOnboardingPayload(values);
+    if (!payload) {
+      setError("Formulaire invalide");
       return;
     }
 
@@ -93,7 +142,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
       const response = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -122,20 +171,26 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
   }
 
   return (
-    <div className="card form">
+    <div className="card form onboarding-form">
       <span className="brand-chip">ONBOARDING</span>
       <h1>Finalise ton profil candidat</h1>
       <p className="muted">
-        Étape {step} / {totalSteps} — progression {progress}%
+        Complète chaque étape pour débloquer les offres adaptées à ton profil.
       </p>
 
+      <OnboardingProgress step={step} totalSteps={totalSteps} />
+
       {step === 1 ? (
-        <>
+        <section className="onboarding-step" aria-labelledby="onboarding-step-1">
+          <h2 id="onboarding-step-1" className="onboarding-step-title">
+            Identité & formation
+          </h2>
           <label htmlFor="fullName">Nom complet</label>
           <input
             id="fullName"
             value={values.fullName}
             onChange={(event) => update("fullName", event.target.value)}
+            required
           />
 
           <label htmlFor="phone">Téléphone</label>
@@ -143,6 +198,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
             id="phone"
             value={values.phone}
             onChange={(event) => update("phone", event.target.value)}
+            required
           />
 
           <label htmlFor="schoolName">Nom de l&apos;école</label>
@@ -150,6 +206,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
             id="schoolName"
             value={values.schoolName}
             onChange={(event) => update("schoolName", event.target.value)}
+            required
           />
 
           <label htmlFor="studyLevel">Niveau d&apos;étude</label>
@@ -157,6 +214,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
             id="studyLevel"
             value={values.studyLevel}
             onChange={(event) => update("studyLevel", event.target.value as StudyLevel)}
+            required
           >
             {STUDY_LEVEL_OPTIONS.map((level) => (
               <option key={level} value={level}>
@@ -169,9 +227,8 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
           <select
             id="studyDomain"
             value={values.studyDomain}
-            onChange={(event) =>
-              update("studyDomain", event.target.value as StudyDomain)
-            }
+            onChange={(event) => update("studyDomain", event.target.value as StudyDomain)}
+            required
           >
             {STUDY_DOMAINS.map((domain) => (
               <option key={domain} value={domain}>
@@ -179,16 +236,20 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
               </option>
             ))}
           </select>
-        </>
+        </section>
       ) : null}
 
       {step === 2 ? (
-        <>
+        <section className="onboarding-step" aria-labelledby="onboarding-step-2">
+          <h2 id="onboarding-step-2" className="onboarding-step-title">
+            Critères de recherche
+          </h2>
           <label htmlFor="targetJob">Poste recherché</label>
           <input
             id="targetJob"
             value={values.targetJob}
             onChange={(event) => update("targetJob", event.target.value)}
+            required
           />
 
           <label htmlFor="startDate">Date de début souhaitée</label>
@@ -197,15 +258,28 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
             type="date"
             value={values.startDate}
             onChange={(event) => update("startDate", event.target.value)}
+            required
           />
 
           <label htmlFor="contractType">Type de contrat</label>
           <select
             id="contractType"
             value={values.contractType}
-            onChange={(event) =>
-              update("contractType", event.target.value as ContractType)
-            }
+            onChange={(event) => {
+              const contractType = event.target.value as ContractType;
+              setValues((current) => ({
+                ...current,
+                contractType,
+                alternanceRhythm: requiresAlternanceRhythm(contractType)
+                  ? current.alternanceRhythm
+                  : "NOT_APPLICABLE",
+                alternanceRhythmOther: requiresAlternanceRhythm(contractType)
+                  ? current.alternanceRhythmOther
+                  : "",
+              }));
+              setError(null);
+            }}
+            required
           >
             {CONTRACT_TYPES.map((type) => (
               <option key={type} value={type}>
@@ -221,6 +295,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
             onChange={(event) =>
               update("contractDuration", event.target.value as ContractDuration)
             }
+            required
           >
             {CONTRACT_DURATIONS.map((duration) => (
               <option key={duration} value={duration}>
@@ -242,12 +317,162 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
               </label>
             ))}
           </fieldset>
-        </>
+        </section>
       ) : null}
 
       {step === 3 ? (
-        <>
-          <label htmlFor="cvUpload">CV (optionnel, PDF ou DOC/DOCX)</label>
+        <section className="onboarding-step" aria-labelledby="onboarding-step-3">
+          <h2 id="onboarding-step-3" className="onboarding-step-title">
+            Alternance & secteurs
+          </h2>
+
+          {showAlternanceRhythm ? (
+            <>
+              <p className="onboarding-callout">
+                <strong>Rythme alternance</strong> — très important pour les profils ingénieurs.
+              </p>
+              <label htmlFor="alternanceRhythm">Rythme souhaité</label>
+              <select
+                id="alternanceRhythm"
+                value={values.alternanceRhythm || ""}
+                onChange={(event) =>
+                  update("alternanceRhythm", event.target.value as AlternanceRhythm)
+                }
+                required
+              >
+                <option value="" disabled>
+                  Sélectionne un rythme
+                </option>
+                {ALTERNANCE_RHYTHM_OPTIONS.map((rhythm) => (
+                  <option key={rhythm} value={rhythm}>
+                    {ALTERNANCE_RHYTHM_LABEL[rhythm]}
+                  </option>
+                ))}
+              </select>
+
+              {values.alternanceRhythm === "AUTRE" ? (
+                <>
+                  <label htmlFor="alternanceRhythmOther">Précise ton rythme</label>
+                  <input
+                    id="alternanceRhythmOther"
+                    value={values.alternanceRhythmOther}
+                    onChange={(event) => update("alternanceRhythmOther", event.target.value)}
+                    placeholder="Ex. 1 semaine école / 3 semaines entreprise"
+                    required
+                  />
+                </>
+              ) : null}
+            </>
+          ) : (
+            <p className="muted">
+              Le rythme alternance s&apos;applique aux contrats alternance et apprentissage. Tu
+              pourras le renseigner si tu changes de type de contrat.
+            </p>
+          )}
+
+          <fieldset className="regions-grid onboarding-sectors">
+            <legend>Secteurs préférés</legend>
+            {PREFERRED_SECTORS.map((sector) => (
+              <label key={sector} className="checkbox-line">
+                <input
+                  type="checkbox"
+                  checked={values.preferredSectors.includes(sector)}
+                  onChange={() => toggleSector(sector)}
+                />
+                <span>{PREFERRED_SECTOR_LABEL[sector]}</span>
+              </label>
+            ))}
+          </fieldset>
+        </section>
+      ) : null}
+
+      {step === 4 ? (
+        <section className="onboarding-step" aria-labelledby="onboarding-step-4">
+          <h2 id="onboarding-step-4" className="onboarding-step-title">
+            Ton parcours de recherche
+          </h2>
+          <p className="muted">
+            Ces informations nous aident à mieux t&apos;accompagner et à comprendre ce qui fonctionne
+            pour ARTEMSI.
+          </p>
+
+          <label htmlFor="acquisitionSource">Comment as-tu connu ARTEMSI ?</label>
+          <select
+            id="acquisitionSource"
+            value={values.acquisitionSource}
+            onChange={(event) =>
+              update("acquisitionSource", event.target.value as AcquisitionSource)
+            }
+            required
+          >
+            <option value="" disabled>
+              Sélectionne une source
+            </option>
+            {ACQUISITION_SOURCES.map((source) => (
+              <option key={source} value={source}>
+                {ACQUISITION_SOURCE_LABEL[source]}
+              </option>
+            ))}
+          </select>
+
+          {values.acquisitionSource === "AUTRE" ? (
+            <>
+              <label htmlFor="acquisitionSourceOther">Précise la source</label>
+              <input
+                id="acquisitionSourceOther"
+                value={values.acquisitionSourceOther}
+                onChange={(event) => update("acquisitionSourceOther", event.target.value)}
+                required
+              />
+            </>
+          ) : null}
+
+          <label htmlFor="applicationsSentRange">
+            Nombre de candidatures déjà envoyées
+          </label>
+          <select
+            id="applicationsSentRange"
+            value={values.applicationsSentRange}
+            onChange={(event) =>
+              update("applicationsSentRange", event.target.value as ApplicationsSentRange)
+            }
+            required
+          >
+            <option value="" disabled>
+              Sélectionne une fourchette
+            </option>
+            {APPLICATIONS_SENT_RANGES.map((range) => (
+              <option key={range} value={range}>
+                {APPLICATIONS_SENT_RANGE_LABEL[range]}
+              </option>
+            ))}
+          </select>
+
+          <label htmlFor="searchLevel">Niveau de recherche</label>
+          <select
+            id="searchLevel"
+            value={values.searchLevel}
+            onChange={(event) => update("searchLevel", event.target.value as SearchLevel)}
+            required
+          >
+            <option value="" disabled>
+              Sélectionne ton niveau
+            </option>
+            {SEARCH_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {SEARCH_LEVEL_LABEL[level]}
+              </option>
+            ))}
+          </select>
+        </section>
+      ) : null}
+
+      {step === 5 ? (
+        <section className="onboarding-step" aria-labelledby="onboarding-step-5">
+          <h2 id="onboarding-step-5" className="onboarding-step-title">
+            Documents (optionnel)
+          </h2>
+          <label htmlFor="cvUpload">CV (PDF ou DOC/DOCX)</label>
           <input
             id="cvUpload"
             type="file"
@@ -255,9 +480,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
             onChange={(event) => setCvFile(event.target.files?.[0] ?? null)}
           />
 
-          <label htmlFor="coverLetterUpload">
-            Lettre de motivation (optionnel, PDF ou DOC/DOCX)
-          </label>
+          <label htmlFor="coverLetterUpload">Lettre de motivation (PDF ou DOC/DOCX)</label>
           <input
             id="coverLetterUpload"
             type="file"
@@ -268,14 +491,14 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
           <p className="muted">
             Tu peux aussi ajouter ou remplacer ces documents plus tard dans ton espace.
           </p>
-        </>
+        </section>
       ) : null}
 
-      {error ? <p className="error">{error}</p> : null}
+      {error ? <p className="error onboarding-step-error">{error}</p> : null}
 
       <div className="form-actions">
         {canGoPrevious ? (
-          <button type="button" className="secondary" onClick={() => setStep(step - 1)}>
+          <button type="button" className="secondary" onClick={goPrevious}>
             Retour
           </button>
         ) : (
@@ -283,7 +506,7 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
         )}
 
         {canGoNext ? (
-          <button type="button" onClick={() => setStep(step + 1)}>
+          <button type="button" onClick={goNext}>
             Continuer
           </button>
         ) : (

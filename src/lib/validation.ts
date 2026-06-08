@@ -1,15 +1,15 @@
 import { z } from "zod";
 
-import {
-  CONTRACT_DURATIONS,
-  CONTRACT_TYPES,
-  MAX_DOCUMENT_SIZE_BYTES,
-  REGIONS,
-  STUDY_DOMAINS,
-  STUDY_LEVELS,
-  SUPPORTED_DOCUMENT_MIME_TYPES,
-} from "@/lib/constants";
+import { MAX_DOCUMENT_SIZE_BYTES, SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { isValidYyyyMmDdDate, normalizeToYyyyMmDd } from "@/lib/dates-fr";
+
+export {
+  onboardingSchema,
+  type OnboardingInput,
+  type OnboardingFormValues,
+  validateOnboardingStep,
+  normalizeOnboardingPayload,
+} from "@/lib/onboarding-validation";
 
 function calendarDateYyyyMmDdSchema(message: string) {
   return z
@@ -51,19 +51,6 @@ export const setPasswordSchema = z
     message: "Les mots de passe ne correspondent pas",
     path: ["confirmPassword"],
   });
-
-export const onboardingSchema = z.object({
-  fullName: z.string().min(2, "Nom complet requis"),
-  phone: z.string().min(8, "Téléphone invalide"),
-  schoolName: z.string().min(2, "Nom de l'école requis"),
-  studyLevel: z.enum(STUDY_LEVELS),
-  studyDomain: z.enum(STUDY_DOMAINS),
-  targetJob: z.string().min(2, "Poste recherché requis"),
-  regions: z.array(z.enum(REGIONS)).min(1, "Sélectionne au moins une région"),
-  startDate: calendarDateYyyyMmDdSchema("Date invalide"),
-  contractType: z.enum(CONTRACT_TYPES),
-  contractDuration: z.enum(CONTRACT_DURATIONS),
-});
 
 export const documentUploadSchema = z.object({
   documentType: z.enum(["cv", "cover_letter"]),
@@ -107,6 +94,5 @@ export const applicationUpdateSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
-export type OnboardingInput = z.infer<typeof onboardingSchema>;
 export type ApplicationCreateInput = z.infer<typeof applicationCreateSchema>;
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];

@@ -18,20 +18,9 @@ import {
   type StudyDomain,
   type StudyLevel,
 } from "@/lib/constants";
-import { onboardingSchema } from "@/lib/validation";
+import { normalizeOnboardingPayload, type OnboardingFormValues } from "@/lib/onboarding-validation";
 
-export type ProfileEditorInitialValues = {
-  fullName: string;
-  phone: string;
-  schoolName: string;
-  studyLevel: StudyLevel;
-  studyDomain: StudyDomain;
-  targetJob: string;
-  regions: string[];
-  startDate: string;
-  contractType: ContractType;
-  contractDuration: ContractDuration;
-};
+export type ProfileEditorInitialValues = OnboardingFormValues;
 
 type ProfileEditorProps = {
   initialValues: ProfileEditorInitialValues;
@@ -92,9 +81,9 @@ export function ProfileEditor({
     setError(null);
     setSuccess(null);
 
-    const parsed = onboardingSchema.safeParse(values);
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Formulaire invalide");
+    const payload = normalizeOnboardingPayload(values);
+    if (!payload) {
+      setError("Formulaire invalide");
       return;
     }
 
@@ -103,7 +92,7 @@ export function ProfileEditor({
       const profileResponse = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(payload),
       });
 
       if (!profileResponse.ok) {

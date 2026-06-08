@@ -1,16 +1,30 @@
 import { ProfileMainClient } from "@/components/profile/profile-main-client";
 import { requireUser } from "@/lib/auth";
 import {
+  ACQUISITION_SOURCES,
+  ALTERNANCE_RHYTHM_LABEL,
+  ALTERNANCE_RHYTHMS,
+  APPLICATIONS_SENT_RANGE_LABEL,
+  APPLICATIONS_SENT_RANGES,
   CONTRACT_DURATION_LABEL,
   CONTRACT_DURATIONS,
   CONTRACT_TYPE_LABEL,
   CONTRACT_TYPES,
+  PREFERRED_SECTOR_LABEL,
+  PREFERRED_SECTORS,
+  SEARCH_LEVEL_LABEL,
+  SEARCH_LEVELS,
   STUDY_DOMAIN_LABEL,
   STUDY_DOMAINS,
   STUDY_LEVEL_LABEL,
   STUDY_LEVEL_OPTIONS,
+  type AcquisitionSource,
+  type AlternanceRhythm,
+  type ApplicationsSentRange,
   type ContractDuration,
   type ContractType,
+  type PreferredSector,
+  type SearchLevel,
   type StudyDomain,
   type StudyLevel,
 } from "@/lib/constants";
@@ -49,7 +63,7 @@ export default async function DashboardProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "full_name, phone, school_name, target_job, regions, study_level, study_domain, contract_type, contract_duration, start_date",
+        "full_name, phone, school_name, target_job, regions, study_level, study_domain, contract_type, contract_duration, start_date, alternance_rhythm, alternance_rhythm_other, preferred_sectors, acquisition_source, acquisition_source_other, applications_sent_range, search_level",
       )
       .eq("id", user.id)
       .maybeSingle(),
@@ -120,6 +134,22 @@ export default async function DashboardProfilePage() {
       label: "Zones",
       value: (profile?.regions ?? []).length ? (profile?.regions ?? []).join(" · ") : "—",
     },
+    {
+      label: "Rythme alternance",
+      value: profile?.alternance_rhythm
+        ? fmt(profile.alternance_rhythm, ALTERNANCE_RHYTHM_LABEL)
+        : "—",
+    },
+    {
+      label: "Secteurs",
+      value: ((profile?.preferred_sectors as string[] | null) ?? [])
+        .map((sector) => PREFERRED_SECTOR_LABEL[sector as PreferredSector] ?? sector)
+        .join(" · ") || "—",
+    },
+    {
+      label: "Niveau de recherche",
+      value: fmt(profile?.search_level, SEARCH_LEVEL_LABEL),
+    },
   ];
 
   return (
@@ -158,6 +188,32 @@ export default async function DashboardProfilePage() {
           startDate: profile?.start_date ?? "",
           contractType: contractTypeInitial,
           contractDuration: contractDurationInitial,
+          alternanceRhythm: ALTERNANCE_RHYTHMS.includes(
+            profile?.alternance_rhythm as AlternanceRhythm,
+          )
+            ? (profile?.alternance_rhythm as AlternanceRhythm)
+            : contractTypeInitial === "ALTERNANCE" || contractTypeInitial === "APPRENTISSAGE"
+              ? ""
+              : "NOT_APPLICABLE",
+          alternanceRhythmOther: profile?.alternance_rhythm_other ?? "",
+          preferredSectors: ((profile?.preferred_sectors as string[] | null) ?? []).filter(
+            (sector): sector is PreferredSector =>
+              PREFERRED_SECTORS.includes(sector as PreferredSector),
+          ),
+          acquisitionSource: ACQUISITION_SOURCES.includes(
+            profile?.acquisition_source as AcquisitionSource,
+          )
+            ? (profile?.acquisition_source as AcquisitionSource)
+            : "AUTRE",
+          acquisitionSourceOther: profile?.acquisition_source_other ?? "",
+          applicationsSentRange: APPLICATIONS_SENT_RANGES.includes(
+            profile?.applications_sent_range as ApplicationsSentRange,
+          )
+            ? (profile?.applications_sent_range as ApplicationsSentRange)
+            : "RANGE_0_10",
+          searchLevel: SEARCH_LEVELS.includes(profile?.search_level as SearchLevel)
+            ? (profile?.search_level as SearchLevel)
+            : "STARTING",
         }}
       />
     </div>

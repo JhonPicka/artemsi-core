@@ -6,16 +6,30 @@ import { needsPasswordSetup } from "@/lib/auth-session";
 import { requireActiveSubscription } from "@/lib/billing";
 import { requireUser } from "@/lib/auth";
 import {
+  ACQUISITION_SOURCES,
+  ALTERNANCE_RHYTHMS,
+  APPLICATIONS_SENT_RANGES,
   CONTRACT_DURATIONS,
   CONTRACT_TYPES,
+  PREFERRED_SECTORS,
+  SEARCH_LEVELS,
   STUDY_DOMAINS,
   STUDY_LEVEL_OPTIONS,
+  type AcquisitionSource,
+  type AlternanceRhythm,
+  type ApplicationsSentRange,
   type ContractDuration,
   type ContractType,
+  type PreferredSector,
+  type SearchLevel,
   type StudyDomain,
   type StudyLevel,
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
+
+function pickEnum<T extends string>(value: string | null | undefined, allowed: readonly T[], fallback: T) {
+  return allowed.includes(value as T) ? (value as T) : fallback;
+}
 
 export default async function OnboardingPage() {
   const user = await requireUser();
@@ -31,7 +45,7 @@ export default async function OnboardingPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, phone, school_name, study_level, study_domain, target_job, regions, start_date, contract_type, contract_duration, onboarding_completed",
+      "full_name, phone, school_name, study_level, study_domain, target_job, regions, start_date, contract_type, contract_duration, alternance_rhythm, alternance_rhythm_other, preferred_sectors, acquisition_source, acquisition_source_other, applications_sent_range, search_level, onboarding_completed",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -40,29 +54,21 @@ export default async function OnboardingPage() {
     redirect("/dashboard");
   }
 
-  const studyLevel: StudyLevel = STUDY_LEVEL_OPTIONS.includes(
-    (profile?.study_level ?? "") as StudyLevel,
+  const studyLevel = pickEnum(profile?.study_level, STUDY_LEVEL_OPTIONS, STUDY_LEVEL_OPTIONS[0]);
+  const studyDomain = pickEnum(profile?.study_domain, STUDY_DOMAINS, STUDY_DOMAINS[0]);
+  const contractType = pickEnum(profile?.contract_type, CONTRACT_TYPES, CONTRACT_TYPES[0]);
+  const contractDuration = pickEnum(profile?.contract_duration, CONTRACT_DURATIONS, "12_MONTHS");
+  const alternanceRhythm: AlternanceRhythm | "" = ALTERNANCE_RHYTHMS.includes(
+    profile?.alternance_rhythm as AlternanceRhythm,
   )
-    ? (profile?.study_level as StudyLevel)
-    : STUDY_LEVEL_OPTIONS[0];
-
-  const studyDomain: StudyDomain = STUDY_DOMAINS.includes(
-    (profile?.study_domain ?? "") as StudyDomain,
-  )
-    ? (profile?.study_domain as StudyDomain)
-    : STUDY_DOMAINS[0];
-
-  const contractType: ContractType = CONTRACT_TYPES.includes(
-    (profile?.contract_type ?? "") as ContractType,
-  )
-    ? (profile?.contract_type as ContractType)
-    : CONTRACT_TYPES[0];
-
-  const contractDuration: ContractDuration = CONTRACT_DURATIONS.includes(
-    (profile?.contract_duration ?? "") as ContractDuration,
-  )
-    ? (profile?.contract_duration as ContractDuration)
-    : "12_MONTHS";
+    ? (profile?.alternance_rhythm as AlternanceRhythm)
+    : contractType === "ALTERNANCE" || contractType === "APPRENTISSAGE"
+      ? ""
+      : "NOT_APPLICABLE";
+  const preferredSectors = ((profile?.preferred_sectors as string[] | null) ?? []).filter(
+    (sector): sector is PreferredSector =>
+      PREFERRED_SECTORS.includes(sector as PreferredSector),
+  );
 
   return (
     <main className="centered-page">
@@ -78,6 +84,21 @@ export default async function OnboardingPage() {
           startDate: profile?.start_date ?? "",
           contractType,
           contractDuration,
+          alternanceRhythm,
+          alternanceRhythmOther: profile?.alternance_rhythm_other ?? "",
+          preferredSectors,
+          acquisitionSource: pickEnum(
+            profile?.acquisition_source,
+            ACQUISITION_SOURCES,
+            "" as AcquisitionSource,
+          ),
+          acquisitionSourceOther: profile?.acquisition_source_other ?? "",
+          applicationsSentRange: pickEnum(
+            profile?.applications_sent_range,
+            APPLICATIONS_SENT_RANGES,
+            "" as ApplicationsSentRange,
+          ),
+          searchLevel: pickEnum(profile?.search_level, SEARCH_LEVELS, "" as SearchLevel),
         }}
       />
     </main>

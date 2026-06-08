@@ -101,6 +101,116 @@ export const STUDY_DOMAIN_LABEL: Record<StudyDomain, string> = {
   AUTRE: "Autre",
 };
 
+export const ALTERNANCE_RHYTHMS = [
+  "ONE_WEEK_ONE_WEEK",
+  "TWO_WEEKS_TWO_WEEKS",
+  "THREE_WEEKS_ONE_WEEK",
+  "AUTRE",
+  "NOT_APPLICABLE",
+] as const;
+
+export type AlternanceRhythm = (typeof ALTERNANCE_RHYTHMS)[number];
+
+export const ALTERNANCE_RHYTHM_LABEL: Record<AlternanceRhythm, string> = {
+  ONE_WEEK_ONE_WEEK: "1 semaine / 1 semaine",
+  TWO_WEEKS_TWO_WEEKS: "2 semaines / 2 semaines",
+  THREE_WEEKS_ONE_WEEK: "3 semaines / 1 semaine",
+  AUTRE: "Autre",
+  NOT_APPLICABLE: "Non concerné",
+};
+
+/** Rythmes affichés dans le formulaire (hors « non concerné »). */
+export const ALTERNANCE_RHYTHM_OPTIONS: AlternanceRhythm[] = [
+  "ONE_WEEK_ONE_WEEK",
+  "TWO_WEEKS_TWO_WEEKS",
+  "THREE_WEEKS_ONE_WEEK",
+  "AUTRE",
+];
+
+export const PREFERRED_SECTORS = [
+  "AUTOMOBILE",
+  "AERONAUTIQUE",
+  "ENERGIE",
+  "DEFENSE",
+  "FERROVIAIRE",
+  "LUXE",
+  "INDUSTRIE",
+] as const;
+
+export type PreferredSector = (typeof PREFERRED_SECTORS)[number];
+
+export const PREFERRED_SECTOR_LABEL: Record<PreferredSector, string> = {
+  AUTOMOBILE: "Automobile",
+  AERONAUTIQUE: "Aéronautique",
+  ENERGIE: "Énergie",
+  DEFENSE: "Défense",
+  FERROVIAIRE: "Ferroviaire",
+  LUXE: "Luxe",
+  INDUSTRIE: "Industrie",
+};
+
+export const ACQUISITION_SOURCES = [
+  "TIKTOK",
+  "LINKEDIN",
+  "INSTAGRAM",
+  "BDE",
+  "AMI",
+  "ECOLE",
+  "AUTRE",
+] as const;
+
+export type AcquisitionSource = (typeof ACQUISITION_SOURCES)[number];
+
+export const ACQUISITION_SOURCE_LABEL: Record<AcquisitionSource, string> = {
+  TIKTOK: "TikTok",
+  LINKEDIN: "LinkedIn",
+  INSTAGRAM: "Instagram",
+  BDE: "BDE",
+  AMI: "Ami",
+  ECOLE: "École",
+  AUTRE: "Autre",
+};
+
+export const APPLICATIONS_SENT_RANGES = [
+  "RANGE_0_10",
+  "RANGE_10_50",
+  "RANGE_50_100",
+  "RANGE_100_PLUS",
+] as const;
+
+export type ApplicationsSentRange = (typeof APPLICATIONS_SENT_RANGES)[number];
+
+export const APPLICATIONS_SENT_RANGE_LABEL: Record<ApplicationsSentRange, string> = {
+  RANGE_0_10: "0-10",
+  RANGE_10_50: "10-50",
+  RANGE_50_100: "50-100",
+  RANGE_100_PLUS: "100+",
+};
+
+export const SEARCH_LEVELS = [
+  "STARTING",
+  "ACTIVE",
+  "INTERVIEWS",
+  "OFFER",
+] as const;
+
+export type SearchLevel = (typeof SEARCH_LEVELS)[number];
+
+export const SEARCH_LEVEL_LABEL: Record<SearchLevel, string> = {
+  STARTING: "Je commence",
+  ACTIVE: "Je recherche activement",
+  INTERVIEWS: "J'ai déjà des entretiens",
+  OFFER: "J'ai une proposition",
+};
+
+export const ONBOARDING_STEP_LABELS = [
+  "Identité",
+  "Recherche",
+  "Alternance & secteurs",
+  "Ton parcours",
+  "Documents",
+] as const;
+
 export const REGIONS = [
   "Ile-de-France",
   "Auvergne-Rhone-Alpes",

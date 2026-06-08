@@ -29,6 +29,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const alternanceRhythm =
+    parsed.data.alternanceRhythm === "NOT_APPLICABLE"
+      ? null
+      : (parsed.data.alternanceRhythm ?? null);
+
   const profileUpsert = await supabase.from("profiles").upsert(
     {
       id: user.id,
@@ -43,6 +48,19 @@ export async function POST(request: Request) {
       start_date: parsed.data.startDate,
       contract_type: parsed.data.contractType,
       contract_duration: parsed.data.contractDuration,
+      alternance_rhythm: alternanceRhythm,
+      alternance_rhythm_other:
+        parsed.data.alternanceRhythm === "AUTRE"
+          ? parsed.data.alternanceRhythmOther?.trim() || null
+          : null,
+      preferred_sectors: parsed.data.preferredSectors,
+      acquisition_source: parsed.data.acquisitionSource,
+      acquisition_source_other:
+        parsed.data.acquisitionSource === "AUTRE"
+          ? parsed.data.acquisitionSourceOther?.trim() || null
+          : null,
+      applications_sent_range: parsed.data.applicationsSentRange,
+      search_level: parsed.data.searchLevel,
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     },
@@ -61,6 +79,8 @@ export async function POST(request: Request) {
       contract_type: parsed.data.contractType,
       contract_duration: parsed.data.contractDuration,
       study_domain: parsed.data.studyDomain,
+      preferred_sectors: parsed.data.preferredSectors,
+      alternance_rhythm: alternanceRhythm,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },

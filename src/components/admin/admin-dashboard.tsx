@@ -4,6 +4,7 @@ import {
   AdminRankedBars,
   AdminVerticalBars,
 } from "@/components/admin/admin-charts";
+import { AdminDashboardLive } from "@/components/admin/admin-dashboard-live";
 import type { AdminDashboardStats } from "@/lib/admin-stats";
 
 type Props = {
@@ -50,162 +51,255 @@ function KpiCard({
   );
 }
 
+function joinOrDash(values: string[]) {
+  return values.length ? values.join(", ") : "—";
+}
+
 export function AdminDashboard({ stats }: Props) {
   const { kpis, charts } = stats;
 
   return (
-    <div className="admin-dashboard">
-      <header className="admin-offer-header">
-        <span className="brand-chip">STATISTIQUES</span>
-        <h1>Vue d&apos;ensemble</h1>
-        <p className="muted">
-          Mis à jour le {formatDate(stats.generatedAt)} — comptes candidats uniquement (hors admin).
-          {kpis.auditsPending > 0 ? (
-            <>
-              {" "}
-              <a href="/admin/audits" className="admin-inline-link">
-                {kpis.auditsPending} audit(s) à traiter →
-              </a>
-            </>
-          ) : null}
-        </p>
-      </header>
+    <AdminDashboardLive generatedAt={stats.generatedAt}>
+      <div className="admin-dashboard">
+        <header className="admin-offer-header">
+          <span className="brand-chip">STATISTIQUES</span>
+          <h1>Vue d&apos;ensemble</h1>
+          <p className="muted">
+            Données live depuis Supabase — comptes candidats uniquement (hors admin).
+            {kpis.auditsPending > 0 ? (
+              <>
+                {" "}
+                <a href="/admin/audits" className="admin-inline-link">
+                  {kpis.auditsPending} audit(s) à traiter →
+                </a>
+              </>
+            ) : null}
+          </p>
+        </header>
 
-      <section className="dash-kpi-block">
-        <h2 className="dash-block-title">Indicateurs clés</h2>
-        <div className="dash-kpi-grid">
-          <KpiCard label="Comptes inscrits" value={kpis.totalAccounts} tone="accent" />
-          <KpiCard label="Abonnements actifs" value={kpis.activeSubscriptions} tone="success" />
-          <KpiCard label="Nouveaux (7 j)" value={kpis.signupsLast7Days} tone="accent" />
-          <KpiCard
-            label="Audits en attente"
-            value={kpis.auditsPending}
-            tone={kpis.auditsPending > 0 ? "warning" : undefined}
-          />
-        </div>
-      </section>
-
-      <section className="card admin-chart-panel">
-        <h2 className="dash-block-title">Taux de complétion</h2>
-        <div className="admin-progress-grid">
-          <AdminProgressBar
-            label="Onboarding terminé"
-            value={kpis.onboardingCompleted}
-            max={kpis.totalAccounts}
-            hint="Part des inscrits avec profil complet"
-            tone="success"
-          />
-          <AdminProgressBar
-            label="Abonnement actif"
-            value={kpis.activeSubscriptions}
-            max={kpis.totalAccounts}
-            hint="Payants parmi les inscrits"
-            tone="accent"
-          />
-          <AdminProgressBar
-            label="Offres publiques"
-            value={kpis.publicOffers}
-            max={Math.max(kpis.totalOffers, 1)}
-            hint="Offres visibles publiquement"
-          />
-          <AdminProgressBar
-            label="Assignations (7 derniers jours)"
-            value={kpis.assignmentsLast7Days}
-            max={Math.max(kpis.assignmentsTotal, 1)}
-            hint="Activité matching récente"
-            tone="warning"
-          />
-        </div>
-      </section>
-
-      <div className="admin-charts-grid admin-charts-grid--pies">
-        <AdminPieChart
-          title="Profils candidats"
-          slices={charts.profileCompletion}
-          empty="Aucun profil inscrit."
-        />
-        <AdminPieChart
-          title="Abonnements"
-          slices={charts.subscriptions}
-          empty="Aucun abonnement enregistré."
-        />
-        <AdminPieChart
-          title="Types de contrat"
-          slices={charts.contractTypes}
-          empty="Aucun type renseigné."
-        />
-        <AdminPieChart
-          title="Domaines d'études"
-          slices={charts.studyDomains}
-          empty="Aucun domaine renseigné."
-        />
-      </div>
-
-      <div className="admin-charts-grid admin-charts-grid--bars">
-        <AdminVerticalBars
-          title="Métiers les plus demandés"
-          items={stats.topTargetJobs}
-          empty="Aucun métier cible."
-        />
-        <AdminRankedBars
-          title="Régions ciblées"
-          items={stats.topRegions}
-          empty="Aucune région."
-        />
-      </div>
-
-      <section className="dash-kpi-block">
-        <h2 className="dash-block-title">Activité produit</h2>
-        <div className="dash-kpi-grid">
-          <KpiCard label="Offres en base" value={kpis.totalOffers} />
-          <KpiCard label="Assignations totales" value={kpis.assignmentsTotal} />
-          <KpiCard label="Candidatures suivies" value={kpis.applicationsTotal} />
-        </div>
-      </section>
-
-      <section className="card admin-dash-panel admin-dash-recent">
-        <h2 className="admin-dash-panel-title">Dernières inscriptions</h2>
-        {stats.recentSignups.length === 0 ? (
-          <p className="muted small-label">Aucun candidat inscrit pour le moment.</p>
-        ) : (
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Email</th>
-                  <th>Nom</th>
-                  <th>Métier cible</th>
-                  <th>Profil</th>
-                  <th>Abonnement</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.recentSignups.map((row) => (
-                  <tr key={row.id}>
-                    <td>{formatDate(row.createdAt)}</td>
-                    <td>{row.email}</td>
-                    <td>{row.fullName ?? "—"}</td>
-                    <td>{row.targetJob ?? "—"}</td>
-                    <td>{row.onboardingCompleted ? "Complet" : "En cours"}</td>
-                    <td>
-                      <span
-                        className={
-                          row.subscriptionStatus === "active"
-                            ? "admin-pill admin-pill--ok"
-                            : "admin-pill"
-                        }
-                      >
-                        {subscriptionLabel(row.subscriptionStatus)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <section className="dash-kpi-block">
+          <h2 className="dash-block-title">Croissance & revenus</h2>
+          <div className="dash-kpi-grid">
+            <KpiCard label="Comptes inscrits" value={kpis.totalAccounts} tone="accent" />
+            <KpiCard
+              label="Abonnements actifs"
+              value={kpis.activeSubscriptions}
+              hint={`Stripe billing : ${kpis.billingActiveTotal}`}
+              tone="success"
+            />
+            <KpiCard
+              label="MRR estimé"
+              value={`${kpis.mrrEstimateEur.toLocaleString("fr-FR")} €`}
+              hint="19,90 € × abonnés actifs"
+              tone="success"
+            />
+            <KpiCard label="Nouveaux (7 j)" value={kpis.signupsLast7Days} tone="accent" />
+            <KpiCard
+              label="Payés non activés"
+              value={kpis.paidNotActivated}
+              hint="Abonnement actif, onboarding incomplet"
+              tone={kpis.paidNotActivated > 0 ? "warning" : undefined}
+            />
+            <KpiCard
+              label="Audits en attente"
+              value={kpis.auditsPending}
+              tone={kpis.auditsPending > 0 ? "warning" : undefined}
+            />
           </div>
-        )}
-      </section>
-    </div>
+        </section>
+
+        <section className="card admin-chart-panel">
+          <h2 className="dash-block-title">Taux de complétion</h2>
+          <div className="admin-progress-grid">
+            <AdminProgressBar
+              label="Onboarding terminé"
+              value={kpis.onboardingCompleted}
+              max={kpis.totalAccounts}
+              hint="Part des inscrits avec profil complet"
+              tone="success"
+            />
+            <AdminProgressBar
+              label="Abonnement actif"
+              value={kpis.activeSubscriptions}
+              max={kpis.totalAccounts}
+              hint="Payants parmi les inscrits"
+              tone="accent"
+            />
+            <AdminProgressBar
+              label="Profils en cours"
+              value={kpis.onboardingPending}
+              max={kpis.totalAccounts}
+              hint="Inscrits sans onboarding complet"
+              tone="warning"
+            />
+            <AdminProgressBar
+              label="Assignations (7 derniers jours)"
+              value={kpis.assignmentsLast7Days}
+              max={Math.max(kpis.assignmentsTotal, 1)}
+              hint="Activité matching récente"
+            />
+          </div>
+        </section>
+
+        <section className="dash-kpi-block">
+          <h2 className="dash-block-title">Acquisition & urgence (données onboarding)</h2>
+          <div className="admin-charts-grid admin-charts-grid--pies">
+            <AdminPieChart
+              title="Source ARTEMSI"
+              slices={charts.acquisitionSources}
+              empty="Aucune source renseignée."
+            />
+            <AdminPieChart
+              title="Niveau de recherche"
+              slices={charts.searchLevels}
+              empty="Aucun niveau renseigné."
+            />
+            <AdminPieChart
+              title="Candidatures envoyées"
+              slices={charts.applicationsSentRanges}
+              empty="Aucune donnée."
+            />
+            <AdminPieChart
+              title="Secteurs préférés"
+              slices={charts.preferredSectors}
+              empty="Aucun secteur."
+            />
+          </div>
+        </section>
+
+        <div className="admin-charts-grid admin-charts-grid--pies">
+          <AdminPieChart
+            title="Profils candidats"
+            slices={charts.profileCompletion}
+            empty="Aucun profil inscrit."
+          />
+          <AdminPieChart
+            title="Abonnements"
+            slices={charts.subscriptions}
+            empty="Aucun abonnement enregistré."
+          />
+          <AdminPieChart
+            title="Types de contrat"
+            slices={charts.contractTypes}
+            empty="Aucun type renseigné."
+          />
+          <AdminPieChart
+            title="Rythmes alternance"
+            slices={charts.alternanceRhythms}
+            empty="Aucun rythme renseigné."
+          />
+        </div>
+
+        <div className="admin-charts-grid admin-charts-grid--bars">
+          <AdminVerticalBars
+            title="Métiers les plus demandés"
+            items={stats.topTargetJobs}
+            empty="Aucun métier cible."
+          />
+          <AdminRankedBars
+            title="Régions ciblées"
+            items={stats.topRegions}
+            empty="Aucune région."
+          />
+          <AdminRankedBars
+            title="Canaux d'acquisition"
+            items={stats.topAcquisitionSources}
+            empty="Aucun canal."
+          />
+          <AdminRankedBars
+            title="Niveaux d'urgence"
+            items={stats.topSearchLevels}
+            empty="Aucun niveau."
+          />
+        </div>
+
+        <section className="dash-kpi-block">
+          <h2 className="dash-block-title">Activité produit</h2>
+          <div className="dash-kpi-grid">
+            <KpiCard label="Offres en base" value={kpis.totalOffers} />
+            <KpiCard label="Offres publiques" value={kpis.publicOffers} />
+            <KpiCard label="Assignations totales" value={kpis.assignmentsTotal} />
+            <KpiCard label="Candidatures suivies" value={kpis.applicationsTotal} />
+          </div>
+        </section>
+
+        <section className="card admin-dash-panel admin-dash-recent">
+          <h2 className="admin-dash-panel-title">
+            Tous les candidats ({stats.candidates.length})
+          </h2>
+          <p className="muted small-label">
+            Dernière synchro : {formatDate(stats.generatedAt)} — données complètes onboarding.
+          </p>
+          {stats.candidates.length === 0 ? (
+            <p className="muted small-label">Aucun candidat inscrit pour le moment.</p>
+          ) : (
+            <div className="admin-table-wrap admin-table-wrap--wide">
+              <table className="admin-table admin-table--candidates">
+                <thead>
+                  <tr>
+                    <th>Inscription</th>
+                    <th>Email</th>
+                    <th>Nom</th>
+                    <th>Tél.</th>
+                    <th>École</th>
+                    <th>Niveau</th>
+                    <th>Domaine</th>
+                    <th>Poste</th>
+                    <th>Contrat</th>
+                    <th>Rythme alt.</th>
+                    <th>Secteurs</th>
+                    <th>Régions</th>
+                    <th>Source</th>
+                    <th>Candidatures</th>
+                    <th>Recherche</th>
+                    <th>Profil</th>
+                    <th>Abonnement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.candidates.map((row) => (
+                    <tr key={row.id}>
+                      <td>{formatDate(row.createdAt)}</td>
+                      <td>{row.email}</td>
+                      <td>{row.fullName ?? "—"}</td>
+                      <td>{row.phone ?? "—"}</td>
+                      <td>{row.schoolName ?? "—"}</td>
+                      <td>{row.studyLevel ?? "—"}</td>
+                      <td>{row.studyDomain ?? "—"}</td>
+                      <td>{row.targetJob ?? "—"}</td>
+                      <td>{row.contractType ?? "—"}</td>
+                      <td>
+                        {row.alternanceRhythm ?? "—"}
+                        {row.alternanceRhythmOther ? ` (${row.alternanceRhythmOther})` : ""}
+                      </td>
+                      <td>{joinOrDash(row.preferredSectors)}</td>
+                      <td>{joinOrDash(row.regions)}</td>
+                      <td>
+                        {row.acquisitionSource ?? "—"}
+                        {row.acquisitionSourceOther ? ` (${row.acquisitionSourceOther})` : ""}
+                      </td>
+                      <td>{row.applicationsSentRange ?? "—"}</td>
+                      <td>{row.searchLevel ?? "—"}</td>
+                      <td>{row.onboardingCompleted ? "Complet" : "En cours"}</td>
+                      <td>
+                        <span
+                          className={
+                            row.subscriptionStatus === "active"
+                              ? "admin-pill admin-pill--ok"
+                              : "admin-pill"
+                          }
+                        >
+                          {subscriptionLabel(row.subscriptionStatus)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
+    </AdminDashboardLive>
   );
 }
