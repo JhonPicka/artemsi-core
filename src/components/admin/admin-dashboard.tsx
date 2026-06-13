@@ -77,66 +77,64 @@ export function AdminDashboard({ stats }: Props) {
           </p>
         </header>
 
-        <section className="dash-kpi-block">
+        <section className="card admin-growth-panel">
           <h2 className="dash-block-title">Croissance & revenus</h2>
-          <div className="dash-kpi-grid">
-            <KpiCard label="Comptes inscrits" value={kpis.totalAccounts} tone="accent" />
+          <div className="admin-kpi-grid">
+            <KpiCard label="Inscrits" value={kpis.totalAccounts} tone="accent" />
             <KpiCard
-              label="Abonnements actifs"
+              label="Abonnés actifs"
               value={kpis.activeSubscriptions}
-              hint={`Stripe billing : ${kpis.billingActiveTotal}`}
+              hint={`Stripe ${kpis.billingActiveTotal}`}
               tone="success"
             />
             <KpiCard
               label="MRR estimé"
               value={`${kpis.mrrEstimateEur.toLocaleString("fr-FR")} €`}
-              hint="19,90 € × abonnés actifs"
+              hint="19,90 € / abonné"
               tone="success"
             />
-            <KpiCard label="Nouveaux (7 j)" value={kpis.signupsLast7Days} tone="accent" />
+            <KpiCard label="Nouveaux 7 j" value={kpis.signupsLast7Days} tone="accent" />
             <KpiCard
-              label="Payés non activés"
+              label="Non activés"
               value={kpis.paidNotActivated}
-              hint="Abonnement actif, onboarding incomplet"
+              hint="Payés sans profil"
               tone={kpis.paidNotActivated > 0 ? "warning" : undefined}
             />
             <KpiCard
-              label="Audits en attente"
+              label="Audits"
               value={kpis.auditsPending}
               tone={kpis.auditsPending > 0 ? "warning" : undefined}
             />
           </div>
-        </section>
 
-        <section className="card admin-chart-panel">
-          <h2 className="dash-block-title">Taux de complétion</h2>
-          <div className="admin-progress-grid">
+          <h3 className="admin-growth-subtitle">Taux de complétion</h3>
+          <div className="admin-progress-grid admin-progress-grid--compact">
             <AdminProgressBar
-              label="Onboarding terminé"
+              label="Onboarding OK"
               value={kpis.onboardingCompleted}
               max={kpis.totalAccounts}
-              hint="Part des inscrits avec profil complet"
+              hint="Profils complets"
               tone="success"
             />
             <AdminProgressBar
               label="Abonnement actif"
               value={kpis.activeSubscriptions}
               max={kpis.totalAccounts}
-              hint="Payants parmi les inscrits"
+              hint="Payants / inscrits"
               tone="accent"
             />
             <AdminProgressBar
-              label="Profils en cours"
+              label="En cours"
               value={kpis.onboardingPending}
               max={kpis.totalAccounts}
-              hint="Inscrits sans onboarding complet"
+              hint="Onboarding incomplet"
               tone="warning"
             />
             <AdminProgressBar
-              label="Assignations (7 derniers jours)"
+              label="Assign. 7 j"
               value={kpis.assignmentsLast7Days}
               max={Math.max(kpis.assignmentsTotal, 1)}
-              hint="Activité matching récente"
+              hint="Matching récent"
             />
           </div>
         </section>
@@ -219,7 +217,17 @@ export function AdminDashboard({ stats }: Props) {
             <KpiCard label="Offres en base" value={kpis.totalOffers} />
             <KpiCard label="Offres publiques" value={kpis.publicOffers} />
             <KpiCard label="Assignations totales" value={kpis.assignmentsTotal} />
-            <KpiCard label="Candidatures suivies" value={kpis.applicationsTotal} />
+            <KpiCard
+              label="Offres ajoutées (users)"
+              value={kpis.userAddedOffersTotal}
+              hint="Suivi candidatures"
+              tone="accent"
+            />
+            <KpiCard
+              label="Moyenne / jour"
+              value={kpis.userAddedOffersDailyAverage.toLocaleString("fr-FR")}
+              hint="Depuis la 1re offre user"
+            />
           </div>
         </section>
 

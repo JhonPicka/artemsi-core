@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 
+import { OfferApplicationGuideBlock } from "@/components/offers/offer-application-guide-block";
+import type { OfferApplicationGuide } from "@/lib/offer-application-guide";
+
 export type OfferCardData = {
   id: string;
   title: string;
@@ -14,8 +17,10 @@ export type OfferCardData = {
   url: string;
   source: "indeed" | "partner" | "autre";
   is_partner_exclusive: boolean;
-  /** Mots-cles a integrer dans le CV et la lettre de motivation. */
+  /** Mots-cles plats (matching / legacy). */
   keywords?: string[] | null;
+  /** Guide CV/LM + questions pour ce poste. */
+  application_guide?: OfferApplicationGuide | null;
 };
 
 type OfferCardProps = {
@@ -69,7 +74,7 @@ function buildMissionRecap(description?: string | null) {
 function OfferKeywordsBlock({ offer }: { offer: OfferCardData }) {
   const [copied, setCopied] = useState<string | null>(null);
   const keywords = (offer.keywords ?? []).filter(Boolean);
-  if (keywords.length === 0) return null;
+  if (keywords.length === 0 || offer.application_guide) return null;
 
   return (
     <div className="offer-keywords-block">
@@ -130,6 +135,7 @@ export function OfferDetailsBlock({ offer }: { offer: OfferCardData }) {
           l&apos;annonce.
         </p>
       )}
+      <OfferApplicationGuideBlock guide={offer.application_guide} />
       <OfferKeywordsBlock offer={offer} />
     </div>
   );

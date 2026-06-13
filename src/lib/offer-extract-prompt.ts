@@ -1,7 +1,11 @@
 import { REGIONS, STUDY_DOMAINS, type StudyDomain } from "@/lib/constants";
+import {
+  normalizeApplicationGuide,
+  type OfferApplicationGuide,
+} from "@/lib/offer-application-guide";
 import { DOMAIN_HINTS, REGION_HINTS } from "@/lib/offer-matching";
 
-/** Réponse JSON attendue du modèle (champs internes optionnels pour le matching). */
+/** Réponse JSON attendue du modèle. */
 export type OfferExtractModelOutput = {
   title: string;
   company: string | null;
@@ -9,12 +13,9 @@ export type OfferExtractModelOutput = {
   description: string;
   contractHint: "alternance" | "apprentissage" | "pro" | null;
   studyDomainHint?: StudyDomain | "AUTRE" | null;
-  /** Villes / lieux à faire apparaître dans title, location ou description (matching régional). */
   locationKeywords?: string[];
-  /** Mots du métier (synonymes inclus) pour le matching target_job. */
   jobKeywords?: string[];
-  /** Mots-cles a integrer dans le CV et la lettre de motivation pour coller a l'offre. */
-  resumeKeywords?: string[];
+  applicationGuide?: Partial<OfferApplicationGuide> | null;
 };
 
 export type ExtractedOfferFields = {
@@ -23,15 +24,13 @@ export type ExtractedOfferFields = {
   location: string | null;
   description: string;
   contractHint: string | null;
-  /** Mots-cles CV/LM affiches au candidat (5 a 12 items). */
-  resumeKeywords: string[];
+  applicationGuide: OfferApplicationGuide | null;
 };
 
 const REGION_SLUGS = REGIONS.map((r) =>
   r
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
     .replace(/'/g, "")
     .replace(/\s+/g, "-"),
 );
@@ -43,7 +42,7 @@ function buildRegionMatchingGuide() {
   for (const slug of REGION_SLUGS) {
     const hints = REGION_HINTS[slug] ?? [];
     const cities = hints.slice(0, 6).join(", ");
-    if (cities) lines.push(`- ${slug} → villes utiles : ${cities}`);
+    if (cities) lines.push(`- ${slug} → ${cities}`);
   }
   return lines.join("\n");
 }
@@ -52,111 +51,110 @@ function buildDomainMatchingGuide() {
   return STUDY_DOMAINS.filter((d) => d !== "AUTRE")
     .map((code) => {
       const hints = DOMAIN_HINTS[code] ?? [];
-      return `- ${code} → mots-clés : ${hints.slice(0, 8).join(", ")}`;
+      return `- ${code} → ${hints.slice(0, 8).join(", ")}`;
     })
     .join("\n");
 }
 
-export const OFFER_EXTRACT_SYSTEM_PROMPT = `Tu es l'extracteur officiel ARTEMSI (plateforme alternance / apprentissage en France).
-Ta mission : extraire les informations importantes d'une annonce brute pour créer un raccourci clair, rapide à lire, exploitable par un candidat ET par le matching automatique.
+export const OFFER_EXTRACT_SYSTEM_PROMPT = `Tu es l'assistant ARTEMSI pour les offres d'alternance / apprentissage en France.
+Tu extrais une fiche courte pour le candidat ET un guide pratique pour adapter son CV et sa lettre de motivation.
 
-## Règles absolues
+## Règles
 - Réponds UNIQUEMENT en JSON valide, sans markdown.
-- N'invente JAMAIS : si une info manque, mets null ou une formulation neutre courte.
-- Tu n'es PAS un copywriter : ne réécris pas toute l'annonce en version marketing.
-- Tu dois EXTRAIRE, NETTOYER et STRUCTURER uniquement les infos utiles : poste, entreprise, lieu, contrat, missions, profil, rythme, durée, démarrage.
-- Ne copie-colle pas l'annonce brute en entier. Ne garde pas les phrases RH génériques, les valeurs corporate, les longs paragraphes de présentation ou les mentions légales.
-- La description doit être un RACCOURCI de l'offre : le candidat doit comprendre en moins de 30 secondes si ça vaut le coup de postuler.
-- Français correct, ton professionnel, pas d'emojis.
-- L'annonce concerne en priorité alternance, apprentissage ou contrat pro en France.
+- N'invente JAMAIS : si une info manque, liste vide ou null.
+- Français professionnel, pas d'emojis.
+- Base-toi UNIQUEMENT sur l'annonce fournie.
 
 ## JSON attendu
 {
-  "title": string,              // 5 à 90 caractères
+  "title": string,
   "company": string | null,
-  "location": string | null,    // OBLIGATOIRE si une ville, adresse, code postal ou site est présent
-  "description": string,        // 350 à 900 caractères, raccourci structuré
+  "location": string | null,
+  "description": string,
   "contractHint": "alternance" | "apprentissage" | "pro" | null,
   "studyDomainHint": ${DOMAIN_LIST} | null,
-  "locationKeywords": string[], // 1 à 4 noms de villes/lieux réels (ex. "Lyon", "Paris")
-  "jobKeywords": string[],      // 3 à 8 mots du métier (intitulé + synonymes)
-  "resumeKeywords": string[]    // 5 à 12 mots-clés à intégrer dans le CV et la lettre de motivation
+  "locationKeywords": string[],
+  "jobKeywords": string[],
+  "applicationGuide": {
+    "cvEssentials": {
+      "competencies": string[],
+      "education": string[],
+      "profile": string[],
+      "keyFacts": string[]
+    },
+    "letterAngles": string[],
+    "typicalQuestions": string[],
+    "questionsToAsk": string[]
+  }
 }
 
-## title (affichage carte offre)
-- Format idéal : « Métier — type » ex. « Développeur web — Alternance »
-- Contient le métier principal en 2 à 6 mots (reprend l'intitulé exact de l'annonce si possible).
-- Pas de nom d'entreprise dans le title (il va dans company).
+## title (5–90 car.)
+- Métier + type de contrat si possible : « Développeur web — Alternance »
+- Pas le nom d'entreprise (champ company).
 
-## company
-- Raison sociale nettoyée, sans « chez », sans URL.
+## company / location
+- company : raison sociale nettoyée.
+- location : ville principale du poste (« Lyon (69) », « Paris 13e », « France (remote) »). null seulement si aucun indice.
 
-## location
-- Champ très important : cherche activement un lieu dans TOUT le texte avant de répondre.
-- Détecte les signaux : "Lieu", "Localisation", "Adresse", "Site", "Poste basé à", "à pourvoir à", code postal + ville, arrondissement, campus, agence, bureau.
-- Format attendu : « Lyon (69) », « Paris 13e », « Nantes », « Lille (hybride) » ou « France (remote) ».
-- Si plusieurs lieux existent, mets le lieu principal du poste. Si hybride, garde la ville du bureau + « (hybride) ».
-- Ne mets null que si aucun lieu, aucune ville, aucun code postal et aucun indice de remote n'apparaît.
+## description (400–1200 car.)
+Raccourci lisible en 3 blocs avec puces « • » :
 
-## description (CRITIQUE pour affichage + matching)
-Structure obligatoire en 3 blocs courts dans un seul texte :
+Infos clés
+• Lieu, contrat, rythme/durée/début si présents
+• Niveau / formation si présent
 
-1) « Infos clés » puis 3 à 5 puces max :
-   • Lieu : ...
-   • Contrat : ...
-   • Rythme / durée / démarrage : ... si présent
-   • Niveau / formation : ... si présent
-   • Source : site carrières officiel / entreprise si évident
+Missions
+• 2 à 5 missions concrètes
 
-2) « Missions » puis 2 à 4 puces max :
-   uniquement les missions concrètes, pas les phrases génériques.
+Profil
+• 2 à 4 exigences (compétences, outils, expériences)
 
-3) « Profil » puis 2 à 3 puces max :
-   formation, compétences, outils, niveau attendu.
+Interdit : blabla RH, valeurs corporate, copier l'annonce entière.
 
-Interdit dans description :
-- long paragraphe d'introduction ;
-- storytelling RH ;
-- répétition de l'annonce brute ;
-- phrases comme « rejoignez une entreprise leader », « environnement dynamique », sauf si c'est utile au poste.
+## Champs matching internes (discrets)
+- locationKeywords : 1–4 villes réelles.
+- jobKeywords : 3–8 mots du métier (≥ 3 lettres).
+- studyDomainHint : code domaine le plus proche.
 
-Priorité : sortir les informations utiles au candidat. Si l'annonce contient un salaire, rythme, durée, date de début, niveau d'étude, outils, équipe, avantages importants, il faut les inclure. Si une information n'existe pas, ne l'invente pas. Maximum 12 puces au total.
+## applicationGuide (PRIORITÉ — valeur ARTEMSI)
+Aide le candidat à fabriquer un CV et une LM parfaits pour CE poste.
 
-Le texte DOIT contenir explicitement (intégrés naturellement, pas en liste séparée « tags ») :
-- Le type de contrat : au moins un parmi « alternance », « apprentissage », « contrat pro », « professionnalisation » selon contractHint.
-- Le nom de la ville principale (identique à location) au moins une fois, si trouvée.
-- 3 à 6 mots-clés du domaine métier (voir studyDomainHint) — ex. pour l'informatique : développeur, data, logiciel…
-- Les termes de jobKeywords répartis dans l'accroche ou les missions.
+cvEssentials.competencies (4–8 items)
+- Compétences techniques, outils, logiciels, méthodes cités ou clairement requis.
+- Formulation actionnable : « Maîtrise de Python pour… », « Excel (TCD, macros) ».
 
-## contractHint
-- "alternance" si alternance / alternant(e)
-- "apprentissage" si apprentissage / apprenti(e) / CFA
-- "pro" si contrat de professionnalisation uniquement
-- null si vraiment indéterminé
+cvEssentials.education (2–5 items)
+- Niveau d'études, filière, diplôme, école type si mentionné.
+- Ex. « Bac+4 minimum en informatique », « École d'ingénieur ou Master 1 ».
 
-## studyDomainHint
-Choisis le code le plus proche parmi la liste. null seulement si impossible à déduire.
+cvEssentials.profile (2–5 items)
+- Soft skills et traits profil explicitement demandés.
+- Ex. « Autonomie sur projets techniques », « Anglais B2 minimum ».
 
-## locationKeywords & jobKeywords
-- locationKeywords : villes réelles pour matcher les régions des candidats (voir guide ci-dessous).
-- jobKeywords : tokens ≥ 3 lettres du métier (ex. « commercial », « marketing », « développeur »).
+cvEssentials.keyFacts (2–6 items)
+- Dates, durée contrat, rythme alternance, date de début, lieu, télétravail, salaire si indiqué.
+- Ex. « Démarrage septembre 2026 », « Rythme 3j entreprise / 2j école ».
 
-## resumeKeywords (CRUCIAL pour l'aide candidature)
-Cette liste est affichée au candidat sous le titre « Mots-clés à intégrer dans ton CV et ta lettre de motivation ».
-- 5 à 12 mots-clés concrets, en français, à reprendre directement par le candidat dans ses documents.
-- Mix attendu : compétences techniques, outils cités, soft skills explicites, méthodologies, secteur d'activité, niveau d'études.
-- Exemples valides : « Excel avancé », « gestion de projet », « anglais professionnel », « Adobe Photoshop », « relation client B2B », « Bac+4 », « SQL ».
-- Interdits : phrases complètes, slogans marketing, valeurs corporate (« passion », « excellence »), mots vides (« travail », « équipe » sans contexte).
-- Reprends fidèlement les termes de l'annonce quand ils existent.
+letterAngles (2–4 items)
+- Accroches pour la lettre : pourquoi ce poste, lien formation-projet, motivation métier.
+- Ex. « Relier ton projet de fin d'études au domaine X de l'entreprise ».
 
-## Guide matching régional (inclure ces villes dans description quand la région correspond)
+typicalQuestions (3–5 items)
+- Questions qu'un recruteur pose souvent pour CE type de poste (même si non listées dans l'annonce).
+- Forme interrogative : « Peux-tu décrire un projet où tu as utilisé… ? »
+
+questionsToAsk (3–5 items)
+- Questions intelligentes à poser au recruteur / en entretien pour montrer ta motivation et valider le poste.
+- Ex. « Quels projets concrets confierais-tu à l'alternant les 3 premiers mois ? »
+
+Interdit dans applicationGuide : slogans, « passion », « dynamique », phrases vides.
+
+## Guides matching (pour locationKeywords / jobKeywords / description)
+Régions :
 ${buildRegionMatchingGuide()}
 
-## Guide matching domaine (mots à intégrer dans la description)
-${buildDomainMatchingGuide()}
-
-## Scoring interne ARTEMSI (ne pas mentionner au candidat)
-Le moteur compare title + company + location + description au profil (métier cible, région, type de contrat, domaine d'études). Plus les mots ci-dessus sont présents et précis, meilleur est le matching.`;
+Domaines :
+${buildDomainMatchingGuide()}`;
 
 export function buildOfferExtractUserMessage(url: string, raw: string) {
   return `URL source : ${url}
@@ -165,9 +163,7 @@ export function buildOfferExtractUserMessage(url: string, raw: string) {
 ${raw.slice(0, 12_000)}
 --- FIN ---
 
-Extrais un raccourci ARTEMSI : infos importantes seulement, format court, pas de copier-coller.
-Le candidat doit comprendre rapidement : où, quel contrat, quelles missions, quel profil, et comment retrouver l'offre officielle.
-Si l'annonce est incomplète, reste factuel et court plutôt que d'inventer.`;
+Extrais la fiche + le guide candidature (CV, LM, questions). Reste factuel.`;
 }
 
 function normalizeText(value: string) {
@@ -175,17 +171,6 @@ function normalizeText(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
-}
-
-function haystackFrom(fields: Pick<ExtractedOfferFields, "title" | "company" | "location" | "description">) {
-  return normalizeText(
-    `${fields.title} ${fields.company ?? ""} ${fields.location ?? ""} ${fields.description}`,
-  );
-}
-
-function containsKeyword(haystack: string, keyword: string) {
-  const n = normalizeText(keyword);
-  return n.length >= 3 && haystack.includes(n);
 }
 
 const LOCATION_STOP_WORDS = [
@@ -202,7 +187,6 @@ const LOCATION_STOP_WORDS = [
   "remuneration",
   "rémunération",
   "salaire",
-  "avantages",
   "postuler",
   "candidature",
   "entreprise",
@@ -261,32 +245,58 @@ function extractLocationFromRaw(raw?: string) {
   return null;
 }
 
-const CONTRACT_PHRASES: Record<string, string> = {
-  alternance: "Contrat en alternance.",
-  apprentissage: "Contrat d'apprentissage.",
-  pro: "Contrat de professionnalisation.",
-};
-
-function dedupeKeywords(values: (string | undefined | null)[], max = 12): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const value of values) {
-    if (!value) continue;
-    const trimmed = String(value).trim();
-    if (trimmed.length < 2 || trimmed.length > 60) continue;
-    const key = normalizeText(trimmed);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(trimmed);
-    if (out.length >= max) break;
-  }
-  return out;
+function normalizeContractHint(
+  hint: OfferExtractModelOutput["contractHint"] | string | null | undefined,
+): string | null {
+  if (!hint) return null;
+  const v = String(hint).toLowerCase().trim();
+  if (v === "alternance" || v === "apprentissage" || v === "pro") return v;
+  if (v.includes("apprenti")) return "apprentissage";
+  if (v.includes("professionnalisation") || v === "contrat pro") return "pro";
+  if (v.includes("altern")) return "alternance";
+  return null;
 }
 
-/**
- * Complète la description si des signaux de matching manquent encore
- * (filet de sécurité après réponse IA).
- */
+function buildFallbackGuideFromText(
+  parsed: Partial<OfferExtractModelOutput>,
+  raw?: string,
+): OfferApplicationGuide | null {
+  const haystack = normalizeText(
+    `${parsed.title ?? ""} ${parsed.description ?? ""} ${raw ?? ""}`,
+  );
+  const competencies = (parsed.jobKeywords ?? []).slice(0, 6).map((k) => `Mettre en avant : ${k}`);
+
+  const education: string[] = [];
+  if (/bac\s*\+\s*[345]/i.test(haystack)) education.push("Préciser ton niveau d'études actuel (Bac+X)");
+  if (/ing[ée]nieur|master|licence/i.test(haystack)) {
+    education.push("Indiquer ta filière et ton école / université");
+  }
+
+  const keyFacts: string[] = [];
+  if (parsed.location) keyFacts.push(`Poste basé à ${parsed.location}`);
+  if (parsed.contractHint) keyFacts.push(`Contrat : ${parsed.contractHint}`);
+
+  return normalizeApplicationGuide({
+    cvEssentials: {
+      competencies,
+      education,
+      profile: ["Relire les exigences « Profil » de l'annonce et les reprendre en puces"],
+      keyFacts,
+    },
+    letterAngles: [
+      "Expliquer en 2 phrases pourquoi ce métier et cette entreprise t'intéressent",
+    ],
+    typicalQuestions: [
+      "Peux-tu te présenter et expliquer ton parcours ?",
+      "Pourquoi cette alternance et pas un stage classique ?",
+    ],
+    questionsToAsk: [
+      "Quelles missions me confierais-tu dès les premières semaines ?",
+      "Comment se déroule l'accompagnement côté entreprise ?",
+    ],
+  });
+}
+
 export function finalizeExtractedOffer(
   parsed: Partial<OfferExtractModelOutput>,
   raw?: string,
@@ -298,81 +308,37 @@ export function finalizeExtractedOffer(
   const company = parsed.company ? String(parsed.company).trim().slice(0, 200) : null;
   const parsedLocation = parsed.location ? cleanLocationCandidate(String(parsed.location)) : null;
   const location = (parsedLocation ?? extractLocationFromRaw(raw))?.slice(0, 200) ?? null;
-  let description = String(parsed.description).trim();
+  const description = String(parsed.description).trim().slice(0, 4000);
 
-  const fields = { title, company, location, description };
-  let haystack = haystackFrom(fields);
+  let applicationGuide =
+    normalizeApplicationGuide(parsed.applicationGuide) ??
+    buildFallbackGuideFromText(parsed, raw);
 
-  if (contractHint && CONTRACT_PHRASES[contractHint]) {
-    const phrase = CONTRACT_PHRASES[contractHint].toLowerCase();
-    if (!haystack.includes(normalizeText(contractHint)) && !haystack.includes(phrase.slice(0, 12))) {
-      description = `${description}\n\n${CONTRACT_PHRASES[contractHint]}`;
-      haystack = haystackFrom({ ...fields, description });
+  if (applicationGuide && location) {
+    const city = location.split(/[,(]/)[0]?.trim() ?? "";
+    const hasLocationFact = applicationGuide.cvEssentials.keyFacts.some((f) =>
+      normalizeText(f).includes(normalizeText(city)),
+    );
+    if (city.length >= 3 && !hasLocationFact) {
+      applicationGuide = normalizeApplicationGuide({
+        ...applicationGuide,
+        cvEssentials: {
+          ...applicationGuide.cvEssentials,
+          keyFacts: [`Poste basé à ${location}`, ...applicationGuide.cvEssentials.keyFacts].slice(
+            0,
+            10,
+          ),
+        },
+      });
     }
   }
-
-  const locationCity = location?.split(/[,(]/)[0]?.trim();
-  const locationKeywords = Array.from(
-    new Set([...(parsed.locationKeywords ?? []), locationCity].filter(Boolean)),
-  );
-
-  for (const city of locationKeywords) {
-    if (city && !containsKeyword(haystack, city)) {
-      description = `${description}\n\nLieu : ${city}.`;
-      haystack = haystackFrom({ ...fields, description });
-    }
-  }
-
-  if (location && !containsKeyword(haystack, location.split(/[,(]/)[0] ?? "")) {
-    const city = location.split(/[,(]/)[0]?.trim();
-    if (city && city.length >= 3) {
-      description = `Basé à ${city}. ${description}`;
-      haystack = haystackFrom({ ...fields, description });
-    }
-  }
-
-  let addedJobKw = 0;
-  for (const kw of parsed.jobKeywords ?? []) {
-    if (addedJobKw >= 3) break;
-    if (kw && !containsKeyword(haystack, kw)) {
-      description = `${description} ${kw}.`;
-      haystack = haystackFrom({ ...fields, description });
-      addedJobKw += 1;
-    }
-  }
-
-  const domain = parsed.studyDomainHint;
-  if (domain && domain !== "AUTRE" && DOMAIN_HINTS[domain]) {
-    const missing = DOMAIN_HINTS[domain].filter((h) => !containsKeyword(haystack, h));
-    if (missing.length > 0) {
-      const top = missing.slice(0, 3).join(", ");
-      description = `${description}\n\nDomaine : ${top}.`;
-    }
-  }
-
-  const resumeKeywords = dedupeKeywords([
-    ...(parsed.resumeKeywords ?? []),
-    ...(parsed.jobKeywords ?? []),
-  ]);
 
   return {
     title,
     company,
     location,
-    description: description.trim().slice(0, 4000),
+    description,
     contractHint,
-    resumeKeywords,
+    applicationGuide,
   };
-}
-
-function normalizeContractHint(
-  hint: OfferExtractModelOutput["contractHint"] | string | null | undefined,
-): string | null {
-  if (!hint) return null;
-  const v = String(hint).toLowerCase().trim();
-  if (v === "alternance" || v === "apprentissage" || v === "pro") return v;
-  if (v.includes("apprenti")) return "apprentissage";
-  if (v.includes("professionnalisation") || v === "contrat pro") return "pro";
-  if (v.includes("altern")) return "alternance";
-  return null;
 }

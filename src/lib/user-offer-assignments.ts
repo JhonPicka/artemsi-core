@@ -21,7 +21,7 @@ export async function fetchUserOfferAssignments(
   const { data, error } = await supabase
     .from("offer_assignments")
     .select(
-      "id, status, assigned_at, offers (id, title, company, location, description, url, source, is_partner_exclusive, keywords)",
+      "id, status, assigned_at, offers (id, title, company, location, description, url, source, is_partner_exclusive, keywords, application_guide)",
     )
     .eq("user_id", userId)
     .order("assigned_at", { ascending: false })

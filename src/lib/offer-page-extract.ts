@@ -129,7 +129,7 @@ function heuristicExtract(url: string, raw: string): ExtractedOfferFields {
       location: base.location ?? null,
       description: base.description ?? "",
       contractHint,
-      resumeKeywords: [],
+      applicationGuide: null,
     }
   );
 }
@@ -220,7 +220,7 @@ export async function extractOfferFieldsFromUrl(input: {
         location: null,
         description: `URL: ${url}\n\nColle la description de l'offre.`,
         contractHint: null,
-        resumeKeywords: [],
+        applicationGuide: null,
       },
       fetchWarning,
       usedAi: false,

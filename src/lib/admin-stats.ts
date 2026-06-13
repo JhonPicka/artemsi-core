@@ -77,6 +77,8 @@ export type AdminDashboardStats = {
     assignmentsTotal: number;
     assignmentsLast7Days: number;
     applicationsTotal: number;
+    userAddedOffersTotal: number;
+    userAddedOffersDailyAverage: number;
     auditsPending: number;
     billingActiveTotal: number;
   };
@@ -107,6 +109,17 @@ function daysAgoIso(days: number) {
   const d = new Date();
   d.setDate(d.getDate() - days);
   return d.toISOString();
+}
+
+function computeDailyAverage(total: number, firstCreatedAt: string | null | undefined) {
+  if (!total || !firstCreatedAt) return 0;
+  const first = new Date(firstCreatedAt);
+  if (Number.isNaN(first.getTime())) return 0;
+  const days = Math.max(
+    1,
+    Math.ceil((Date.now() - first.getTime()) / 86_400_000),
+  );
+  return Math.round((total / days) * 10) / 10;
 }
 
 function countByField<T extends string | null | undefined>(
@@ -257,6 +270,7 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
     { count: assignmentsTotal },
     { count: assignmentsLast7Days },
     { count: applicationsTotal },
+    { data: firstUserOfferRow },
     { count: auditsPending },
     { data: candidateRows },
     { count: billingActiveTotal },
@@ -298,6 +312,12 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
       .select("id", { count: "exact", head: true })
       .gte("assigned_at", since7d),
     supabase.from("applications").select("id", { count: "exact", head: true }),
+    supabase
+      .from("applications")
+      .select("created_at")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
     supabase
       .from("audit_bookings")
       .select("id", { count: "exact", head: true })
@@ -402,6 +422,11 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
   );
 
   const activeCount = activeSubscriptions ?? 0;
+  const userAddedOffersTotal = applicationsTotal ?? 0;
+  const userAddedOffersDailyAverage = computeDailyAverage(
+    userAddedOffersTotal,
+    firstUserOfferRow?.created_at as string | undefined,
+  );
 
   return {
     generatedAt: new Date().toISOString(),
@@ -437,6 +462,8 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
       assignmentsTotal: assignmentsTotal ?? 0,
       assignmentsLast7Days: assignmentsLast7Days ?? 0,
       applicationsTotal: applicationsTotal ?? 0,
+      userAddedOffersTotal,
+      userAddedOffersDailyAverage,
       auditsPending: auditsPending ?? 0,
       billingActiveTotal: billingActiveTotal ?? 0,
     },

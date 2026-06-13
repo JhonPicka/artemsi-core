@@ -48,13 +48,13 @@ export default async function DashboardOffersPage() {
   const [jobboardRes, assignmentsRes, interestsRes, keywordsRes] = await Promise.all([
     supabase
       .from("offers")
-      .select("id, title, company, location, description, url, source, is_partner_exclusive, keywords")
+      .select("id, title, company, location, description, url, source, is_partner_exclusive, keywords, application_guide")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .limit(48),
     supabase
       .from("offer_assignments")
-      .select("status, assigned_at, offers (id, title, company, location, description, url, source, is_partner_exclusive, keywords)")
+      .select("status, assigned_at, offers (id, title, company, location, description, url, source, is_partner_exclusive, keywords, application_guide)")
       .eq("user_id", user.id)
       .order("assigned_at", { ascending: false }),
     supabase.from("offer_interests").select("offer_id").eq("user_id", user.id),
