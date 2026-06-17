@@ -1,23 +1,10 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
 import { adminUnauthorizedResponse, getAdminUserOrNull } from "@/lib/admin-api-auth";
+import { adminOfferBodySchema } from "@/lib/admin-offer-schema";
 import { normalizeApplicationGuide } from "@/lib/offer-application-guide";
 import { runOfferMatching } from "@/lib/run-offer-matching";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const bodySchema = z.object({
-  title: z.string().min(2).max(200),
-  company: z.string().max(200).optional().nullable(),
-  location: z.string().max(200).optional().nullable(),
-  url: z.string().url(),
-  description: z.string().min(20).max(8000),
-  source: z.enum(["partner", "autre"]).default("partner"),
-  isPublic: z.boolean().default(true),
-  isPartnerExclusive: z.boolean().default(false),
-  applicationGuide: z.record(z.string(), z.unknown()).optional().nullable(),
-  runMatching: z.boolean().default(true),
-});
 
 export async function POST(request: Request) {
   if (!(await getAdminUserOrNull())) {
@@ -25,7 +12,7 @@ export async function POST(request: Request) {
   }
 
   const payload = await request.json().catch(() => null);
-  const parsed = bodySchema.safeParse(payload);
+  const parsed = adminOfferBodySchema.safeParse(payload);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Payload invalide" },
@@ -78,7 +65,7 @@ export async function POST(request: Request) {
     }
 
     let matching = null;
-    if (data.runMatching) {
+    if (parsed.data.runMatching !== false) {
       matching = await runOfferMatching({ dryRun: false });
     }
 
