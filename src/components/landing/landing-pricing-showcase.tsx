@@ -1,4 +1,11 @@
 import { SubscribeButton } from "@/components/billing/subscribe-button";
+import {
+  billingAfterTrialPriceLine,
+  billingMonthlyPriceLine,
+  billingTrialCtaLabel,
+  billingTrialShortLabel,
+  BILLING_TRIAL_DAYS,
+} from "@/lib/billing-offer";
 import { legalConfig } from "@/lib/legal-config";
 
 type PricingGroup = {
@@ -62,13 +69,13 @@ export function LandingPricingShowcase() {
     >
       <div className="landing-container">
         <div className="landing-section-head landing-pricing-head">
-          <span className="landing-kicker">Tarif</span>
+          <span className="landing-kicker">Offre de lancement</span>
           <h2 id="landing-pricing-title" className="landing-section-title">
-            Un investissement qui va changer ta recherche d&apos;alternance
+            Teste ARTEMSI gratuitement pendant {BILLING_TRIAL_DAYS} jours
           </h2>
           <p className="landing-section-lead">
-            Pour 19,90&nbsp;EUR/mois&nbsp;: des offres ciblées qui matchent ton profil, un seul
-            endroit pour candidater, suivre et progresser.
+            Accès complet aux offres ciblées, au suivi et à l&apos;accompagnement —{" "}
+            {billingAfterTrialPriceLine()}.
           </p>
         </div>
 
@@ -80,36 +87,38 @@ export function LandingPricingShowcase() {
                 Offre ARTEMSI · Alternance
               </p>
 
-              <p className="landing-pricing-price" aria-label="19,90 euros TTC par mois">
-                <span className="landing-pricing-amount">19,90&nbsp;€</span>
+              <p
+                className="landing-pricing-price"
+                aria-label={`${BILLING_TRIAL_DAYS} jours gratuits puis ${billingMonthlyPriceLine()}`}
+              >
+                <span className="landing-pricing-amount">Gratuit</span>
                 <span className="landing-pricing-period">
-                  <span>TTC</span>
-                  <span>/&nbsp;mois</span>
+                  <span>{BILLING_TRIAL_DAYS}&nbsp;jours</span>
                 </span>
               </p>
 
               <p className="landing-pricing-tagline">
-                Une seule formule, pensée pour l&apos;alternance.
+                {billingAfterTrialPriceLine()} · carte requise, sans débit pendant l&apos;essai.
               </p>
 
               <ul className="landing-pricing-aside-meta" aria-label="Conditions">
+                <li>
+                  <CheckIcon />
+                  <span>{billingTrialShortLabel()} — accès complet</span>
+                </li>
                 <li>
                   <CheckIcon />
                   <span>Paiement sécurisé (Stripe)</span>
                 </li>
                 <li>
                   <CheckIcon />
-                  <span>Accès immédiat après souscription</span>
-                </li>
-                <li>
-                  <CheckIcon />
-                  <span>Résiliable selon les CGU</span>
+                  <span>Résiliable avant la fin de l&apos;essai</span>
                 </li>
               </ul>
 
               <div className="landing-cta-row landing-pricing-cta">
                 <SubscribeButton className="button-link landing-cta-primary">
-                  S&apos;abonner
+                  {billingTrialCtaLabel()}
                   <span className="landing-cta-arrow" aria-hidden="true">
                     →
                   </span>

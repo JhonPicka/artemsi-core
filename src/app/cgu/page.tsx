@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 
 import { LegalPageShell } from "@/components/legal/legal-page-shell";
+import {
+  billingMonthlyPriceLine,
+  billingTrialShortLabel,
+  BILLING_TRIAL_DAYS,
+} from "@/lib/billing-offer";
 import { legalConfig } from "@/lib/legal-config";
 
 export const metadata: Metadata = {
@@ -61,7 +66,12 @@ export default function CguPage() {
         </p>
         <ul>
           <li>
-            <strong>Abonnement mensuel :</strong> 19,90&nbsp;EUR TTC / mois.
+            <strong>Essai gratuit :</strong> {billingTrialShortLabel()} avec accès complet au
+            service (offre de lancement).
+          </li>
+          <li>
+            <strong>Abonnement mensuel :</strong> {billingMonthlyPriceLine()} après la période
+            d&apos;essai, sauf résiliation avant son terme.
           </li>
         </ul>
         <p>
@@ -72,8 +82,9 @@ export default function CguPage() {
           checkout Stripe).
         </p>
         <p className="muted">
-          Il n&apos;est pas proposé de période d&apos;essai gratuite par défaut : l&apos;accès au
-          service payant débute après validation du paiement selon le parcours en vigueur.
+          L&apos;essai gratuit de {BILLING_TRIAL_DAYS} jours nécessite une carte bancaire valide :
+          aucun prélèvement n&apos;est effectué pendant l&apos;essai. Sans résiliation avant la fin
+          de l&apos;essai, l&apos;abonnement mensuel démarre automatiquement au tarif en vigueur.
         </p>
       </section>
 

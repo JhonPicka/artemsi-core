@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
+import { BILLING_TRIAL_DAYS } from "@/lib/billing-offer";
 import { env } from "@/lib/env";
 import {
-  getAppBaseUrl,
   getStripeClient,
   isStripeConfigured,
   isStripeSecretKeyValid,
+  resolveAppBaseUrl,
 } from "@/lib/stripe";
 import { getRequestKey, takeRateLimit } from "@/lib/rate-limit";
 
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
       ? body.email.trim().toLowerCase()
       : undefined;
 
-  const baseUrl = getAppBaseUrl();
+  const baseUrl = resolveAppBaseUrl(request);
   const stripe = getStripeClient();
 
   try {
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
       cancel_url: `${baseUrl}/checkout/cancel`,
       ...(email ? { customer_email: email } : {}),
       subscription_data: {
+        trial_period_days: BILLING_TRIAL_DAYS,
         metadata: {
           product: "artemsi_alternance_monthly",
           ...(email ? { checkout_email: email } : {}),

@@ -5996,57 +5996,6 @@ input[type="checkbox"] {
 }
 
 
-.offer-keywords-block {
-  display: grid;
-  gap: 0.55rem;
-  padding: 0.85rem;
-  border-radius: 14px;
-  border: 1px solid var(--primary-soft-strong);
-  background: rgba(124, 92, 255, 0.08);
-}
-
-.offer-keywords-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.offer-keywords-head .offer-details-label {
-  margin: 0;
-}
-
-.offer-keywords-copy {
-  font-size: 0.78rem;
-}
-
-.offer-keywords-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.offer-keyword-chip {
-  font-size: 0.78rem;
-  padding: 0.3rem 0.65rem;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-  font-weight: 600;
-}
-
-.offer-keywords-feedback,
-.offer-keywords-hint {
-  margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
 .offer-guide-block {
   display: grid;
   gap: 0.85rem;
@@ -6082,15 +6031,6 @@ input[type="checkbox"] {
   flex-shrink: 0;
 }
 
-.offer-guide-section {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.offer-guide-section .offer-details-label {
-  margin: 0;
-}
-
 .offer-guide-list {
   margin: 0;
   padding-left: 1.1rem;
@@ -6101,8 +6041,7 @@ input[type="checkbox"] {
   color: var(--foreground);
 }
 
-.offer-guide-feedback,
-.offer-guide-hint {
+.offer-guide-feedback {
   margin: 0;
   font-size: 0.78rem;
   line-height: 1.45;

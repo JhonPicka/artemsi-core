@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 
 import { loginAction, type AuthFormState } from "@/app/(auth)/actions";
+import { billingTrialCtaLabel } from "@/lib/billing-offer";
 
 const initialState: AuthFormState = {};
 
@@ -54,7 +55,7 @@ export function LoginForm({ initialEmail, initialError }: Props) {
         </Link>
         <br />
         <Link href="/subscribe" className="inline-link">
-          S&apos;abonner à 19,90&nbsp;€
+          {billingTrialCtaLabel()}
         </Link>
       </p>
     </form>

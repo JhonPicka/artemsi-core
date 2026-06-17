@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { adminUnauthorizedResponse, getAdminUserOrNull } from "@/lib/admin-api-auth";
-import {
-  keywordsFromApplicationGuide,
-  normalizeApplicationGuide,
-} from "@/lib/offer-application-guide";
+import { normalizeApplicationGuide } from "@/lib/offer-application-guide";
 import { runOfferMatching } from "@/lib/run-offer-matching";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -18,7 +15,6 @@ const bodySchema = z.object({
   source: z.enum(["partner", "autre"]).default("partner"),
   isPublic: z.boolean().default(true),
   isPartnerExclusive: z.boolean().default(false),
-  keywords: z.array(z.string().min(2).max(60)).max(20).optional().nullable(),
   applicationGuide: z.record(z.string(), z.unknown()).optional().nullable(),
   runMatching: z.boolean().default(true),
 });
@@ -60,14 +56,6 @@ export async function POST(request: Request) {
     }
 
     const applicationGuide = normalizeApplicationGuide(data.applicationGuide);
-    const keywordsFromGuide = keywordsFromApplicationGuide(applicationGuide);
-    const keywordsExplicit = data.keywords?.filter((k) => k.trim()) ?? [];
-    const keywords =
-      keywordsExplicit.length > 0
-        ? keywordsExplicit
-        : keywordsFromGuide.length > 0
-          ? keywordsFromGuide
-          : null;
 
     const { data: inserted, error: insertError } = await supabase
       .from("offers")
@@ -80,7 +68,6 @@ export async function POST(request: Request) {
         source: data.source,
         is_public: data.isPublic,
         is_partner_exclusive: data.isPartnerExclusive,
-        keywords: keywords && keywords.length > 0 ? keywords : null,
         application_guide: applicationGuide,
       })
       .select("id")

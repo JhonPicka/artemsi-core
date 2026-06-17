@@ -17,9 +17,7 @@ export type OfferCardData = {
   url: string;
   source: "indeed" | "partner" | "autre";
   is_partner_exclusive: boolean;
-  /** Mots-cles plats (matching / legacy). */
-  keywords?: string[] | null;
-  /** Guide CV/LM + questions pour ce poste. */
+  /** Raccourci candidat (tips JSON). */
   application_guide?: OfferApplicationGuide | null;
 };
 
@@ -71,39 +69,7 @@ function buildMissionRecap(description?: string | null) {
     : "";
 }
 
-function OfferKeywordsBlock({ offer }: { offer: OfferCardData }) {
-  const [copied, setCopied] = useState<string | null>(null);
-  const keywords = (offer.keywords ?? []).filter(Boolean);
-  if (keywords.length === 0 || offer.application_guide) return null;
-
-  return (
-    <div className="offer-keywords-block">
-      <div className="offer-keywords-head">
-        <p className="offer-details-label">Mots-clés à intégrer dans ton CV et ta lettre de motivation</p>
-        <button
-          type="button"
-          className="button-link secondary-link offer-keywords-copy"
-          onClick={() => copyText(keywords.join(", "), setCopied, "Mots-clés copiés.")}
-        >
-          Copier la liste
-        </button>
-      </div>
-      <ul className="offer-keywords-list">
-        {keywords.map((keyword) => (
-          <li key={keyword} className="offer-keyword-chip">
-            {keyword}
-          </li>
-        ))}
-      </ul>
-      {copied ? <p className="muted offer-keywords-feedback">{copied}</p> : null}
-      <p className="muted offer-keywords-hint">
-        Reprends ces termes dans ton CV et ta lettre pour augmenter tes chances de matcher l&apos;offre.
-      </p>
-    </div>
-  );
-}
-
-export function OfferDetailsBlock({ offer }: { offer: OfferCardData }) {
+function OfferDetailsBlock({ offer }: { offer: OfferCardData }) {
   return (
     <div className="offer-details">
       <dl className="offer-details-grid">
@@ -136,7 +102,6 @@ export function OfferDetailsBlock({ offer }: { offer: OfferCardData }) {
         </p>
       )}
       <OfferApplicationGuideBlock guide={offer.application_guide} />
-      <OfferKeywordsBlock offer={offer} />
     </div>
   );
 }

@@ -32,9 +32,11 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
       const session = await stripe.checkout.sessions.retrieve(sessionId, {
         expand: ["subscription", "customer"],
       });
-      const paid = session.payment_status === "paid" || session.status === "complete";
-      if (!paid) {
-        error = "Le paiement n'est pas encore confirmé. Réessaie dans quelques instants.";
+      const checkoutComplete =
+        session.status === "complete" &&
+        (session.payment_status === "paid" || session.payment_status === "no_payment_required");
+      if (!checkoutComplete) {
+        error = "L'inscription n'est pas encore confirmée. Réessaie dans quelques instants.";
       } else {
         email = emailFromCheckoutSession(session);
         const result = await finalizePaidCheckoutSession(session, {
@@ -56,12 +58,12 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     <AuthPageShell>
       <div className="card form">
         <span className="brand-chip">PAIEMENT</span>
-        <h1>{verified ? "Paiement confirmé" : "Vérification en cours"}</h1>
+        <h1>{verified ? "Essai activé" : "Vérification en cours"}</h1>
 
         {verified ? (
           <>
             <p className="muted">
-              Merci ! Ton abonnement ARTEMSI est actif pour{" "}
+              Merci ! Ton essai gratuit ARTEMSI est actif pour{" "}
               <strong>{email ?? "ton adresse email"}</strong>.
             </p>
 
@@ -76,7 +78,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
                     </>
                   ) : (
                     <>
-                      Ton paiement est confirmé. Choisis ton mot de passe pour accéder à
+                      Ton essai est confirmé. Choisis ton mot de passe pour accéder à
                       ARTEMSI&nbsp;: renvoie l&apos;email ou crée ton compte directement
                       ci-dessous.
                     </>

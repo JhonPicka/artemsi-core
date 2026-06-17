@@ -15,7 +15,7 @@ export type OfferExtractModelOutput = {
   studyDomainHint?: StudyDomain | "AUTRE" | null;
   locationKeywords?: string[];
   jobKeywords?: string[];
-  applicationGuide?: Partial<OfferApplicationGuide> | null;
+  applicationGuide?: { tips?: string[] } | null;
 };
 
 export type ExtractedOfferFields = {
@@ -57,7 +57,7 @@ function buildDomainMatchingGuide() {
 }
 
 export const OFFER_EXTRACT_SYSTEM_PROMPT = `Tu es l'assistant ARTEMSI pour les offres d'alternance / apprentissage en France.
-Tu extrais une fiche courte pour le candidat ET un guide pratique pour adapter son CV et sa lettre de motivation.
+Tu extrais une fiche courte pour le candidat ET un raccourci concis pour adapter son CV et sa lettre.
 
 ## Règles
 - Réponds UNIQUEMENT en JSON valide, sans markdown.
@@ -76,15 +76,7 @@ Tu extrais une fiche courte pour le candidat ET un guide pratique pour adapter s
   "locationKeywords": string[],
   "jobKeywords": string[],
   "applicationGuide": {
-    "cvEssentials": {
-      "competencies": string[],
-      "education": string[],
-      "profile": string[],
-      "keyFacts": string[]
-    },
-    "letterAngles": string[],
-    "typicalQuestions": string[],
-    "questionsToAsk": string[]
+    "tips": string[]
   }
 }
 
@@ -116,38 +108,17 @@ Interdit : blabla RH, valeurs corporate, copier l'annonce entière.
 - jobKeywords : 3–8 mots du métier (≥ 3 lettres).
 - studyDomainHint : code domaine le plus proche.
 
-## applicationGuide (PRIORITÉ — valeur ARTEMSI)
-Aide le candidat à fabriquer un CV et une LM parfaits pour CE poste.
+## applicationGuide (raccourci candidat — 3 à 5 items max)
+Liste courte, actionnable, max 120 caractères par item. Pas de questions d'entretien.
 
-cvEssentials.competencies (4–8 items)
-- Compétences techniques, outils, logiciels, méthodes cités ou clairement requis.
-- Formulation actionnable : « Maîtrise de Python pour… », « Excel (TCD, macros) ».
+Exemples de tips :
+- « Mets en avant Python et SQL sur ton CV »
+- « Bac+3 informatique ou équivalent demandé »
+- « Démarrage septembre 2026 — Lyon »
+- « Rythme 3j entreprise / 2j école »
 
-cvEssentials.education (2–5 items)
-- Niveau d'études, filière, diplôme, école type si mentionné.
-- Ex. « Bac+4 minimum en informatique », « École d'ingénieur ou Master 1 ».
-
-cvEssentials.profile (2–5 items)
-- Soft skills et traits profil explicitement demandés.
-- Ex. « Autonomie sur projets techniques », « Anglais B2 minimum ».
-
-cvEssentials.keyFacts (2–6 items)
-- Dates, durée contrat, rythme alternance, date de début, lieu, télétravail, salaire si indiqué.
-- Ex. « Démarrage septembre 2026 », « Rythme 3j entreprise / 2j école ».
-
-letterAngles (2–4 items)
-- Accroches pour la lettre : pourquoi ce poste, lien formation-projet, motivation métier.
-- Ex. « Relier ton projet de fin d'études au domaine X de l'entreprise ».
-
-typicalQuestions (3–5 items)
-- Questions qu'un recruteur pose souvent pour CE type de poste (même si non listées dans l'annonce).
-- Forme interrogative : « Peux-tu décrire un projet où tu as utilisé… ? »
-
-questionsToAsk (3–5 items)
-- Questions intelligentes à poser au recruteur / en entretien pour montrer ta motivation et valider le poste.
-- Ex. « Quels projets concrets confierais-tu à l'alternant les 3 premiers mois ? »
-
-Interdit dans applicationGuide : slogans, « passion », « dynamique », phrases vides.
+Couvre si possible : compétences clés à reprendre, niveau/filière, info pratique (lieu, début, contrat).
+Interdit : slogans, « passion », « dynamique », phrases vides, listes longues.
 
 ## Guides matching (pour locationKeywords / jobKeywords / description)
 Régions :
@@ -163,7 +134,7 @@ export function buildOfferExtractUserMessage(url: string, raw: string) {
 ${raw.slice(0, 12_000)}
 --- FIN ---
 
-Extrais la fiche + le guide candidature (CV, LM, questions). Reste factuel.`;
+Extrais la fiche + le raccourci candidat (3 à 5 points). Reste factuel.`;
 }
 
 function normalizeText(value: string) {
@@ -261,40 +232,22 @@ function buildFallbackGuideFromText(
   parsed: Partial<OfferExtractModelOutput>,
   raw?: string,
 ): OfferApplicationGuide | null {
+  const tips: string[] = [];
+
+  for (const kw of (parsed.jobKeywords ?? []).slice(0, 2)) {
+    tips.push(`Mets en avant : ${kw}`);
+  }
+
   const haystack = normalizeText(
     `${parsed.title ?? ""} ${parsed.description ?? ""} ${raw ?? ""}`,
   );
-  const competencies = (parsed.jobKeywords ?? []).slice(0, 6).map((k) => `Mettre en avant : ${k}`);
-
-  const education: string[] = [];
-  if (/bac\s*\+\s*[345]/i.test(haystack)) education.push("Préciser ton niveau d'études actuel (Bac+X)");
-  if (/ing[ée]nieur|master|licence/i.test(haystack)) {
-    education.push("Indiquer ta filière et ton école / université");
+  if (/bac\s*\+\s*[345]/i.test(haystack)) {
+    tips.push("Précise ton niveau d'études (Bac+X) sur ton CV");
   }
+  if (parsed.location) tips.push(`Poste basé à ${parsed.location}`);
+  if (parsed.contractHint) tips.push(`Contrat : ${parsed.contractHint}`);
 
-  const keyFacts: string[] = [];
-  if (parsed.location) keyFacts.push(`Poste basé à ${parsed.location}`);
-  if (parsed.contractHint) keyFacts.push(`Contrat : ${parsed.contractHint}`);
-
-  return normalizeApplicationGuide({
-    cvEssentials: {
-      competencies,
-      education,
-      profile: ["Relire les exigences « Profil » de l'annonce et les reprendre en puces"],
-      keyFacts,
-    },
-    letterAngles: [
-      "Expliquer en 2 phrases pourquoi ce métier et cette entreprise t'intéressent",
-    ],
-    typicalQuestions: [
-      "Peux-tu te présenter et expliquer ton parcours ?",
-      "Pourquoi cette alternance et pas un stage classique ?",
-    ],
-    questionsToAsk: [
-      "Quelles missions me confierais-tu dès les premières semaines ?",
-      "Comment se déroule l'accompagnement côté entreprise ?",
-    ],
-  });
+  return normalizeApplicationGuide({ tips });
 }
 
 export function finalizeExtractedOffer(
@@ -316,19 +269,12 @@ export function finalizeExtractedOffer(
 
   if (applicationGuide && location) {
     const city = location.split(/[,(]/)[0]?.trim() ?? "";
-    const hasLocationFact = applicationGuide.cvEssentials.keyFacts.some((f) =>
-      normalizeText(f).includes(normalizeText(city)),
+    const hasLocationTip = applicationGuide.tips.some((t) =>
+      normalizeText(t).includes(normalizeText(city)),
     );
-    if (city.length >= 3 && !hasLocationFact) {
+    if (city.length >= 3 && !hasLocationTip) {
       applicationGuide = normalizeApplicationGuide({
-        ...applicationGuide,
-        cvEssentials: {
-          ...applicationGuide.cvEssentials,
-          keyFacts: [`Poste basé à ${location}`, ...applicationGuide.cvEssentials.keyFacts].slice(
-            0,
-            10,
-          ),
-        },
+        tips: [`Poste basé à ${location}`, ...applicationGuide.tips],
       });
     }
   }

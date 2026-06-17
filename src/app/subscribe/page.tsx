@@ -7,6 +7,11 @@ import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { isAdminUser } from "@/lib/admin-auth";
 import { resolveAdminPostAuthPath } from "@/lib/admin-profile";
 import { userHasBillingAccess } from "@/lib/billing";
+import {
+  billingAfterTrialPriceLine,
+  billingTrialCtaLabel,
+  billingTrialShortLabel,
+} from "@/lib/billing-offer";
 import { isBillingEnforced } from "@/lib/stripe";
 import { logoutToLoginAction } from "@/app/(auth)/actions";
 import { getCurrentUser } from "@/lib/auth";
@@ -40,13 +45,14 @@ export default async function SubscribePage() {
           <>
             <p className="muted">
               Pour accéder aux offres ciblées, au suivi des candidatures et à l&apos;accompagnement,
-              souscris à <strong>19,90&nbsp;EUR TTC / mois</strong>. Paiement sécurisé. Après
-              validation, tu reçois un <strong>email avec un lien</strong> pour choisir ton mot de
-              passe (même adresse qu&apos;au paiement).
+              profite de <strong>{billingTrialShortLabel()}</strong> ({billingAfterTrialPriceLine()}
+              ). Carte bancaire requise, sans débit pendant l&apos;essai. Après validation, tu
+              reçois un <strong>email avec un lien</strong> pour choisir ton mot de passe (même
+              adresse qu&apos;à l&apos;inscription).
             </p>
 
             <SubscribeButton className="button-link">
-              S&apos;abonner — 19,90&nbsp;EUR / mois
+              {billingTrialCtaLabel()}
             </SubscribeButton>
 
             {user ? (

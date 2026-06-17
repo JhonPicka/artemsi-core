@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { syncUserBilling } from "@/lib/billing";
-import { getAppBaseUrl, getStripeClient, isStripeConfigured } from "@/lib/stripe";
+import { getStripeClient, isStripeConfigured, resolveAppBaseUrl } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function POST(request: Request) {
   if (!isStripeConfigured()) {
     return NextResponse.json({ error: "Stripe non configure" }, { status: 503 });
   }
@@ -42,7 +42,7 @@ export async function POST() {
   const stripe = getStripeClient();
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: customerId,
-    return_url: `${getAppBaseUrl()}/dashboard`,
+    return_url: `${resolveAppBaseUrl(request)}/dashboard`,
   });
 
   return NextResponse.json({ url: portalSession.url });

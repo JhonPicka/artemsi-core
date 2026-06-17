@@ -3,9 +3,8 @@
 import { useState } from "react";
 
 import {
-  formStateToApplicationGuide,
-  guideToFormState,
-  type ApplicationGuideFormState,
+  guideTipsToText,
+  textToApplicationGuide,
   type OfferApplicationGuide,
 } from "@/lib/offer-application-guide";
 
@@ -27,46 +26,6 @@ type PublishResult = {
   };
 };
 
-const EMPTY_GUIDE_FORM: ApplicationGuideFormState = {
-  competencies: "",
-  education: "",
-  profile: "",
-  keyFacts: "",
-  letterAngles: "",
-  typicalQuestions: "",
-  questionsToAsk: "",
-};
-
-function GuideField({
-  id,
-  label,
-  hint,
-  value,
-  onChange,
-  rows = 4,
-}: {
-  id: string;
-  label: string;
-  hint: string;
-  value: string;
-  onChange: (value: string) => void;
-  rows?: number;
-}) {
-  return (
-    <>
-      <label htmlFor={id}>{label}</label>
-      <textarea
-        id={id}
-        rows={rows}
-        placeholder="Une ligne = un point"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <p className="muted small-label">{hint}</p>
-    </>
-  );
-}
-
 export function AdminOfferForm() {
   const [url, setUrl] = useState("");
   const [pastedText, setPastedText] = useState("");
@@ -74,7 +33,7 @@ export function AdminOfferForm() {
   const [company, setCompany] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
-  const [guideForm, setGuideForm] = useState<ApplicationGuideFormState>(EMPTY_GUIDE_FORM);
+  const [tips, setTips] = useState("");
   const [source, setSource] = useState<"partner" | "autre">("partner");
   const [isPublic, setIsPublic] = useState(true);
   const [isExclusive, setIsExclusive] = useState(false);
@@ -83,13 +42,6 @@ export function AdminOfferForm() {
   const [extracting, setExtracting] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState<PublishResult | null>(null);
-
-  function updateGuideField<K extends keyof ApplicationGuideFormState>(
-    key: K,
-    value: ApplicationGuideFormState[K],
-  ) {
-    setGuideForm((prev) => ({ ...prev, [key]: value }));
-  }
 
   async function handleExtract() {
     setError(null);
@@ -122,17 +74,17 @@ export function AdminOfferForm() {
       setCompany(fields.company ?? "");
       setLocation(fields.location ?? "");
       setDescription(fields.description ?? "");
-      setGuideForm(guideToFormState(fields.applicationGuide ?? null));
+      setTips(guideTipsToText(fields.applicationGuide ?? null));
 
       const hints: string[] = [];
       if (data.rawSource) hints.push(`Source analysee : ${data.rawSource}.`);
       if (data.fetchWarning) hints.push(data.fetchWarning);
-      if (data.usedAi) hints.push("Analyse IA appliquee — guide CV/LM genere.");
+      if (data.usedAi) hints.push("Analyse IA appliquee — raccourci candidat genere.");
       if (fields.contractHint) hints.push(`Contrat detecte : ${fields.contractHint}.`);
       setInfo(
         hints.length
           ? hints.join(" ")
-          : "Champs pre-remplis — verifie le guide candidat avant publication.",
+          : "Champs pre-remplis — verifie le raccourci candidat avant publication.",
       );
     } catch {
       setError("Erreur reseau lors de l'analyse.");
@@ -151,7 +103,7 @@ export function AdminOfferForm() {
       return;
     }
 
-    const applicationGuide = formStateToApplicationGuide(guideForm);
+    const applicationGuide = textToApplicationGuide(tips);
 
     setPublishing(true);
     try {
@@ -196,7 +148,7 @@ export function AdminOfferForm() {
         <p className="muted admin-offer-lead">
           Colle en priorité le lien officiel de l&apos;annonce (site carrières entreprise, page
           recrutement ou école partenaire). Si la page est bloquee, copie le texte de l&apos;annonce
-          dans le champ ci-dessous — c&apos;est recommandé pour un guide CV/LM de qualité.
+          dans le champ ci-dessous — recommandé pour un raccourci candidat de qualité.
         </p>
         <label htmlFor="offer-url">URL</label>
         <input
@@ -244,60 +196,23 @@ export function AdminOfferForm() {
       </section>
 
       <section className="card form admin-offer-step">
-        <h2>3. Guide candidat (CV &amp; lettre)</h2>
+        <h2>3. Raccourci candidat</h2>
         <p className="muted admin-offer-lead">
-          Affiché au candidat dans « Voir l&apos;offre » — l&apos;IA pré-remplit ces blocs. Une ligne
-          = un point. Relis et corrige avant publication.
+          3 à 5 points max, affichés au candidat dans « Voir l&apos;offre ». Une ligne = un point.
+          L&apos;IA pré-remplit — relis et raccourcis si besoin.
         </p>
-        <GuideField
-          id="guide-competencies"
-          label="Compétences à mettre en avant (CV)"
-          hint="Outils, méthodes, compétences techniques cités dans l'annonce."
-          value={guideForm.competencies}
-          onChange={(v) => updateGuideField("competencies", v)}
+        <label htmlFor="guide-tips">L&apos;essentiel pour ce poste</label>
+        <textarea
+          id="guide-tips"
+          rows={5}
+          placeholder={"Ex. :\nMets en avant Excel et la gestion de projet sur ton CV\nBac+3 commerce minimum\nDémarrage septembre 2026 — Lyon"}
+          value={tips}
+          onChange={(e) => setTips(e.target.value)}
         />
-        <GuideField
-          id="guide-education"
-          label="Cursus & formation (CV)"
-          hint="Niveau Bac+X, filière, diplôme ou type d'école attendu."
-          value={guideForm.education}
-          onChange={(v) => updateGuideField("education", v)}
-        />
-        <GuideField
-          id="guide-profile"
-          label="Profil recherché (CV)"
-          hint="Soft skills, langues, expériences types demandées."
-          value={guideForm.profile}
-          onChange={(v) => updateGuideField("profile", v)}
-        />
-        <GuideField
-          id="guide-keyfacts"
-          label="Infos clés (dates, rythme, contrat…)"
-          hint="Démarrage, durée, rythme alternance, lieu, télétravail, salaire si indiqué."
-          value={guideForm.keyFacts}
-          onChange={(v) => updateGuideField("keyFacts", v)}
-        />
-        <GuideField
-          id="guide-letter"
-          label="Angles pour la lettre de motivation"
-          hint="Accroches pour expliquer pourquoi ce poste et cette entreprise."
-          value={guideForm.letterAngles}
-          onChange={(v) => updateGuideField("letterAngles", v)}
-        />
-        <GuideField
-          id="guide-typical"
-          label="Questions typiques en entretien"
-          hint="Ce qu'un recruteur pose souvent pour ce type de poste."
-          value={guideForm.typicalQuestions}
-          onChange={(v) => updateGuideField("typicalQuestions", v)}
-        />
-        <GuideField
-          id="guide-ask"
-          label="Questions à poser au recruteur"
-          hint="Pour montrer ta motivation et valider le poste."
-          value={guideForm.questionsToAsk}
-          onChange={(v) => updateGuideField("questionsToAsk", v)}
-        />
+        <p className="muted small-label">
+          Profil clé, compétences à reprendre, info pratique (lieu, début, rythme). Pas de questions
+          d&apos;entretien.
+        </p>
       </section>
 
       <section className="card form admin-offer-step">

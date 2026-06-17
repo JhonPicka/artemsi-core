@@ -8,6 +8,12 @@ import { LandingTabs } from "@/components/landing/landing-tabs";
 import { LegalFooterLinks } from "@/components/legal/legal-footer-links";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { getFreshLoginPath } from "@/lib/auth-paths";
+import {
+  billingAfterTrialPriceLine,
+  billingMonthlyPriceLine,
+  billingTrialCtaLabel,
+  billingTrialShortLabel,
+} from "@/lib/billing-offer";
 import { legalConfig } from "@/lib/legal-config";
 
 type HomeProps = {
@@ -41,7 +47,7 @@ export default async function Home({ searchParams }: HomeProps) {
               Connexion
             </Link>
             <SubscribeButton className="button-link landing-nav-cta">
-              S&apos;abonner
+              {billingTrialCtaLabel()}
             </SubscribeButton>
           </nav>
         </div>
@@ -61,9 +67,9 @@ export default async function Home({ searchParams }: HomeProps) {
           <div className="landing-hero-copy">
             <Link href="#landing-prix" className="landing-announce">
               <span className="landing-announce-dot" aria-hidden="true" />
-              <span className="landing-announce-tag">Nouveau</span>
+              <span className="landing-announce-tag">Offre lancement</span>
               <span className="landing-announce-text">
-                Trouve ton alternance et profite de l&apos;été
+                {billingTrialShortLabel()} — {billingAfterTrialPriceLine()}
               </span>
               <span className="landing-announce-arrow" aria-hidden="true">
                 →
@@ -83,7 +89,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
             <div className="landing-cta-row">
               <SubscribeButton className="button-link landing-cta-primary">
-                S&apos;abonner — 19,90&nbsp;EUR / mois
+                {billingTrialCtaLabel()}
                 <span className="landing-cta-arrow" aria-hidden="true">→</span>
               </SubscribeButton>
               <a
@@ -101,7 +107,7 @@ export default async function Home({ searchParams }: HomeProps) {
               </li>
               <li>
                 <span className="landing-trust-dot" aria-hidden="true" />
-                19,90 EUR / mois — un seul abonnement, accès immédiat
+                {billingTrialShortLabel()} — accès complet, {billingAfterTrialPriceLine()}
               </li>
               <li>
                 <span className="landing-trust-dot" aria-hidden="true" />
@@ -481,13 +487,15 @@ export default async function Home({ searchParams }: HomeProps) {
               </p>
             </details>
             <details className="landing-faq-item">
-              <summary>Pourquoi pas d&apos;essai gratuit ?</summary>
+              <summary>Comment fonctionne l&apos;essai gratuit ?</summary>
               <p>
-                Dès la souscription, le matching, les offres et le suivi sont actifs — ce sont des
-                services réels, pas une démo limitée. Tu paies pour un gain de temps immédiat (tri,
-                dossier, candidatures). Tu peux résilier selon les{" "}
-                <Link href="/cgu">CGU</Link> ; la gestion de l&apos;abonnement se fait depuis ton profil
-                (portail Stripe sécurisé).
+                Tu bénéficies de <strong>{billingTrialShortLabel()}</strong> avec accès complet
+                (offres ciblées, suivi, documents, accompagnement). Une carte bancaire est demandée
+                à l&apos;inscription pour sécuriser l&apos;essai ; tu n&apos;es pas débité pendant
+                la période d&apos;essai. Ensuite, l&apos;abonnement passe à{" "}
+                <strong>{billingMonthlyPriceLine()}</strong> sauf résiliation avant la fin de
+                l&apos;essai. Gestion depuis ton profil (portail Stripe) — voir les{" "}
+                <Link href="/cgu">CGU</Link>.
               </p>
             </details>
             <details className="landing-faq-item">
@@ -572,13 +580,13 @@ export default async function Home({ searchParams }: HomeProps) {
             </h2>
             <p className="landing-section-lead landing-cta-final-lead">
               Simplifie-toi la vie : les offres viennent à toi avec un matching clair sur ton
-              profil, le suivi des candidatures et des documents prêts à l&apos;envoi — puis
-              souscription en ligne (Stripe) des
-              19,90&nbsp;EUR&nbsp;/&nbsp;mois. Le rythme réel dépend de ton profil, du secteur et du marché.
+              profil, le suivi des candidatures et des documents prêts à l&apos;envoi — essai{" "}
+              <strong>{billingTrialShortLabel()}</strong>, puis {billingAfterTrialPriceLine()}.
+              Le rythme réel dépend de ton profil, du secteur et du marché.
             </p>
             <div className="landing-cta-row landing-cta-final-actions landing-cta-final-actions--single">
               <SubscribeButton className="button-link landing-cta-primary">
-                S&apos;abonner maintenant
+                {billingTrialCtaLabel()}
                 <span className="landing-cta-arrow" aria-hidden="true">→</span>
               </SubscribeButton>
             </div>

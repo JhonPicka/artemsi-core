@@ -29,3 +29,39 @@ export function getStripeClient() {
 export function getAppBaseUrl() {
   return env.NEXT_PUBLIC_APP_URL ?? legalConfig.appUrl;
 }
+
+function isLocalHostHostname(hostname: string) {
+  return hostname === "localhost" || hostname === "127.0.0.1";
+}
+
+/** Prefer localhost origin in dev so Stripe return URLs stay on the running app. */
+export function resolveAppBaseUrl(request?: Request) {
+  const configured = getAppBaseUrl().replace(/\/$/, "");
+
+  if (!request || process.env.NODE_ENV !== "development") {
+    return configured;
+  }
+
+  const origin = request.headers.get("origin");
+  if (origin) {
+    try {
+      const { hostname } = new URL(origin);
+      if (isLocalHostHostname(hostname)) {
+        return origin.replace(/\/$/, "");
+      }
+    } catch {
+      // ignore invalid origin
+    }
+  }
+
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (host) {
+    const hostname = host.split(":")[0] ?? "";
+    if (isLocalHostHostname(hostname)) {
+      const proto = request.headers.get("x-forwarded-proto") ?? "http";
+      return `${proto}://${host}`.replace(/\/$/, "");
+    }
+  }
+
+  return configured;
+}
