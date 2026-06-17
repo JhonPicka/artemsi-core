@@ -581,7 +581,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <p className="landing-section-lead landing-cta-final-lead">
               Simplifie-toi la vie : les offres viennent à toi avec un matching clair sur ton
               profil, le suivi des candidatures et des documents prêts à l&apos;envoi — essai{" "}
-              <strong>{billingTrialShortLabel()}</strong>, puis {billingAfterTrialPriceLine()}.
+              <strong>{billingTrialShortLabel()}</strong>, {billingAfterTrialPriceLine()}.
               Le rythme réel dépend de ton profil, du secteur et du marché.
             </p>
             <div className="landing-cta-row landing-cta-final-actions landing-cta-final-actions--single">
