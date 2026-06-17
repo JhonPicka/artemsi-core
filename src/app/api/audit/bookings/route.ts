@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAdminAuditsPath, getAdminUserId } from "@/lib/admin-auth";
-import { isSlotAllowed } from "@/lib/audit-slots";
+import { AUDIT_AVAILABILITY_LABEL, isSlotAllowed } from "@/lib/audit-slots";
 import { hasApiBillingAccess } from "@/lib/billing";
 import { getAppUrl } from "@/lib/email";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
   if (!isSlotAllowed(parsed.data.slotStart)) {
     return NextResponse.json(
-      { error: "Creneau non autorise (semaine 18h-22h, week-end 10h-14h)." },
+      { error: `Creneau non autorise (${AUDIT_AVAILABILITY_LABEL}).` },
       { status: 400 },
     );
   }

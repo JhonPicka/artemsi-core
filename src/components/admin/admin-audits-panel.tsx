@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { AUDIT_AVAILABILITY_LABEL } from "@/lib/audit-slots";
 import {
   AUDIT_STATUS_LABEL,
   type AdminAuditRow,
@@ -129,7 +130,7 @@ function AuditEditor({
             onChange={(e) => setSlotLocal(e.target.value)}
           />
           <p className="muted small-label">
-            Semaine 18h–22h · week-end 10h–14h (heure Paris)
+            {AUDIT_AVAILABILITY_LABEL}
           </p>
         </>
       ) : null}

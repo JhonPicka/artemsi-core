@@ -1,4 +1,4 @@
-import { isSlotAllowed } from "@/lib/audit-slots";
+import { AUDIT_AVAILABILITY_LABEL, isSlotAllowed } from "@/lib/audit-slots";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AuditBookingStatus = "pending" | "confirmed" | "declined" | "cancelled";
@@ -206,7 +206,7 @@ export async function patchAdminAuditBooking(
     if (!isSlotAllowed(patch.slotStart)) {
       return {
         ok: false,
-        error: "Creneau invalide (semaine 18h-22h, week-end 10h-14h).",
+        error: `Creneau invalide (${AUDIT_AVAILABILITY_LABEL}).`,
       };
     }
     const slotStartISO = slotStart.toISOString();

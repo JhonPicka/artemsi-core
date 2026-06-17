@@ -1,6 +1,6 @@
 import { AuditCalendar } from "@/components/audit/audit-calendar";
 import { requireUser } from "@/lib/auth";
-import { generateAuditDays } from "@/lib/audit-slots";
+import { AUDIT_AVAILABILITY_LABEL, generateAuditDays } from "@/lib/audit-slots";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -46,8 +46,8 @@ export default async function DashboardAuditPage() {
           objectif alternance, et te dit quoi ajuster en priorite — echange reel, pas un score auto.
         </p>
         <p className="muted audit-intro-practical">
-          Reserve un creneau ci-dessous. Disponibilites en semaine de 18h a 22h, et le
-          week-end de 10h a 14h. Une fois ta demande envoyee, tu recevras une
+          Reserve un creneau ci-dessous. Disponibilites : {AUDIT_AVAILABILITY_LABEL}.
+          Une fois ta demande envoyee, tu recevras une
           notification apres validation.
         </p>
       </section>

@@ -21,8 +21,15 @@ export type AuditDay = {
 
 const SLOT_DURATION_MINUTES = 60;
 
-const WEEKDAY_HOURS = [18, 19, 20, 21];
-const WEEKEND_HOURS = [10, 11, 12, 13];
+/** Créneaux de début (heure Paris) — audits d'1 h. */
+export const AUDIT_WEEKDAY_HOURS = [10, 11, 12, 13, 14, 15, 16] as const;
+export const AUDIT_WEEKEND_HOURS = [10, 11, 12, 13, 14] as const;
+
+export const AUDIT_AVAILABILITY_LABEL =
+  "semaine 10h-16h, week-end 10h-14h (heure Paris)";
+
+const WEEKDAY_HOURS: readonly number[] = AUDIT_WEEKDAY_HOURS;
+const WEEKEND_HOURS: readonly number[] = AUDIT_WEEKEND_HOURS;
 
 function pad(value: number) {
   return value.toString().padStart(2, "0");
