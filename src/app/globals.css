@@ -7136,6 +7136,42 @@ input[type="checkbox"] {
   font-size: 0.85em;
 }
 
+.admin-offer-csv-actions {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-offer-csv-file-label {
+  cursor: pointer;
+  margin: 0;
+}
+
+.admin-offer-csv-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.admin-offer-csv-issues {
+  margin-top: 1rem;
+}
+
+.admin-offer-csv-issues-list {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.admin-offer-form-block {
+  display: grid;
+  gap: 1.25rem;
+}
+
 .admin-dashboard {
   display: grid;
   gap: 1.35rem;

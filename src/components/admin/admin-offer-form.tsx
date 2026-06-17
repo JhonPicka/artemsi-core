@@ -142,7 +142,15 @@ export function AdminOfferForm() {
   }
 
   return (
-    <div className="admin-offer-panel">
+    <div className="admin-offer-form-block">
+      <section className="card form admin-offer-step">
+        <h2>Offre partenaire — publication unitaire</h2>
+        <p className="muted admin-offer-lead">
+          Pour les offres partenaires ou exclusives ARTEMSI : analyse IA, raccourci candidat et
+          options de visibilité avancées.
+        </p>
+      </section>
+
       <section className="card form admin-offer-step">
         <h2>1. URL de l&apos;offre</h2>
         <p className="muted admin-offer-lead">
