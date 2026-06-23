@@ -24,7 +24,7 @@ export function billingTrialShortLabel() {
 }
 
 export function billingMonthlyPriceLine() {
-  return `${formatMonthlyPriceLabel()}\u00a0EUR TTC / mois`;
+  return `${formatMonthlyPriceLabel()}\u00a0€ / mois`;
 }
 
 export function billingAfterTrialPriceLine() {
