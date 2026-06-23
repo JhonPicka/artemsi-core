@@ -98,6 +98,38 @@ export function AdminPieChart({
   );
 }
 
+export function AdminFunnelSteps({
+  steps,
+}: {
+  steps: { label: string; value: number; pct: number }[];
+}) {
+  const max = steps[0]?.value ?? 1;
+
+  return (
+    <section className="card admin-chart-card admin-funnel-card">
+      <h3 className="admin-chart-card-title">Funnel produit</h3>
+      <ol className="admin-funnel-steps">
+        {steps.map((step) => (
+          <li key={step.label} className="admin-funnel-step">
+            <div className="admin-funnel-step-head">
+              <span className="admin-funnel-step-label">{step.label}</span>
+              <span className="admin-funnel-step-meta">
+                {step.value} · {step.pct}%
+              </span>
+            </div>
+            <div className="admin-progress-track">
+              <div
+                className="admin-progress-fill admin-progress-fill--accent"
+                style={{ width: `${max > 0 ? (step.value / max) * 100 : 0}%` }}
+              />
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 export function AdminRankedBars({
   title,
   items,

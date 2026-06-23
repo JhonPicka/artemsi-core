@@ -1,4 +1,5 @@
 import { getAdminEmail, getAdminUserId } from "@/lib/admin-auth";
+import { BILLING_MONTHLY_PRICE_EUR } from "@/lib/billing-offer";
 import {
   ACQUISITION_SOURCE_LABEL,
   ALTERNANCE_RHYTHM_LABEL,
@@ -20,6 +21,7 @@ import {
   type StudyLevel,
 } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
 
 export type RankedItem = { label: string; count: number };
 
@@ -54,47 +56,61 @@ export type ChartSlice = { label: string; value: number; color: string };
 export type AdminDashboardStats = {
   generatedAt: string;
   charts: {
-    profileCompletion: ChartSlice[];
+    accountTiers: ChartSlice[];
     subscriptions: ChartSlice[];
-    contractTypes: ChartSlice[];
-    studyDomains: ChartSlice[];
     acquisitionSources: ChartSlice[];
     searchLevels: ChartSlice[];
-    applicationsSentRanges: ChartSlice[];
-    preferredSectors: ChartSlice[];
-    alternanceRhythms: ChartSlice[];
+    signupsTrend: RankedItem[];
+    proActivationsTrend: RankedItem[];
+  };
+  funnel: {
+    signups: number;
+    onboardingCompleted: number;
+    engagedUsers: number;
+    proActive: number;
   };
   kpis: {
     totalAccounts: number;
+    freeAccounts: number;
     onboardingCompleted: number;
     onboardingPending: number;
     activeSubscriptions: number;
+    canceledSubscriptions: number;
+    pastDueSubscriptions: number;
+    conversionRatePct: number;
+    activationRatePct: number;
+    engagementRatePct: number;
+    churnRatePct: number;
     paidNotActivated: number;
     signupsLast7Days: number;
+    signupsLast30Days: number;
+    cancellationsLast30Days: number;
+    accountDeletionsLast30Days: number;
     mrrEstimateEur: number;
     totalOffers: number;
     publicOffers: number;
+    hiddenOffers: number;
+    linkReportsTotal: number;
     assignmentsTotal: number;
     assignmentsLast7Days: number;
     applicationsTotal: number;
+    usersWithApplications: number;
     userAddedOffersTotal: number;
     userAddedOffersDailyAverage: number;
     auditsPending: number;
     billingActiveTotal: number;
+    billingCustomersTotal: number;
+    stripeRefundsCount: number | null;
+    stripeRefundRatePct: number | null;
   };
   topTargetJobs: RankedItem[];
-  topStudyDomains: RankedItem[];
   topRegions: RankedItem[];
-  contractTypes: RankedItem[];
   topAcquisitionSources: RankedItem[];
   topSearchLevels: RankedItem[];
-  topApplicationsSentRanges: RankedItem[];
-  topPreferredSectors: RankedItem[];
-  topAlternanceRhythms: RankedItem[];
   candidates: AdminCandidateProfile[];
 };
 
-const MONTHLY_PRICE_EUR = 19.9;
+const MONTHLY_PRICE_EUR = BILLING_MONTHLY_PRICE_EUR;
 
 const PIE_COLORS = [
   "var(--admin-chart-1)",
@@ -109,6 +125,79 @@ function daysAgoIso(days: number) {
   const d = new Date();
   d.setDate(d.getDate() - days);
   return d.toISOString();
+}
+
+function pct(value: number, max: number) {
+  if (max <= 0) return 0;
+  return Math.round((value / max) * 1000) / 10;
+}
+
+function groupCountByRecentDays(
+  rows: readonly { created_at?: string; updated_at?: string }[],
+  days: number,
+): RankedItem[] {
+  const map = new Map<string, number>();
+
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    map.set(d.toISOString().slice(0, 10), 0);
+  }
+
+  for (const row of rows) {
+    const iso = row.created_at ?? row.updated_at;
+    if (!iso) continue;
+    const key = iso.slice(0, 10);
+    if (map.has(key)) {
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+  }
+
+  return [...map.entries()].map(([iso, count]) => ({
+    label: new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }),
+    count,
+  }));
+}
+
+async function fetchStripeRefundMetrics(): Promise<{
+  refundsCount: number;
+  refundRatePct: number;
+} | null> {
+  if (!isStripeConfigured()) return null;
+
+  try {
+    const stripe = getStripeClient();
+    const since = Math.floor((Date.now() - 90 * 86_400_000) / 1000);
+    let refundsCount = 0;
+    let paidChargesCount = 0;
+
+    for await (const refund of stripe.refunds.list({
+      limit: 100,
+      created: { gte: since },
+    })) {
+      if (!refund.status || refund.status === "succeeded" || refund.status === "pending") {
+        refundsCount += 1;
+      }
+    }
+
+    for await (const charge of stripe.charges.list({
+      limit: 100,
+      created: { gte: since },
+    })) {
+      if (charge.paid && !charge.refunded) {
+        paidChargesCount += 1;
+      }
+    }
+
+    const denominator = Math.max(paidChargesCount + refundsCount, 1);
+    return {
+      refundsCount,
+      refundRatePct: pct(refundsCount, denominator),
+    };
+  } catch {
+    return null;
+  }
 }
 
 function computeDailyAverage(total: number, firstCreatedAt: string | null | undefined) {
@@ -239,6 +328,8 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
   const supabase = createAdminClient();
   const adminEmail = getAdminEmail();
   const since7d = daysAgoIso(7);
+  const since30d = daysAgoIso(30);
+  const since14d = daysAgoIso(14);
 
   const adminUserId = getAdminUserId();
 
@@ -263,17 +354,30 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
     { count: totalAccounts },
     { count: onboardingCompleted },
     { count: activeSubscriptions },
+    { count: freeAccountsCount },
+    { count: canceledSubscriptions },
+    { count: pastDueSubscriptions },
     { count: signupsLast7Days },
+    { count: signupsLast30Days },
     { data: profileRows },
+    { data: signupTrendRows },
+    { data: proTrendRows },
     { count: totalOffers },
     { count: publicOffers },
+    { count: hiddenOffers },
+    { count: linkReportsTotal },
     { count: assignmentsTotal },
     { count: assignmentsLast7Days },
     { count: applicationsTotal },
+    { data: applicationUserRows },
     { data: firstUserOfferRow },
     { count: auditsPending },
     { data: candidateRows },
     { count: billingActiveTotal },
+    { count: billingCustomersTotal },
+    { count: cancellationsLast30Days },
+    { count: accountDeletionsLast30Days },
+    stripeRefundMetrics,
   ] = await Promise.all([
     profileFilter(supabase.from("profiles").select("id", { count: "exact", head: true })),
     profileFilter(
@@ -292,26 +396,69 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
       supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
+        .eq("subscription_status", "inactive"),
+    ),
+    profileFilter(
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("subscription_status", "canceled"),
+    ),
+    profileFilter(
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("subscription_status", "past_due"),
+    ),
+    profileFilter(
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
         .gte("created_at", since7d),
     ),
     profileFilter(
       supabase
         .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", since30d),
+    ),
+    profileFilter(
+      supabase
+        .from("profiles")
         .select(
-          "target_job, study_domain, regions, contract_type, acquisition_source, applications_sent_range, search_level, preferred_sectors, alternance_rhythm, email, subscription_status, onboarding_completed",
+          "target_job, regions, acquisition_source, search_level, email, subscription_status, onboarding_completed",
         ),
+    ),
+    profileFilter(
+      supabase
+        .from("profiles")
+        .select("created_at")
+        .gte("created_at", since14d),
+    ),
+    profileFilter(
+      supabase
+        .from("profiles")
+        .select("updated_at")
+        .eq("subscription_status", "active")
+        .gte("updated_at", since14d),
     ),
     supabase.from("offers").select("id", { count: "exact", head: true }),
     supabase
       .from("offers")
       .select("id", { count: "exact", head: true })
       .eq("is_public", true),
+    supabase
+      .from("offers")
+      .select("id", { count: "exact", head: true })
+      .not("hidden_at", "is", null),
+    supabase.from("offer_link_reports").select("id", { count: "exact", head: true }),
     supabase.from("offer_assignments").select("id", { count: "exact", head: true }),
     supabase
       .from("offer_assignments")
       .select("id", { count: "exact", head: true })
       .gte("assigned_at", since7d),
     supabase.from("applications").select("id", { count: "exact", head: true }),
+    supabase.from("applications").select("user_id"),
     supabase
       .from("applications")
       .select("created_at")
@@ -333,19 +480,31 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
       .from("billing_customers")
       .select("email", { count: "exact", head: true })
       .eq("subscription_status", "active"),
+    supabase.from("billing_customers").select("email", { count: "exact", head: true }),
+    supabase
+      .from("billing_customers")
+      .select("email", { count: "exact", head: true })
+      .eq("subscription_status", "canceled")
+      .gte("updated_at", since30d),
+    supabase
+      .from("account_deletion_feedback")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", since30d),
+    fetchStripeRefundMetrics(),
   ]);
 
   const profiles = profileRows ?? [];
+  const total = totalAccounts ?? 0;
+  const activeCount = activeSubscriptions ?? 0;
+  const canceledCount = canceledSubscriptions ?? 0;
+  const pastDueCount = pastDueSubscriptions ?? 0;
+  const onboardedCount = onboardingCompleted ?? 0;
+  const freeAccounts = freeAccountsCount ?? Math.max(0, total - activeCount - canceledCount - pastDueCount);
 
-  let onboardingDone = 0;
-  let onboardingPending = 0;
   let paidNotActivated = 0;
   const subscriptionCounts = { active: 0, inactive: 0, past_due: 0, canceled: 0 };
 
   for (const p of profiles) {
-    if (p.onboarding_completed) onboardingDone += 1;
-    else onboardingPending += 1;
-
     const status = String(p.subscription_status ?? "inactive");
     if (status === "active" && !p.onboarding_completed) {
       paidNotActivated += 1;
@@ -357,28 +516,16 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
     }
   }
 
+  const usersWithApplications = new Set(
+    (applicationUserRows ?? []).map((row) => row.user_id as string),
+  ).size;
+
   const topTargetJobs = countByField(
     profiles.map((p) => p.target_job as string | null),
     (v) => v.trim(),
   ).slice(0, 8);
 
-  const topStudyDomains = countByField(
-    profiles.map((p) => {
-      const code = p.study_domain as StudyDomain | null;
-      if (!code) return null;
-      return STUDY_DOMAIN_LABEL[code] ?? code;
-    }),
-  ).slice(0, 8);
-
   const topRegions = countRegions(profiles.map((p) => p.regions as string[] | null)).slice(0, 8);
-
-  const contractTypes = countByField(
-    profiles.map((p) => {
-      const code = p.contract_type as ContractType | null;
-      if (!code) return null;
-      return CONTRACT_TYPE_LABEL[code] ?? code;
-    }),
-  );
 
   const topAcquisitionSources = countByField(
     profiles.map((p) => {
@@ -396,86 +543,82 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
     }),
   );
 
-  const topApplicationsSentRanges = countByField(
-    profiles.map((p) => {
-      const code = p.applications_sent_range as ApplicationsSentRange | null;
-      if (!code) return null;
-      return APPLICATIONS_SENT_RANGE_LABEL[code] ?? code;
-    }),
-  );
-
-  const topPreferredSectors = countMultiSelect(
-    profiles.map((p) => p.preferred_sectors as string[] | null),
-    (sector) => PREFERRED_SECTOR_LABEL[sector as PreferredSector] ?? sector,
-  ).slice(0, 8);
-
-  const topAlternanceRhythms = countByField(
-    profiles.map((p) => {
-      const code = p.alternance_rhythm as AlternanceRhythm | null;
-      if (!code || code === "NOT_APPLICABLE") return null;
-      return ALTERNANCE_RHYTHM_LABEL[code] ?? code;
-    }),
-  );
-
   const candidates = (candidateRows ?? []).map((row) =>
     mapCandidate(row as Record<string, unknown>),
   );
 
-  const activeCount = activeSubscriptions ?? 0;
   const userAddedOffersTotal = applicationsTotal ?? 0;
   const userAddedOffersDailyAverage = computeDailyAverage(
     userAddedOffersTotal,
     firstUserOfferRow?.created_at as string | undefined,
   );
 
+  const churnDenominator = Math.max(activeCount + canceledCount, 1);
+
   return {
     generatedAt: new Date().toISOString(),
+    funnel: {
+      signups: total,
+      onboardingCompleted: onboardedCount,
+      engagedUsers: usersWithApplications,
+      proActive: activeCount,
+    },
     charts: {
-      profileCompletion: toSlices([
-        { label: "Profil complet", value: onboardingDone },
-        { label: "En cours", value: onboardingPending },
+      accountTiers: toSlices([
+        { label: "Gratuit", value: freeAccounts },
+        { label: "Pro actif", value: activeCount },
+        { label: "Résilié", value: canceledCount },
+        { label: "Impayé", value: pastDueCount },
       ]),
       subscriptions: toSlices([
         { label: "Actifs", value: subscriptionCounts.active },
-        { label: "Inactifs", value: subscriptionCounts.inactive },
+        { label: "Gratuits", value: subscriptionCounts.inactive },
         { label: "Impayés", value: subscriptionCounts.past_due },
         { label: "Résiliés", value: subscriptionCounts.canceled },
       ]),
-      contractTypes: rankedToSlices(contractTypes),
-      studyDomains: rankedToSlices(topStudyDomains),
       acquisitionSources: rankedToSlices(topAcquisitionSources),
       searchLevels: rankedToSlices(topSearchLevels),
-      applicationsSentRanges: rankedToSlices(topApplicationsSentRanges),
-      preferredSectors: rankedToSlices(topPreferredSectors),
-      alternanceRhythms: rankedToSlices(topAlternanceRhythms),
+      signupsTrend: groupCountByRecentDays(signupTrendRows ?? [], 14),
+      proActivationsTrend: groupCountByRecentDays(proTrendRows ?? [], 14),
     },
     kpis: {
-      totalAccounts: totalAccounts ?? 0,
-      onboardingCompleted: onboardingCompleted ?? 0,
-      onboardingPending: (totalAccounts ?? 0) - (onboardingCompleted ?? 0),
+      totalAccounts: total,
+      freeAccounts,
+      onboardingCompleted: onboardedCount,
+      onboardingPending: Math.max(0, total - onboardedCount),
       activeSubscriptions: activeCount,
+      canceledSubscriptions: canceledCount,
+      pastDueSubscriptions: pastDueCount,
+      conversionRatePct: pct(activeCount, total),
+      activationRatePct: pct(onboardedCount, total),
+      engagementRatePct: pct(usersWithApplications, Math.max(onboardedCount, 1)),
+      churnRatePct: pct(canceledCount, churnDenominator),
       paidNotActivated,
       signupsLast7Days: signupsLast7Days ?? 0,
+      signupsLast30Days: signupsLast30Days ?? 0,
+      cancellationsLast30Days: cancellationsLast30Days ?? 0,
+      accountDeletionsLast30Days: accountDeletionsLast30Days ?? 0,
       mrrEstimateEur: Math.round(activeCount * MONTHLY_PRICE_EUR * 100) / 100,
       totalOffers: totalOffers ?? 0,
       publicOffers: publicOffers ?? 0,
+      hiddenOffers: hiddenOffers ?? 0,
+      linkReportsTotal: linkReportsTotal ?? 0,
       assignmentsTotal: assignmentsTotal ?? 0,
       assignmentsLast7Days: assignmentsLast7Days ?? 0,
-      applicationsTotal: applicationsTotal ?? 0,
+      applicationsTotal: userAddedOffersTotal,
+      usersWithApplications,
       userAddedOffersTotal,
       userAddedOffersDailyAverage,
       auditsPending: auditsPending ?? 0,
       billingActiveTotal: billingActiveTotal ?? 0,
+      billingCustomersTotal: billingCustomersTotal ?? 0,
+      stripeRefundsCount: stripeRefundMetrics?.refundsCount ?? null,
+      stripeRefundRatePct: stripeRefundMetrics?.refundRatePct ?? null,
     },
     topTargetJobs,
-    topStudyDomains,
     topRegions,
-    contractTypes,
     topAcquisitionSources,
     topSearchLevels,
-    topApplicationsSentRanges,
-    topPreferredSectors,
-    topAlternanceRhythms,
     candidates,
   };
 }
