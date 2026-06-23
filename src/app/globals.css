@@ -507,26 +507,6 @@ html:has(.landing-shell) {
 }
 
 /* ---- Top nav ---- */
-.landing-nav-brand-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.landing-nav-tagline {
-  font-size: 0.65rem;
-  color: var(--muted);
-  line-height: 1.3;
-  max-width: 22ch;
-  display: none;
-}
-
-@media (min-width: 768px) {
-  .landing-nav-tagline {
-    display: block;
-  }
-}
-
 .landing-nav {
   position: sticky;
   top: 0;

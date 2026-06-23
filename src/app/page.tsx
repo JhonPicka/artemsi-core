@@ -39,16 +39,11 @@ export default async function Home({ searchParams }: HomeProps) {
 
       <header className="landing-nav">
         <div className="landing-container landing-nav-inner">
-          <div className="landing-nav-brand-group">
-            <BrandMark
-              href="/"
-              size={40}
-              logoClassName="brand-logo landing-brand-logo"
-            />
-            <p className="landing-nav-tagline">
-              Trouve ton alternance grâce à ARTEMSI et profite de l&apos;été
-            </p>
-          </div>
+          <BrandMark
+            href="/"
+            size={40}
+            logoClassName="brand-logo landing-brand-logo"
+          />
 
           <LandingTabs />
 
