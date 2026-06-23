@@ -125,6 +125,7 @@ function ProfileDocCard({
 }
 
 type ProfileMainClientProps = {
+  isPro: boolean;
   summaryRows: { label: string; value: string }[];
   cvDoc: ProfileDocSlot;
   letterDoc: ProfileDocSlot;
@@ -132,6 +133,7 @@ type ProfileMainClientProps = {
 };
 
 export function ProfileMainClient({
+  isPro,
   summaryRows,
   cvDoc,
   letterDoc,
@@ -227,7 +229,7 @@ export function ProfileMainClient({
             </div>
           </div>
           <ThemeToggle variant="card" />
-          <ManageAccountPanel />
+          <ManageAccountPanel isPro={isPro} />
         </section>
       </div>
 

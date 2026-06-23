@@ -6747,6 +6747,112 @@ input[type="checkbox"] {
   background: rgba(124, 92, 255, 0.06);
 }
 
+.freemium-pro-upgrade-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+  margin: 0 0 1.1rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(168, 138, 255, 0.42);
+  background: linear-gradient(
+    135deg,
+    rgba(124, 92, 255, 0.2) 0%,
+    rgba(124, 92, 255, 0.07) 55%,
+    rgba(12, 10, 22, 0.15) 100%
+  );
+  box-shadow: 0 0 28px rgba(124, 92, 255, 0.14);
+}
+
+.offers-page-pro-banner {
+  margin-top: 0.25rem;
+}
+
+.freemium-pro-upgrade-banner__body {
+  flex: 1 1 16rem;
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.freemium-pro-upgrade-banner__chip {
+  justify-self: start;
+}
+
+.freemium-pro-upgrade-banner__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+.freemium-pro-upgrade-banner__text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--foreground-soft);
+  max-width: 52ch;
+}
+
+.freemium-pro-upgrade-banner__text strong {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.freemium-pro-upgrade-banner__trial {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.freemium-pro-upgrade-banner__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  min-width: 11.5rem;
+}
+
+.freemium-pro-upgrade-banner__cta {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+}
+
+.freemium-pro-upgrade-banner__link {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+}
+
+.manage-account-row--upgrade {
+  padding: 0.85rem 0.95rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(168, 138, 255, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(124, 92, 255, 0.14),
+    rgba(124, 92, 255, 0.05)
+  );
+}
+
+.manage-account-row-trial {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.manage-account-upgrade-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
 .pro-upgrade-card {
   display: grid;
   gap: 0.65rem;

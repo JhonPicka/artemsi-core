@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { FreemiumProUpgradeBanner } from "@/components/billing/freemium-pro-upgrade-banner";
 import { JobboardOfferCard } from "@/components/offers/jobboard-offer-card";
 import { JobboardPagination } from "@/components/offers/jobboard-pagination";
 import { JobboardToolbar } from "@/components/offers/jobboard-toolbar";
@@ -154,6 +155,19 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
         <OffersViewTabs active={view} counts={tabCounts} />
       </header>
 
+      {!isPro ? (
+        <FreemiumProUpgradeBanner
+          variant={
+            view === "partenaires"
+              ? "partners"
+              : view === "jobboard"
+                ? "jobboard"
+                : "matching"
+          }
+          className="offers-page-pro-banner"
+        />
+      ) : null}
+
       {view === "pour-moi" ? (
         <section className="offers-section" aria-labelledby="offers-pour-moi-title">
           <div className="offers-section-header">
@@ -169,20 +183,11 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
               </>
             ) : null}
           </p>
-          {!isPro ? (
-            <p className="offers-freemium-banner muted">
-              Aperçu gratuit : <strong>{FREE_TIER_ASSIGNMENT_CAP} offres personnalisées</strong>{" "}
-              maximum.{" "}
-              <Link href="/subscribe">Passe Pro</Link> pour le matching complet sur ton profil.
-            </p>
-          ) : null}
           {hiddenPersonalCount > 0 ? (
-            <p className="offers-freemium-banner muted">
-              Encore <strong>{hiddenPersonalCount}</strong> offre
-              {hiddenPersonalCount > 1 ? "s" : ""} te correspond
-              {hiddenPersonalCount > 1 ? "ent" : ""} — <Link href="/subscribe">Passe Pro</Link>{" "}
-              pour les voir.
-            </p>
+            <FreemiumProUpgradeBanner
+              variant="hidden-offers"
+              hiddenCount={hiddenPersonalCount}
+            />
           ) : null}
 
           {assignmentsRes.error ? (
@@ -240,14 +245,6 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
             Offres mises en avant pour les candidats accompagnés — sources partenaires ou validées
             manuellement.
           </p>
-          {!isPro ? (
-            <p className="offers-freemium-banner muted">
-              En compte gratuit, tu peux consulter ces offres mais{" "}
-              <strong>tu ne peux pas y candidater</strong>.{" "}
-              <Link href="/subscribe">Passe Pro</Link> pour postuler.
-            </p>
-          ) : null}
-
           {assignmentsRes.error ? (
             <p className="error">Erreur offres partenaires : {assignmentsRes.error.message}</p>
           ) : showExclusiveDemo ? (
@@ -299,15 +296,6 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
           <div className="offers-section-header">
             <h2 id="offers-jobboard-title">Jobboard public</h2>
           </div>
-          {!isPro ? (
-            <p className="offers-freemium-banner muted">
-            Compte gratuit : tu vois <strong>50&nbsp;% du jobboard</strong> (les offres les moins
-            récentes). Les <strong>dernières offres publiées</strong> sont réservées aux abonnés
-            Pro.
-            {" "}
-            <Link href="/subscribe">Passe Pro</Link> pour le jobboard complet et l&apos;audit CV.
-            </p>
-          ) : null}
           <p className="muted">
             Parcours les offres de la communauté. Clique sur <strong>Ça m'intéresse</strong> pour
             recevoir plus d&apos;offres similaires dans <em>Pour toi</em>.

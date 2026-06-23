@@ -1,5 +1,6 @@
 import { ProfileMainClient } from "@/components/profile/profile-main-client";
 import { requireUser } from "@/lib/auth";
+import { userHasProAccess } from "@/lib/billing";
 import {
   ACQUISITION_SOURCES,
   ALTERNANCE_RHYTHM_LABEL,
@@ -58,6 +59,7 @@ function initials(fullName: string | null | undefined, email: string) {
 export default async function DashboardProfilePage() {
   const user = await requireUser();
   const supabase = await createClient();
+  const isPro = await userHasProAccess(user);
 
   const [{ data: profile }, { data: documentsRaw }] = await Promise.all([
     supabase
@@ -166,6 +168,7 @@ export default async function DashboardProfilePage() {
       </header>
 
       <ProfileMainClient
+        isPro={isPro}
         summaryRows={summaryRows}
         cvDoc={
           cvDoc

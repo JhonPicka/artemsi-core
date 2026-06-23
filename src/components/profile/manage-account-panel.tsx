@@ -1,26 +1,56 @@
 "use client";
 
+import Link from "next/link";
+
+import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
+import { billingProCtaLabel, billingProTrialLine } from "@/lib/billing-offer";
 import { legalConfig } from "@/lib/legal-config";
 
-export function ManageAccountPanel() {
+type Props = {
+  isPro: boolean;
+};
+
+export function ManageAccountPanel({ isPro }: Props) {
   const contactSubject = encodeURIComponent("Demande de suppression de compte ARTEMSI");
   const contactHref = `mailto:${legalConfig.contactEmail}?subject=${contactSubject}`;
 
   return (
     <div className="manage-account-panel">
-      <article className="manage-account-row">
-        <p className="manage-account-row-title">Annuler son abonnement</p>
-        <p className="muted manage-account-row-lead">
-          Portail Stripe : désabonnement, carte bancaire et factures (selon les{" "}
-          <a href="/cgu" className="manage-account-link">
-            CGU
-          </a>
-          ).
+      <article
+        className={`manage-account-row${!isPro ? " manage-account-row--upgrade" : ""}`}
+      >
+        <p className="manage-account-row-title">
+          {isPro ? "Gérer mon abonnement" : "Passer Pro"}
         </p>
-        <ManageSubscriptionButton className="button-link secondary-link">
-          Gérer ou annuler l&apos;abonnement
-        </ManageSubscriptionButton>
+        {isPro ? (
+          <>
+            <p className="muted manage-account-row-lead">
+              Portail Stripe : désabonnement, carte bancaire et factures (selon les{" "}
+              <a href="/cgu" className="manage-account-link">
+                CGU
+              </a>
+              ).
+            </p>
+            <ManageSubscriptionButton className="button-link secondary-link">
+              Gérer ou annuler l&apos;abonnement
+            </ManageSubscriptionButton>
+          </>
+        ) : (
+          <>
+            <p className="muted manage-account-row-lead">
+              Débloque le <strong>matching complet</strong> sur ton profil, le jobboard intégral,
+              les offres partenaires et l&apos;audit CV.
+            </p>
+            <p className="manage-account-row-trial">{billingProTrialLine()}</p>
+            <div className="manage-account-upgrade-actions">
+              <SubscribeButton className="button-link">{billingProCtaLabel()}</SubscribeButton>
+              <Link href="/subscribe" className="button-link secondary-link">
+                Voir les détails
+              </Link>
+            </div>
+          </>
+        )}
       </article>
 
       <div className="manage-account-divider" role="separator" />
