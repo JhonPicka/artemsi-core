@@ -108,7 +108,7 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
           disabled={loading}
           aria-pressed={interested}
         >
-          {loading ? "…" : interested ? "Interesse ✓" : "Ca m'interesse"}
+          {loading ? "…" : interested ? "Intéressé ✓" : "Ça m'intéresse"}
         </button>
         {opensExternally ? (
           <a

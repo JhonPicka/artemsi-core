@@ -309,7 +309,7 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
             </p>
           ) : null}
           <p className="muted">
-            Parcours les offres de la communauté. Clique sur <strong>Ça m&apos;intéresse</strong> pour
+            Parcours les offres de la communauté. Clique sur <strong>Ça m'intéresse</strong> pour
             recevoir plus d&apos;offres similaires dans <em>Pour toi</em>.
           </p>
 

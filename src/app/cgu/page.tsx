@@ -22,8 +22,8 @@ export default function CguPage() {
       <section>
         <h2>1. Objet</h2>
         <p>
-          Les présentes conditions régissent l&apos;accès et l&apos;utilisation du service{" "}
-          {c.brand}, accessible via {c.appUrl} (l&apos;&laquo;&nbsp;Application&nbsp;&raquo;),
+          Les présentes conditions régissent l'accès et l'utilisation du service{" "}
+          {c.brand}, accessible via {c.appUrl} (l'« Application »),
           édité par {c.publisherName}. En créant un compte ou en souscrivant la formule Pro, tu
           acceptes sans réserve ces conditions ainsi que la{" "}
           <a href="/confidentialite">politique de confidentialité</a>.
@@ -33,11 +33,11 @@ export default function CguPage() {
       <section>
         <h2>2. Description du service</h2>
         <p>
-          {c.brand} est un espace candidat dédié à la recherche d&apos;alternance : offres
+          {c.brand} est un espace candidat dédié à la recherche d'alternance : offres
           sélectionnées, suivi des candidatures, gestion de documents (CV, lettre de motivation) et
           accompagnement humain sur ton dossier. Le service vise à réduire le bruit et structurer ta
           recherche ; il ne remplace pas ta démarche personnelle auprès des employeurs et ne garantit
-          ni entretien ni signature de contrat.
+          ni un entretien ni une signature de contrat.
         </p>
         <p>Deux formules coexistent :</p>
         <ul>
@@ -49,8 +49,8 @@ export default function CguPage() {
           <li>
             <strong>Pro</strong> — accès au jobboard complet, au matching selon ton profil, aux
             offres exclusives partenaires, aux guides candidat CV/LM par offre et à{" "}
-            <strong>3 appels personnalisés d&apos;1 heure par mois</strong> avec un accompagnateur
-            humain (pas de score automatique, pas d&apos;IA générative à la place de l&apos;échange).
+            <strong>3 appels personnalisés d'1 heure par mois</strong> avec un accompagnateur
+            humain (pas de score automatique, pas d'IA générative à la place de l'échange).
           </li>
         </ul>
       </section>
@@ -64,12 +64,12 @@ export default function CguPage() {
             compte est présumée réalisée par toi.
           </li>
           <li>
-            L&apos;accès peut être suspendu en cas de manquement grave (fraude, abus, atteinte au
+            L'accès peut être suspendu en cas de manquement grave (fraude, abus, atteinte au
             service ou à des tiers).
           </li>
           <li>
-            Âge minimum : tu déclares avoir au moins 16 ans ou l&apos;autorisation d&apos;un
-            représentant légal si la loi l&apos;exige.
+            Âge minimum : tu déclares avoir au moins 16 ans ou l'autorisation d'un
+            représentant légal si la loi l'exige.
           </li>
         </ul>
       </section>
@@ -78,7 +78,7 @@ export default function CguPage() {
         <h2>4. Formule Gratuite</h2>
         <ul>
           <li>
-            La création d&apos;un compte gratuit ne nécessite pas de moyen de paiement.
+            La création d'un compte gratuit ne nécessite pas de moyen de paiement.
           </li>
           <li>
             Le jobboard gratuit affiche environ <strong>50&nbsp;%</strong> des offres publiques les
@@ -93,20 +93,20 @@ export default function CguPage() {
         <p>
           {c.brand} peut proposer ponctuellement des <strong>offres promotionnelles</strong>{" "}
           (ex.&nbsp;: mini-audit découverte de 10&nbsp;minutes, session collective, opération
-          partenaire) selon sa disponibilité opérationnelle, sur invitation ou dans le cadre d&apos;une
+          partenaire) selon sa disponibilité opérationnelle, sur invitation ou dans le cadre d'une
           campagne.
         </p>
         <ul>
           <li>
             Ces offres <strong>ne constituent pas un droit automatique</strong> lié à la création
-            d&apos;un compte Gratuit.
+            d'un compte Gratuit.
           </li>
           <li>
-            Les modalités (durée, format individuel ou collectif, période d&apos;éligibilité) sont
-            précisées au moment de l&apos;offre.
+            Les modalités (durée, format individuel ou collectif, période d'éligibilité) sont
+            précisées au moment de l'offre.
           </li>
           <li>
-            Une offre promo acceptée ne remplace pas l&apos;accompagnement Pro (appels d&apos;1&nbsp;heure)
+            Une offre promo acceptée ne remplace pas l'accompagnement Pro (appels d'1 heure)
             ni une relecture illimitée de documents.
           </li>
         </ul>
@@ -122,34 +122,34 @@ export default function CguPage() {
           </li>
           <li>
             <strong>Abonnement mensuel :</strong> {billingMonthlyPriceLine()} après la période
-            d&apos;essai, sauf résiliation avant son terme.
+            d'essai, sauf résiliation avant son terme.
           </li>
           <li>
-            <strong>Accompagnement Pro :</strong> jusqu&apos;à 3 appels de 1 heure par mois,
-            réservables depuis l&apos;Application (délai de réservation indiqué in-app). Un rapport
+            <strong>Accompagnement Pro :</strong> jusqu'à 3 appels d'1 heure par mois,
+            réservables depuis l'Application (délai de réservation indiqué in-app). Un rapport
             récapitulatif peut être disponible dans ton espace après chaque échange.
           </li>
         </ul>
         <p>
           Les prix affichés sur {c.publicSiteUrl} ou au moment du paiement font foi. Le paiement et
-          la gestion de l&apos;abonnement sont traités par <strong>Stripe</strong>. L&apos;abonnement
-          Pro est conclu pour une durée d&apos;un mois et se renouvelle tacitement chaque mois, sauf
+          la gestion de l'abonnement sont traités par <strong>Stripe</strong>. L'abonnement
+          Pro est conclu pour une durée d'un mois et se renouvelle tacitement chaque mois, sauf
           résiliation via le portail Stripe accessible depuis ton profil.
         </p>
         <p className="muted">
-          Le passage Pro nécessite une carte bancaire valide : aucun prélèvement n&apos;est effectué
-          pendant les {BILLING_TRIAL_DAYS} jours d&apos;essai. Sans résiliation avant la fin de
-          l&apos;essai, l&apos;abonnement mensuel démarre automatiquement au tarif en vigueur.
+          Le passage Pro nécessite une carte bancaire valide : aucun prélèvement n'est effectué
+          pendant les {BILLING_TRIAL_DAYS} jours d'essai. Sans résiliation avant la fin de
+          l'essai, l'abonnement mensuel démarre automatiquement au tarif en vigueur.
         </p>
       </section>
 
       <section>
         <h2>7. Droit de rétractation</h2>
         <p>
-          Pour un contrat conclu à distance, tu disposes en principe d&apos;un délai de 14 jours
+          Pour un contrat conclu à distance, tu disposes en principe d'un délai de 14 jours
           pour te rétracter, sauf exceptions légales. Pour un service numérique fourni
           immédiatement après souscription Pro, tu peux être invité à renoncer expressément à ce
-          délai pour accéder au service sans attendre — conformément à l&apos;article L221-28 du
+          délai pour accéder au service sans attendre — conformément à l'article L221-28 du
           Code de la consommation. Les modalités exactes sont rappelées au moment du paiement Stripe.
         </p>
       </section>
@@ -158,13 +158,13 @@ export default function CguPage() {
         <h2>8. Remboursements</h2>
         <p>
           Sauf obligation légale ou décision exceptionnelle de {c.brand}, les sommes versées pour
-          une période d&apos;abonnement Pro déjà entamée ne sont pas remboursées au prorata. En cas
+          une période d'abonnement Pro déjà entamée ne sont pas remboursées au prorata. En cas
           de dysfonctionnement majeur imputable à {c.brand} et non résolu dans un délai raisonnable,
           contacte <a href={`mailto:${c.contactEmail}`}>{c.contactEmail}</a> pour une solution
           (extension, avoir ou remboursement selon les circonstances).
         </p>
         <p className="muted">
-          Les indications sur les délais d&apos;entretien, de signature ou les statistiques affichées
+          Les indications sur les délais d'entretien, de signature ou les statistiques affichées
           sur le site sont des moyennes ou objectifs indicatifs : ils dépendent de ton profil, du
           marché et de ton implication ; ils ne constituent pas une garantie de résultat.
         </p>
@@ -174,8 +174,8 @@ export default function CguPage() {
         <h2>9. Offres et contenus tiers</h2>
         <p>
           Certaines offres peuvent provenir de sites carrières officiels, de sources entreprises ou
-          de partenaires. {c.brand} ne garantit pas la disponibilité continue d&apos;une annonce ni la
-          réponse d&apos;un recruteur. Les offres sont sélectionnées et filtrées selon ton profil ;
+          de partenaires. {c.brand} ne garantit pas la disponibilité continue d'une annonce ni la
+          réponse d'un recruteur. Les offres sont sélectionnées et filtrées selon ton profil ;
           leur exactitude relève aussi de ta diligence avant candidature. Tu restes seul responsable
           des candidatures que tu envoies et des informations communiquées aux employeurs.
         </p>
@@ -195,9 +195,9 @@ export default function CguPage() {
         <h2>11. Responsabilité</h2>
         <p>
           {c.brand} est soumis à une obligation de moyens. En aucun cas {c.brand} ne pourra être
-          tenu responsable des dommages indirects (perte d&apos;opportunité, de revenus, de données
-          non sauvegardées par l&apos;utilisateur). La responsabilité totale, si elle est engagée,
-          est limitée au montant des sommes payées par l&apos;utilisateur pour les 12 derniers mois
+          tenu responsable des dommages indirects (perte d'opportunité, de revenus, de données
+          non sauvegardées par l'utilisateur). La responsabilité totale, si elle est engagée,
+          est limitée au montant des sommes payées par l'utilisateur pour les 12 derniers mois
           précédant le fait générateur (formule Pro uniquement).
         </p>
       </section>
@@ -205,11 +205,11 @@ export default function CguPage() {
       <section>
         <h2>12. Résiliation</h2>
         <p>
-          Tu peux cesser d&apos;utiliser le service à tout moment. Pour la formule Pro, tu peux
+          Tu peux cesser d'utiliser le service à tout moment. Pour la formule Pro, tu peux
           annuler le renouvellement depuis ton profil (portail Stripe). Tu peux demander la
           suppression de ton compte à{" "}
           <a href={`mailto:${c.contactEmail}`}>{c.contactEmail}</a>. {c.brand} peut résilier
-          l&apos;accès en cas de violation des présentes conditions, avec information lorsque cela
+          l'accès en cas de violation des présentes conditions, avec information lorsque cela
           est possible.
         </p>
       </section>

@@ -21,7 +21,7 @@ export function LegalPageShell({ title, children, active }: Props) {
       <div className="legal-page-inner">
         <header className="legal-page-head">
           <Link href="/" className="legal-page-back">
-            ← Retour à l&apos;accueil
+            ← Retour à l'accueil
           </Link>
           <p className="legal-page-brand">{legalConfig.brand}</p>
           <h1 className="legal-page-title">{title}</h1>
@@ -45,7 +45,7 @@ export function LegalPageShell({ title, children, active }: Props) {
         <article className="legal-prose card">{children}</article>
 
         <p className="muted legal-page-note">
-          Document opposable pour l&apos;utilisation du service {legalConfig.brand}. Pour toute
+          Document opposable pour l'utilisation du service {legalConfig.brand}. Pour toute
           question :{" "}
           <a href={`mailto:${legalConfig.contactEmail}`}>{legalConfig.contactEmail}</a>.
         </p>

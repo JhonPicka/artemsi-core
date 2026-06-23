@@ -37,7 +37,7 @@ export default function ConfidentialitePage() {
             identifiant utilisateur, formule souscrite (Gratuit ou Pro).
           </li>
           <li>
-            <strong>Profil candidat :</strong> nom, téléphone, établissement, niveau d&apos;études,
+            <strong>Profil candidat :</strong> nom, téléphone, établissement, niveau d'études,
             domaine, poste visé, zones géographiques, dates et préférences de contrat.
           </li>
           <li>
@@ -62,7 +62,7 @@ export default function ConfidentialitePage() {
           </li>
           <li>
             <strong>Technique :</strong> logs de connexion, cookies de session nécessaires au
-            fonctionnement de l&apos;application.
+            fonctionnement de l'application.
           </li>
         </ul>
       </section>
@@ -82,7 +82,7 @@ export default function ConfidentialitePage() {
               <td>Exécution du contrat (CGU)</td>
             </tr>
             <tr>
-              <td>Matching et proposition d&apos;offres pertinentes</td>
+              <td>Matching et proposition d'offres pertinentes</td>
               <td>Exécution du contrat</td>
             </tr>
             <tr>
@@ -94,7 +94,7 @@ export default function ConfidentialitePage() {
               <td>Exécution du contrat / intérêt légitime</td>
             </tr>
             <tr>
-              <td>Facturation et gestion de l&apos;abonnement Pro</td>
+              <td>Facturation et gestion de l'abonnement Pro</td>
               <td>Exécution du contrat / obligation légale</td>
             </tr>
             <tr>
@@ -114,20 +114,20 @@ export default function ConfidentialitePage() {
           </li>
           <li>
             <strong>Compte Gratuit inactif :</strong> suppression ou anonymisation après une
-            période d&apos;inactivité prolongée, avec information préalable lorsque c&apos;est
+            période d'inactivité prolongée, avec information préalable lorsque c'est
             possible.
           </li>
           <li>
             <strong>Après résiliation Pro ou suppression de compte :</strong> suppression ou
-            anonymisation dans un délai raisonnable (sauf obligations légales de conservation, ex.
-            facturation).
+            anonymisation dans un délai raisonnable (sauf obligations légales de conservation,
+            ex. facturation).
           </li>
           <li>
-            <strong>Documents :</strong> conservés tant qu&apos;ils restent actifs sur ton profil ;
+            <strong>Documents :</strong> conservés tant qu'ils restent actifs sur ton profil ;
             remplacement possible à tout moment.
           </li>
           <li>
-            <strong>Rapports d&apos;accompagnement :</strong> conservés dans ton espace tant que
+            <strong>Rapports d'accompagnement :</strong> conservés dans ton espace tant que
             ton compte est actif, sauf demande de suppression de ta part.
           </li>
         </ul>
@@ -142,14 +142,14 @@ export default function ConfidentialitePage() {
             (hébergement selon région du projet).
           </li>
           <li>
-            <strong>Stripe</strong> — paiement et gestion de l&apos;abonnement Pro.
+            <strong>Stripe</strong> — paiement et gestion de l'abonnement Pro.
           </li>
           <li>
-            <strong>Resend</strong> (si activé) — envoi d&apos;e-mails transactionnels
+            <strong>Resend</strong> (si activé) — envoi d'e-mails transactionnels
             (accompagnement, notifications).
           </li>
           <li>
-            <strong>Hébergeur de l&apos;application</strong> — {c.hostName}.
+            <strong>Hébergeur de l'application</strong> — {c.hostName}.
           </li>
         </ul>
         <p>
@@ -163,7 +163,7 @@ export default function ConfidentialitePage() {
         <p>
           Lorsque un sous-traitant traite des données hors Union européenne, nous nous appuyons
           sur les mécanismes prévus par le RGPD (clauses contractuelles types, décisions
-          d&apos;adéquation) selon les outils proposés par le prestataire.
+          d'adéquation) selon les outils proposés par le prestataire.
         </p>
       </section>
 
@@ -176,7 +176,7 @@ export default function ConfidentialitePage() {
           <li>portabilité des données fournies ;</li>
           <li>retrait du consentement lorsque le traitement est fondé sur le consentement ;</li>
           <li>
-            introduction d&apos;une réclamation auprès de la CNIL (
+            introduction d'une réclamation auprès de la CNIL (
             <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer">
               www.cnil.fr
             </a>
@@ -185,7 +185,7 @@ export default function ConfidentialitePage() {
         </ul>
         <p>
           Pour demander la suppression de ton compte : envoie un e-mail à{" "}
-          <a href={`mailto:${c.contactEmail}`}>{c.contactEmail}</a> depuis l&apos;adresse liée à
+          <a href={`mailto:${c.contactEmail}`}>{c.contactEmail}</a> depuis l'adresse liée à
           ton compte (objet « suppression de compte »). Nous traitons la demande sous 30 jours.
         </p>
         <p>
@@ -200,15 +200,15 @@ export default function ConfidentialitePage() {
         <p>
           Nous appliquons des mesures techniques et organisationnelles adaptées : accès
           authentifié, stockage des documents en bucket privé, URLs signées à durée limitée,
-          politiques d&apos;accès par utilisateur (RLS) côté base de données.
+          politiques d'accès par utilisateur (RLS) côté base de données.
         </p>
       </section>
 
       <section>
         <h2>9. Cookies</h2>
         <p>
-          L&apos;application utilise des cookies strictement nécessaires à la session
-          (authentification). Si des cookies de mesure d&apos;audience ou marketing sont ajoutés
+          L'application utilise des cookies strictement nécessaires à la session
+          (authentification). Si des cookies de mesure d'audience ou marketing sont ajoutés
           ultérieurement, une information et un choix te seront proposés avant leur dépôt.
         </p>
       </section>
@@ -217,7 +217,7 @@ export default function ConfidentialitePage() {
         <h2>10. Modifications</h2>
         <p>
           Cette politique peut être mise à jour. La date en tête de page indique la dernière
-          révision. En cas de changement substantiel, nous t&apos;en informerons par un moyen
+          révision. En cas de changement substantiel, nous t'en informerons par un moyen
           approprié (e-mail ou notification in-app).
         </p>
       </section>

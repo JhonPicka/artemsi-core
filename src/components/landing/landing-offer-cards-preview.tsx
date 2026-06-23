@@ -48,10 +48,10 @@ export function LandingOfferCardsPreview() {
           </p>
           <div className="offer-card-actions offer-card-actions--compact">
             <span className="button-link secondary-link offer-interest-btn" aria-hidden="true">
-              {offer.interested ? "Intéressé ✓" : "Ça m&apos;intéresse"}
+              {offer.interested ? "Intéressé ✓" : "Ça m'intéresse"}
             </span>
             <span className="button-link offer-view-btn" aria-hidden="true">
-              Voir l&apos;offre
+              Voir l'offre
             </span>
           </div>
         </article>
