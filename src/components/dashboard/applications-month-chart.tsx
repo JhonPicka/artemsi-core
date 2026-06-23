@@ -8,6 +8,8 @@ type Props = {
   series: DailyApplicationPoint[];
   monthLabel: string;
   isDemo: boolean;
+  /** Landing preview: no month title, no demo badge, metrics below legend */
+  landing?: boolean;
 };
 
 type PlotPoint = {
@@ -18,9 +20,8 @@ type PlotPoint = {
   day: string;
 };
 
-const W = 720;
-const H = 260;
-const PAD = { top: 20, right: 20, bottom: 36, left: 44 };
+const DEFAULT_DIMS = { w: 720, h: 260, pad: { top: 20, right: 20, bottom: 36, left: 44 } };
+const LANDING_DIMS = { w: 720, h: 400, pad: { top: 28, right: 28, bottom: 18, left: 44 } };
 
 function niceMax(raw: number): number {
   if (raw <= 0) return 4;
@@ -45,13 +46,14 @@ function toPlotPoints(
   innerW: number,
   innerH: number,
   max: number,
+  pad: typeof DEFAULT_DIMS.pad,
 ): PlotPoint[] {
   const n = series.length;
   if (n === 0) return [];
   const step = n > 1 ? innerW / (n - 1) : 0;
   return series.map((d, i) => ({
-    x: PAD.left + (n > 1 ? i * step : innerW / 2),
-    y: PAD.top + innerH - (d[key] / max) * innerH,
+    x: pad.left + (n > 1 ? i * step : innerW / 2),
+    y: pad.top + innerH - (d[key] / max) * innerH,
     value: d[key],
     label: d.label,
     day: d.day,
@@ -96,28 +98,43 @@ function pickXTickIndices(length: number): number[] {
   return [...picks].sort((a, b) => a - b);
 }
 
-export function ApplicationsMonthChart({ series, monthLabel, isDemo }: Props) {
+function buildYTicks(max: number, landing: boolean): number[] {
+  if (landing) {
+    return Array.from({ length: max + 1 }, (_, i) => i);
+  }
+  const steps = max <= 4 ? [0, 2, 4] : max <= 6 ? [0, 3, 6] : [0, Math.round(max / 2), max];
+  return [...new Set(steps)].sort((a, b) => a - b);
+}
+
+function buildSquareGrid(innerW: number, innerH: number, max: number) {
+  const cellSize = innerH / max;
+  const cols = Math.max(1, Math.floor(innerW / cellSize));
+  const gridW = cols * cellSize;
+  const yLines = Array.from({ length: max + 1 }, (_, i) => i * cellSize);
+  const xLines = Array.from({ length: cols + 1 }, (_, i) => i * cellSize);
+  return { cellSize, cols, gridW, yLines, xLines };
+}
+
+export function ApplicationsMonthChart({ series, monthLabel, isDemo, landing = false }: Props) {
   const uid = useId().replace(/:/g, "");
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const innerW = W - PAD.left - PAD.right;
-  const innerH = H - PAD.top - PAD.bottom;
-  const baselineY = PAD.top + innerH;
+  const { w, h, pad } = landing ? LANDING_DIMS : DEFAULT_DIMS;
+  const innerW = w - pad.left - pad.right;
+  const innerH = h - pad.top - pad.bottom;
+  const baselineY = pad.top + innerH;
 
   const max = useMemo(() => maxValue(series), [series]);
-  const yTicks = useMemo(() => {
-    const steps = max <= 4 ? [0, 2, 4] : max <= 6 ? [0, 3, 6] : [0, Math.round(max / 2), max];
-    return [...new Set(steps)].sort((a, b) => a - b);
-  }, [max]);
+  const yTicks = useMemo(() => buildYTicks(max, landing), [max, landing]);
 
   const sentPoints = useMemo(
-    () => toPlotPoints(series, "sent", innerW, innerH, max),
-    [series, innerW, innerH, max],
+    () => toPlotPoints(series, "sent", innerW, innerH, max, pad),
+    [series, innerW, innerH, max, pad],
   );
   const responsePoints = useMemo(
-    () => toPlotPoints(series, "responses", innerW, innerH, max),
-    [series, innerW, innerH, max],
+    () => toPlotPoints(series, "responses", innerW, innerH, max, pad),
+    [series, innerW, innerH, max, pad],
   );
 
   const sentPath = useMemo(() => buildSmoothPath(sentPoints), [sentPoints]);
@@ -128,6 +145,10 @@ export function ApplicationsMonthChart({ series, monthLabel, isDemo }: Props) {
   );
 
   const xTickIndices = useMemo(() => pickXTickIndices(series.length), [series.length]);
+  const squareGrid = useMemo(
+    () => (landing ? buildSquareGrid(innerW, innerH, max) : null),
+    [landing, innerW, innerH, max],
+  );
 
   const totals = useMemo(
     () => ({
@@ -147,12 +168,12 @@ export function ApplicationsMonthChart({ series, monthLabel, isDemo }: Props) {
       if (!svg || series.length === 0) return null;
       const rect = svg.getBoundingClientRect();
       const ratio = (clientX - rect.left) / rect.width;
-      const plotX = ratio * W;
-      const t = (plotX - PAD.left) / innerW;
+      const plotX = ratio * w;
+      const t = (plotX - pad.left) / innerW;
       const idx = Math.round(t * (series.length - 1));
       return Math.max(0, Math.min(series.length - 1, idx));
     },
-    [series.length, innerW],
+    [series.length, innerW, w, pad.left],
   );
 
   const onPointerMove = useCallback(
@@ -171,46 +192,78 @@ export function ApplicationsMonthChart({ series, monthLabel, isDemo }: Props) {
     return Math.min(90, Math.max(10, raw));
   }, [activeIndex, series.length]);
 
-  return (
-    <div className="app-chart">
-      <div className="app-chart-head">
-        <div className="app-chart-head-main">
-          <p className="app-chart-kicker">Candidatures · mois en cours</p>
-          <h3 className="app-chart-title">
-            {monthLabel}
-            {isDemo ? <span className="app-chart-demo">Exemple</span> : null}
-          </h3>
-        </div>
-        <div className="app-chart-metrics" aria-label="Totaux du mois">
-          <div className="app-chart-metric">
-            <span className="app-chart-metric-value">{totals.sent}</span>
-            <span className="app-chart-metric-label">Envoyées</span>
-          </div>
-          <div className="app-chart-metric app-chart-metric--success">
-            <span className="app-chart-metric-value">{totals.responses}</span>
-            <span className="app-chart-metric-label">Retours</span>
-          </div>
-        </div>
+  const metrics = (
+    <div className="app-chart-metrics" aria-label="Totaux du mois">
+      <div className="app-chart-metric">
+        <span className="app-chart-metric-value">{totals.sent}</span>
+        <span className="app-chart-metric-label">Envoyées</span>
       </div>
+      <div className="app-chart-metric app-chart-metric--success">
+        <span className="app-chart-metric-value">{totals.responses}</span>
+        <span className="app-chart-metric-label">Retours</span>
+      </div>
+    </div>
+  );
 
-      <ul className="app-chart-legend" aria-label="Légende">
-        <li>
-          <span className="app-chart-legend-dot app-chart-legend-dot--sent" aria-hidden />
-          Envoyées
-        </li>
-        <li>
-          <span className="app-chart-legend-dot app-chart-legend-dot--responses" aria-hidden />
-          Retours &amp; entretiens
-        </li>
-      </ul>
+  const gridClass = landing ? "app-chart-grid app-chart-grid--landing" : "app-chart-grid";
+
+  return (
+    <div className={`app-chart${landing ? " app-chart--landing" : ""}`}>
+      {landing ? (
+        <div className="app-chart-landing-bar">
+          <div className="app-chart-landing-bar-main">
+            <p className="app-chart-kicker">Candidatures · mois en cours</p>
+            <ul className="app-chart-legend" aria-label="Légende">
+              <li>
+                <span className="app-chart-legend-dot app-chart-legend-dot--sent" aria-hidden />
+                Envoyées
+              </li>
+              <li>
+                <span
+                  className="app-chart-legend-dot app-chart-legend-dot--responses"
+                  aria-hidden
+                />
+                Retours &amp; entretiens
+              </li>
+            </ul>
+          </div>
+          {metrics}
+        </div>
+      ) : (
+        <>
+          <div className="app-chart-head">
+            <div className="app-chart-head-main">
+              <p className="app-chart-kicker">Candidatures · mois en cours</p>
+              <h3 className="app-chart-title">
+                {monthLabel}
+                {isDemo ? <span className="app-chart-demo">Exemple</span> : null}
+              </h3>
+            </div>
+            {metrics}
+          </div>
+
+          <ul className="app-chart-legend" aria-label="Légende">
+            <li>
+              <span className="app-chart-legend-dot app-chart-legend-dot--sent" aria-hidden />
+              Envoyées
+            </li>
+            <li>
+              <span className="app-chart-legend-dot app-chart-legend-dot--responses" aria-hidden />
+              Retours &amp; entretiens
+            </li>
+          </ul>
+        </>
+      )}
 
       <div
-        className="app-chart-stage"
+        className={`app-chart-stage${landing ? " app-chart-stage--landing" : ""}`}
         role="group"
         aria-label={
-          isDemo
-            ? `Graphique d'exemple pour ${monthLabel}`
-            : `Évolution des candidatures pour ${monthLabel}`
+          landing
+            ? "Évolution des candidatures du mois en cours"
+            : isDemo
+              ? `Graphique d'exemple pour ${monthLabel}`
+              : `Évolution des candidatures pour ${monthLabel}`
         }
         onMouseLeave={onPointerLeave}
       >
@@ -238,8 +291,8 @@ export function ApplicationsMonthChart({ series, monthLabel, isDemo }: Props) {
         <svg
           ref={svgRef}
           className="app-chart-svg"
-          viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="xMidYMid meet"
+          viewBox={`0 0 ${w} ${h}`}
+          preserveAspectRatio={landing ? "xMidYMin meet" : "xMidYMid meet"}
           aria-hidden="true"
           onPointerMove={onPointerMove}
           onPointerLeave={onPointerLeave}
@@ -260,34 +313,109 @@ export function ApplicationsMonthChart({ series, monthLabel, isDemo }: Props) {
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            {landing ? (
+              <marker
+                id={`${uid}-axis-arrow`}
+                markerWidth="8"
+                markerHeight="8"
+                refX="7"
+                refY="4"
+                orient="auto"
+                markerUnits="userSpaceOnUse"
+              >
+                <path d="M0,0 L8,4 L0,8 Z" fill="var(--muted-strong)" />
+              </marker>
+            ) : null}
           </defs>
 
-          <rect
-            x={PAD.left}
-            y={PAD.top}
-            width={innerW}
-            height={innerH}
-            className="app-chart-plot-bg"
-            rx="10"
-          />
+          {landing && squareGrid
+            ? squareGrid.yLines.map((offset, i) => {
+                const y = pad.top + offset;
+                return (
+                  <line
+                    key={`grid-y-${i}`}
+                    x1={pad.left}
+                    y1={y}
+                    x2={pad.left + squareGrid.gridW}
+                    y2={y}
+                    className={gridClass}
+                  />
+                );
+              })
+            : yTicks.map((tick) => {
+                const y = pad.top + innerH - (tick / max) * innerH;
+                return (
+                  <g key={tick}>
+                    <line
+                      x1={pad.left}
+                      y1={y}
+                      x2={w - pad.right}
+                      y2={y}
+                      className={gridClass}
+                    />
+                    <text x={pad.left - 10} y={y + 4} className="app-chart-y">
+                      {tick}
+                    </text>
+                  </g>
+                );
+              })}
 
-          {yTicks.map((tick) => {
-            const y = PAD.top + innerH - (tick / max) * innerH;
-            return (
-              <g key={tick}>
-                <line
-                  x1={PAD.left}
-                  y1={y}
-                  x2={W - PAD.right}
-                  y2={y}
-                  className="app-chart-grid"
-                />
-                <text x={PAD.left - 10} y={y + 4} className="app-chart-y">
-                  {tick}
-                </text>
-              </g>
-            );
-          })}
+          {landing && squareGrid
+            ? squareGrid.xLines.map((offset, i) => {
+                const x = pad.left + offset;
+                return (
+                  <line
+                    key={`grid-x-${i}`}
+                    x1={x}
+                    y1={pad.top}
+                    x2={x}
+                    y2={baselineY}
+                    className={`${gridClass} app-chart-grid--vertical`}
+                  />
+                );
+              })
+            : null}
+
+          {landing
+            ? yTicks.map((tick) => {
+                const y = pad.top + innerH - (tick / max) * innerH;
+                return (
+                  <text key={`y-label-${tick}`} x={pad.left - 10} y={y + 4} className="app-chart-y">
+                    {tick}
+                  </text>
+                );
+              })
+            : null}
+
+          {landing ? (
+            <>
+              <line
+                x1={pad.left}
+                y1={baselineY}
+                x2={pad.left}
+                y2={pad.top}
+                className="app-chart-axis app-chart-axis--y"
+                markerEnd={`url(#${uid}-axis-arrow)`}
+              />
+              <line
+                x1={pad.left}
+                y1={baselineY}
+                x2={pad.left + (squareGrid?.gridW ?? innerW)}
+                y2={baselineY}
+                className="app-chart-axis app-chart-axis--x"
+                markerEnd={`url(#${uid}-axis-arrow)`}
+              />
+            </>
+          ) : (
+            <rect
+              x={pad.left}
+              y={pad.top}
+              width={innerW}
+              height={innerH}
+              className="app-chart-plot-bg"
+              rx="10"
+            />
+          )}
 
           {sentArea ? (
             <path d={sentArea} fill={`url(#${uid}-sent-area)`} className="app-chart-area" />
@@ -310,7 +438,7 @@ export function ApplicationsMonthChart({ series, monthLabel, isDemo }: Props) {
           {guideX !== null ? (
             <line
               x1={guideX}
-              y1={PAD.top}
+              y1={pad.top}
               x2={guideX}
               y2={baselineY}
               className="app-chart-guide"
@@ -340,15 +468,15 @@ export function ApplicationsMonthChart({ series, monthLabel, isDemo }: Props) {
             if (!d || !p) return null;
             const dayNum = d.day.split("-")[2] ?? "";
             return (
-              <text key={d.day} x={p.x} y={H - 10} className="app-chart-x">
+              <text key={d.day} x={p.x} y={baselineY + 16} className="app-chart-x">
                 {dayNum}
               </text>
             );
           })}
 
           <rect
-            x={PAD.left}
-            y={PAD.top}
+            x={pad.left}
+            y={pad.top}
             width={innerW}
             height={innerH}
             fill="transparent"

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { canCreatePersonalAssignmentForUser } from "@/lib/freemium-access";
+
 type AssignResult = {
   created: boolean;
   assignmentId: string | null;
@@ -12,12 +14,20 @@ export async function assignOfferToUser(
 ): Promise<AssignResult> {
   const { data: offer, error: offerError } = await supabase
     .from("offers")
-    .select("id, title, company")
+    .select("id, title, company, is_partner_exclusive")
     .eq("id", input.offerId)
     .maybeSingle();
 
   if (offerError) throw new Error(offerError.message);
   if (!offer) throw new Error("Offre introuvable");
+
+  const isPartnerExclusive = Boolean(offer.is_partner_exclusive);
+  if (
+    !isPartnerExclusive &&
+    !(await canCreatePersonalAssignmentForUser(supabase, input.userId))
+  ) {
+    return { created: false, assignmentId: null, notificationCreated: false };
+  }
 
   const { data: existing } = await supabase
     .from("offer_assignments")

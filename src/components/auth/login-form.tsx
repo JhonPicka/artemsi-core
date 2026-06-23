@@ -5,7 +5,6 @@ import { useActionState } from "react";
 import Link from "next/link";
 
 import { loginAction, type AuthFormState } from "@/app/(auth)/actions";
-import { billingTrialCtaLabel } from "@/lib/billing-offer";
 
 const initialState: AuthFormState = {};
 
@@ -22,6 +21,9 @@ export function LoginForm({ initialEmail, initialError }: Props) {
     <form className="card form" action={action} autoComplete="off">
       <span className="brand-chip">CONNEXION</span>
       <h1>Connexion</h1>
+      <p className="muted">
+        Connecte-toi avec l&apos;email et le mot de passe choisis à l&apos;inscription.
+      </p>
 
       <label htmlFor="email">Email</label>
       <input
@@ -48,16 +50,14 @@ export function LoginForm({ initialEmail, initialError }: Props) {
         {pending ? "Connexion..." : "Se connecter"}
       </button>
 
-      <p className="muted auth-form-footer">
-        Tu viens de payer ?{" "}
-        <Link href="/activer-mon-compte" className="inline-link">
-          Activer mon compte
-        </Link>
-        <br />
-        <Link href="/subscribe" className="inline-link">
-          {billingTrialCtaLabel()}
-        </Link>
-      </p>
+      <div className="auth-form-footer">
+        <p className="muted auth-form-footer-line">
+          Pas encore de compte ?{" "}
+          <Link href="/signup" className="inline-link">
+            S&apos;inscrire
+          </Link>
+        </p>
+      </div>
     </form>
   );
 }

@@ -19,7 +19,7 @@ export const legalConfig = {
   hostName: "IONOS",
   hostAddress: "44 avenue de la Renaissance, Goussainville",
 
-  lastUpdated: "20 mai 2026",
+  lastUpdated: "21 juin 2026",
 } as const;
 
 export const legalRoutes = {

@@ -37,7 +37,8 @@ export async function assignMatchingOffersToUser(
 
   const { data: offers, error: offersError } = await supabase
     .from("offers")
-    .select("id,title,company,location,description")
+    .select("id,title,company,location,description,is_partner_exclusive")
+    .is("hidden_at", null)
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending: false })
     .limit(RECENT_OFFERS_LIMIT);
@@ -50,6 +51,7 @@ export async function assignMatchingOffersToUser(
     company: row.company as string | null,
     location: row.location as string | null,
     summary: (row.description as string | null) ?? "",
+    is_partner_exclusive: Boolean(row.is_partner_exclusive),
   }));
 
   const offersById = new Map(matchableOffers.map((o) => [o.id, o]));
@@ -59,6 +61,7 @@ export async function assignMatchingOffersToUser(
     supabase,
     pairs,
     offersById,
+    [profile],
     dryRun,
   );
 

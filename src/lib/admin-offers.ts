@@ -1,6 +1,10 @@
 import { normalizeApplicationGuide, type OfferApplicationGuide } from "@/lib/offer-application-guide";
 import type { AdminOfferBody } from "@/lib/admin-offer-schema";
-import { runOfferMatching } from "@/lib/run-offer-matching";
+import {
+  clearOfferDeadLinkReports,
+  getOfferLinkReportCounts,
+  restoreOfferVisibility,
+} from "@/lib/offer-link-reports";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AdminOfferListRow = {
@@ -13,6 +17,9 @@ export type AdminOfferListRow = {
   isPublic: boolean;
   isPartnerExclusive: boolean;
   createdAt: string;
+  hiddenAt: string | null;
+  hiddenReason: string | null;
+  linkReportCount: number;
 };
 
 export type AdminOfferDetail = AdminOfferListRow & {
@@ -25,14 +32,20 @@ export async function loadAdminOffersList(limit = 100): Promise<AdminOfferListRo
   const { data, error } = await supabase
     .from("offers")
     .select(
-      "id, title, company, location, url, source, is_public, is_partner_exclusive, created_at",
+      "id, title, company, location, url, source, is_public, is_partner_exclusive, hidden_at, hidden_reason, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((row) => ({
+  const rows = data ?? [];
+  const reportCounts = await getOfferLinkReportCounts(
+    supabase,
+    rows.map((row) => row.id as string),
+  );
+
+  const mapped = rows.map((row) => ({
     id: row.id as string,
     title: row.title as string,
     company: (row.company as string | null) ?? null,
@@ -42,7 +55,16 @@ export async function loadAdminOffersList(limit = 100): Promise<AdminOfferListRo
     isPublic: Boolean(row.is_public),
     isPartnerExclusive: Boolean(row.is_partner_exclusive),
     createdAt: row.created_at as string,
+    hiddenAt: (row.hidden_at as string | null) ?? null,
+    hiddenReason: (row.hidden_reason as string | null) ?? null,
+    linkReportCount: reportCounts.get(row.id as string) ?? 0,
   }));
+
+  return mapped.sort((a, b) => {
+    if (a.hiddenAt && !b.hiddenAt) return -1;
+    if (!a.hiddenAt && b.hiddenAt) return 1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 }
 
 export async function loadAdminOfferById(id: string): Promise<AdminOfferDetail | null> {
@@ -50,13 +72,15 @@ export async function loadAdminOfferById(id: string): Promise<AdminOfferDetail |
   const { data, error } = await supabase
     .from("offers")
     .select(
-      "id, title, company, location, url, description, source, is_public, is_partner_exclusive, application_guide, created_at",
+      "id, title, company, location, url, description, source, is_public, is_partner_exclusive, application_guide, hidden_at, hidden_reason, created_at",
     )
     .eq("id", id)
     .maybeSingle();
 
   if (error) throw new Error(error.message);
   if (!data) return null;
+
+  const reportCounts = await getOfferLinkReportCounts(supabase, [id]);
 
   return {
     id: data.id as string,
@@ -70,19 +94,29 @@ export async function loadAdminOfferById(id: string): Promise<AdminOfferDetail |
     isPartnerExclusive: Boolean(data.is_partner_exclusive),
     applicationGuide: normalizeApplicationGuide(data.application_guide),
     createdAt: data.created_at as string,
+    hiddenAt: (data.hidden_at as string | null) ?? null,
+    hiddenReason: (data.hidden_reason as string | null) ?? null,
+    linkReportCount: reportCounts.get(id) ?? 0,
   };
 }
 
 export async function updateAdminOffer(
   id: string,
   body: AdminOfferBody,
-): Promise<{ ok: true; matching: Awaited<ReturnType<typeof runOfferMatching>> | null } | { ok: false; error: string }> {
+): Promise<{ ok: true } | { ok: false; error: string }> {
   const supabase = createAdminClient();
 
-  const { data: current } = await supabase.from("offers").select("id").eq("id", id).maybeSingle();
+  const { data: current } = await supabase
+    .from("offers")
+    .select("id, url, hidden_at")
+    .eq("id", id)
+    .maybeSingle();
   if (!current) {
     return { ok: false, error: "Offre introuvable." };
   }
+
+  const urlChanged = (current.url as string) !== body.url;
+  const shouldRestoreVisibility = urlChanged && Boolean(current.hidden_at);
 
   const { data: urlConflict } = await supabase
     .from("offers")
@@ -117,10 +151,28 @@ export async function updateAdminOffer(
     return { ok: false, error: updateError.message };
   }
 
-  let matching = null;
-  if (body.runMatching) {
-    matching = await runOfferMatching({ dryRun: false });
+  if (shouldRestoreVisibility) {
+    await restoreOfferVisibility(supabase, id);
+    await clearOfferDeadLinkReports(supabase, id);
   }
 
-  return { ok: true, matching };
+  return { ok: true };
+}
+
+export async function deleteAdminOffer(
+  id: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = createAdminClient();
+
+  const { data: current } = await supabase.from("offers").select("id").eq("id", id).maybeSingle();
+  if (!current) {
+    return { ok: false, error: "Offre introuvable." };
+  }
+
+  const { error } = await supabase.from("offers").delete().eq("id", id);
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true };
 }

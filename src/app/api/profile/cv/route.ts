@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasApiBillingAccess } from "@/lib/billing";
+import { hasApiAccountAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -16,7 +16,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await hasApiBillingAccess(user))) {
+  if (!(await hasApiAccountAccess(user))) {
     return NextResponse.json({ error: "Abonnement actif requis." }, { status: 402 });
   }
 

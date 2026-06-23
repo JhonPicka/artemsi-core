@@ -7,15 +7,8 @@ import {
   guideTipsToText,
   textToApplicationGuide,
 } from "@/lib/offer-application-guide";
+import { OFFER_DEAD_LINK_HIDE_THRESHOLD } from "@/lib/offer-link-reports";
 import type { AdminOfferDetail } from "@/lib/admin-offers";
-
-type SaveResult = {
-  matching?: {
-    matchedPairs: number;
-    insertedAssignments: number;
-    profilesConsidered: number;
-  };
-};
 
 type Props = {
   offer: AdminOfferDetail;
@@ -34,16 +27,17 @@ export function AdminOfferEditForm({ offer }: Props) {
   );
   const [isPublic, setIsPublic] = useState(offer.isPublic);
   const [isExclusive, setIsExclusive] = useState(offer.isPartnerExclusive);
-  const [runMatching, setRunMatching] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [saved, setSaved] = useState<SaveResult | null>(null);
+
+  const isHidden = Boolean(offer.hiddenAt);
+  const urlChanged = url.trim() !== offer.url;
 
   async function handleSave() {
     setError(null);
     setInfo(null);
-    setSaved(null);
 
     if (!url.trim() || !title.trim() || description.trim().length < 20) {
       setError("URL, titre et description (20 caracteres min.) sont obligatoires.");
@@ -67,7 +61,6 @@ export function AdminOfferEditForm({ offer }: Props) {
           isPublic,
           isPartnerExclusive: isExclusive,
           applicationGuide,
-          runMatching,
         }),
       });
       const data = await response.json();
@@ -76,10 +69,9 @@ export function AdminOfferEditForm({ offer }: Props) {
         return;
       }
 
-      setSaved({ matching: data.matching });
       setInfo(
-        runMatching
-          ? "Offre mise a jour. Le matching a ete relance."
+        isHidden && urlChanged
+          ? "Offre mise a jour. Le lien a ete corrige et l'offre est de nouveau visible."
           : "Offre mise a jour.",
       );
       router.refresh();
@@ -90,8 +82,54 @@ export function AdminOfferEditForm({ offer }: Props) {
     }
   }
 
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      `Supprimer définitivement l'offre « ${offer.title} » ? Cette action est irréversible.`,
+    );
+    if (!confirmed) return;
+
+    setError(null);
+    setInfo(null);
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/admin/offers/${offer.id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(data.error ?? "Suppression impossible.");
+        return;
+      }
+      router.push("/admin/offres");
+      router.refresh();
+    } catch {
+      setError("Erreur reseau lors de la suppression.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="admin-offer-form-block">
+      {isHidden ? (
+        <section className="card admin-offer-alert" role="status">
+          <h2>Offre masquée ({offer.linkReportCount} signalement(s))</h2>
+          <p className="muted">
+            Cette offre a été retirée du catalogue après {OFFER_DEAD_LINK_HIDE_THRESHOLD}{" "}
+            signalements de lien mort. Corrige l&apos;URL ci-dessous puis enregistre pour la
+            republier, ou supprime-la si elle n&apos;est plus valide.
+          </p>
+        </section>
+      ) : offer.linkReportCount > 0 ? (
+        <section className="card admin-offer-alert admin-offer-alert--warning" role="status">
+          <h2>Signalements de lien mort</h2>
+          <p className="muted">
+            {offer.linkReportCount} signalement(s) reçu(s). L&apos;offre sera masquée
+            automatiquement à {OFFER_DEAD_LINK_HIDE_THRESHOLD}.
+          </p>
+        </section>
+      ) : null}
+
       <section className="card form admin-offer-step">
         <h2>Fiche offre</h2>
         <p className="muted admin-offer-lead">
@@ -186,23 +224,31 @@ export function AdminOfferEditForm({ offer }: Props) {
           Offre exclusive ARTEMSI
         </label>
 
-        <label className="admin-offer-check">
-          <input
-            type="checkbox"
-            checked={runMatching}
-            onChange={(e) => setRunMatching(e.target.checked)}
-          />
-          Relancer le matching apres enregistrement
-        </label>
-
         <div className="form-actions">
           <button
             type="button"
             className="button-link"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || deleting}
           >
             {saving ? "Enregistrement…" : "Enregistrer les modifications"}
+          </button>
+        </div>
+      </section>
+
+      <section className="card form admin-offer-step admin-offer-danger-zone">
+        <h2>Supprimer l&apos;offre</h2>
+        <p className="muted admin-offer-lead">
+          Retire définitivement l&apos;offre, ses assignations et ses signalements.
+        </p>
+        <div className="form-actions">
+          <button
+            type="button"
+            className="button-link danger-link"
+            onClick={() => void handleDelete()}
+            disabled={saving || deleting}
+          >
+            {deleting ? "Suppression…" : "Supprimer l'offre"}
           </button>
         </div>
       </section>
@@ -216,24 +262,6 @@ export function AdminOfferEditForm({ offer }: Props) {
         <p className="error admin-offer-error" role="alert">
           {error}
         </p>
-      ) : null}
-      {saved?.matching ? (
-        <section className="card admin-offer-success" role="status">
-          <div className="admin-offer-matching-summary">
-            <div>
-              <strong>{saved.matching.insertedAssignments}</strong>
-              <span>assignation(s) créée(s)</span>
-            </div>
-            <div>
-              <strong>{saved.matching.matchedPairs}</strong>
-              <span>match(s) trouvé(s)</span>
-            </div>
-            <div>
-              <strong>{saved.matching.profilesConsidered}</strong>
-              <span>profil(s) analysé(s)</span>
-            </div>
-          </div>
-        </section>
       ) : null}
     </div>
   );

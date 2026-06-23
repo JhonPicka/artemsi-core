@@ -21,12 +21,12 @@ export async function recordOfferInterest(
 ): Promise<RecordOfferInterestResult> {
   const { data: offer, error: offerError } = await supabase
     .from("offers")
-    .select("id, title, company, description, is_public")
+    .select("id, title, company, description, is_public, hidden_at")
     .eq("id", offerId)
     .maybeSingle();
 
   if (offerError) throw new Error(offerError.message);
-  if (!offer?.is_public) {
+  if (!offer?.is_public || offer.hidden_at) {
     throw new Error("Seules les offres publiques peuvent etre marquees en interet.");
   }
 

@@ -37,6 +37,11 @@ export default function MentionsLegalesPage() {
             <a href={`mailto:${c.contactEmail}`}>{c.contactEmail}</a>
           </li>
         </ul>
+        <p className="muted">
+          {c.brand} propose un service en ligne d&apos;aide à la recherche d&apos;alternance :
+          formule Gratuite (jobboard partiel, suivi, profil) et formule Pro payante (matching
+          complet, offres exclusives, accompagnement humain).
+        </p>
       </section>
 
       <section>
@@ -58,7 +63,8 @@ export default function MentionsLegalesPage() {
         <p className="muted">
           Les données utilisateur (comptes, profils, documents) sont également traitées via la
           plateforme Supabase (base de données et stockage fichiers), dont les serveurs peuvent
-          être situés dans l&apos;Union européenne selon la configuration du projet.
+          être situés dans l&apos;Union européenne selon la configuration du projet. Les paiements
+          de la formule Pro sont traités par Stripe.
         </p>
       </section>
 
@@ -78,7 +84,9 @@ export default function MentionsLegalesPage() {
           la fiabilité des informations. Le service est fourni en l&apos;état ; {c.brand} ne
           garantit pas l&apos;obtention d&apos;un contrat, d&apos;une alternance ou d&apos;un
           entretien. Les offres publiées peuvent provenir de sources tierces ; leur exactitude
-          relève de la diligence de l&apos;utilisateur avant candidature.
+          relève de la diligence de l&apos;utilisateur avant candidature. Les statistiques ou
+          délais évoqués sur le site sont indicatifs et ne constituent pas une promesse de
+          résultat.
         </p>
       </section>
 
@@ -87,7 +95,7 @@ export default function MentionsLegalesPage() {
         <p>
           Pour le traitement des données personnelles, consulte la{" "}
           <a href="/confidentialite">politique de confidentialité</a>. Pour les conditions
-          d&apos;utilisation et d&apos;abonnement, consulte les{" "}
+          d&apos;utilisation et de vente (formules Gratuite et Pro), consulte les{" "}
           <a href="/cgu">CGU & CGV</a>.
         </p>
       </section>

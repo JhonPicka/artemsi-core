@@ -3,6 +3,7 @@ import Stripe from "stripe";
 
 import { BILLING_TRIAL_DAYS } from "@/lib/billing-offer";
 import { env } from "@/lib/env";
+import { createClient } from "@/lib/supabase/server";
 import {
   getStripeClient,
   isStripeConfigured,
@@ -62,10 +63,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
-  const email =
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const bodyEmail =
     typeof body.email === "string" && body.email.includes("@")
       ? body.email.trim().toLowerCase()
       : undefined;
+  const email = bodyEmail ?? user?.email?.trim().toLowerCase();
 
   const baseUrl = resolveAppBaseUrl(request);
   const stripe = getStripeClient();
@@ -78,17 +85,20 @@ export async function POST(request: Request) {
       line_items: [{ price: env.STRIPE_PRICE_ID!, quantity: 1 }],
       success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/checkout/cancel`,
+      ...(user?.id ? { client_reference_id: user.id } : {}),
       ...(email ? { customer_email: email } : {}),
       subscription_data: {
         trial_period_days: BILLING_TRIAL_DAYS,
         metadata: {
           product: "artemsi_alternance_monthly",
           ...(email ? { checkout_email: email } : {}),
+          ...(user?.id ? { checkout_user_id: user.id } : {}),
         },
       },
       metadata: {
         product: "artemsi_alternance_monthly",
         ...(email ? { checkout_email: email } : {}),
+        ...(user?.id ? { checkout_user_id: user.id } : {}),
       },
     });
 

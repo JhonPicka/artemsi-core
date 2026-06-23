@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { getAdminAuditsPath, getAdminUserId } from "@/lib/admin-auth";
 import { AUDIT_AVAILABILITY_LABEL, isSlotAllowed } from "@/lib/audit-slots";
-import { hasApiBillingAccess } from "@/lib/billing";
+import { userHasProAccess } from "@/lib/billing";
 import { getAppUrl } from "@/lib/email";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -23,8 +23,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await hasApiBillingAccess(user))) {
-    return NextResponse.json({ error: "Abonnement actif requis." }, { status: 402 });
+  if (!(await userHasProAccess(user))) {
+    return NextResponse.json(
+      { error: "L'audit CV est réservé aux abonnés Pro." },
+      { status: 403 },
+    );
   }
 
   const payload = await request.json().catch(() => null);

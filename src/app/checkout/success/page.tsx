@@ -1,10 +1,15 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { ActivatePaidAccountButton } from "@/components/billing/activate-paid-account-button";
 import { ResendEmailButton } from "@/components/billing/resend-email-button";
-import { getFreshLoginPath } from "@/lib/auth-paths";
-import { emailFromCheckoutSession, finalizePaidCheckoutSession } from "@/lib/billing";
+import { getCurrentUser } from "@/lib/auth";
+import {
+  emailFromCheckoutSession,
+  finalizePaidCheckoutSession,
+  syncUserBilling,
+} from "@/lib/billing";
 import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
 
 type Props = {
@@ -15,12 +20,14 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const { session_id: sessionId, error: activateError } = await searchParams;
   const activationError =
     typeof activateError === "string" ? decodeURIComponent(activateError) : null;
+  const currentUser = await getCurrentUser();
 
   let email: string | null = null;
   let needsPasswordSetup: boolean | null = null;
   let setupEmailSent = false;
   let verified = false;
   let error: string | null = null;
+  let redirectToDashboard = false;
 
   if (!isStripeConfigured()) {
     error = "Paiement non configuré sur ce serveur.";
@@ -46,6 +53,11 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         needsPasswordSetup = result.needsPasswordSetup ?? null;
         setupEmailSent = result.setupEmailSent ?? false;
         verified = true;
+
+        if (currentUser?.email && !needsPasswordSetup) {
+          await syncUserBilling(currentUser);
+          redirectToDashboard = true;
+        }
       }
     } catch (cause) {
       console.error("[checkout/success]", cause);
@@ -53,6 +65,14 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         cause instanceof Error ? cause.message : "Impossible de vérifier le paiement.";
     }
   }
+
+  if (redirectToDashboard) {
+    redirect("/dashboard");
+  }
+
+  const loginHref = email
+    ? `/login?email=${encodeURIComponent(email)}`
+    : "/login";
 
   return (
     <AuthPageShell>
@@ -114,10 +134,10 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
             ) : (
               <>
                 <p className="muted">
-                  Tu as déjà un compte ARTEMSI. Connecte-toi directement avec ton mot de
-                  passe habituel.
+                  Ton abonnement Pro est actif. Connecte-toi avec ton mot de passe habituel pour
+                  retrouver ton espace.
                 </p>
-                <Link href={getFreshLoginPath()} className="button-link">
+                <Link href={loginHref} className="button-link">
                   Se connecter
                 </Link>
               </>
@@ -126,9 +146,15 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         ) : (
           <>
             <p className="error">{error ?? "Une erreur est survenue."}</p>
-            <Link href="/subscribe" className="button-link secondary-link">
-              Retour à l&apos;abonnement
-            </Link>
+            {currentUser ? (
+              <Link href="/dashboard" className="button-link">
+                Retour au dashboard
+              </Link>
+            ) : (
+              <Link href="/subscribe" className="button-link secondary-link">
+                Retour à l&apos;abonnement
+              </Link>
+            )}
           </>
         )}
       </div>

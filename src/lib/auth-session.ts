@@ -23,42 +23,6 @@ export async function markPasswordSetupComplete(user: User) {
   });
 }
 
-/**
- * Pour /login : redirection auto seulement si l'abonnement est actif.
- * Sinon null → afficher le formulaire (évite d'envoyer "Connexion" vers /subscribe).
- */
-export async function resolveLoginPageRedirect(user: User): Promise<string | null> {
-  if (isAdminUser(user)) {
-    return await resolveAdminPostAuthPath(user);
-  }
-
-  if (needsPasswordSetup(user)) {
-    return "/signup/finish";
-  }
-
-  if (!user.email) {
-    return null;
-  }
-
-  await syncUserBilling(user);
-  if (!(await userHasBillingAccess(user.email))) {
-    return null;
-  }
-
-  const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("onboarding_completed")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile?.onboarding_completed) {
-    return "/onboarding";
-  }
-
-  return "/dashboard";
-}
-
 /** Où envoyer un utilisateur déjà authentifié (login, proxy, signup). */
 export async function resolvePostAuthRedirect(user: User): Promise<string> {
   if (isAdminUser(user)) {
@@ -74,9 +38,6 @@ export async function resolvePostAuthRedirect(user: User): Promise<string> {
   }
 
   await syncUserBilling(user);
-  if (!(await userHasBillingAccess(user.email))) {
-    return "/subscribe";
-  }
 
   const supabase = await createClient();
   const { data: profile } = await supabase

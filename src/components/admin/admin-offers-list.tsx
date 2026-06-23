@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { OFFER_DEAD_LINK_HIDE_THRESHOLD } from "@/lib/offer-link-reports";
 import type { AdminOfferListRow } from "@/lib/admin-offers";
 
 type Props = {
@@ -24,12 +25,17 @@ export function AdminOffersList({ offers }: Props) {
     );
   }
 
+  const hiddenCount = offers.filter((offer) => offer.hiddenAt).length;
+
   return (
     <section className="card admin-offer-step admin-offers-list">
       <h2>Offres en base ({offers.length})</h2>
       <p className="muted admin-offer-lead">
         Modifie une offre pour corriger le titre, la description, la visibilité ou le raccourci
         candidat.
+        {hiddenCount > 0
+          ? ` ${hiddenCount} offre(s) masquée(s) après ${OFFER_DEAD_LINK_HIDE_THRESHOLD} signalements.`
+          : null}
       </p>
 
       <div className="admin-offers-table-wrap">
@@ -40,6 +46,7 @@ export function AdminOffersList({ offers }: Props) {
               <th scope="col">Entreprise</th>
               <th scope="col">Lieu</th>
               <th scope="col">Type</th>
+              <th scope="col">Signalements</th>
               <th scope="col">Ajoutée</th>
               <th scope="col">
                 <span className="sr-only">Actions</span>
@@ -48,10 +55,12 @@ export function AdminOffersList({ offers }: Props) {
           </thead>
           <tbody>
             {offers.map((offer) => (
-              <tr key={offer.id}>
+              <tr key={offer.id} className={offer.hiddenAt ? "admin-offers-row--hidden" : undefined}>
                 <td>
                   <span className="admin-offers-table-title">{offer.title}</span>
-                  {offer.isPublic ? (
+                  {offer.hiddenAt ? (
+                    <span className="admin-offers-badge danger-badge">Masquée</span>
+                  ) : offer.isPublic ? (
                     <span className="admin-offers-badge">Public</span>
                   ) : (
                     <span className="admin-offers-badge muted-badge">Privée</span>
@@ -63,10 +72,25 @@ export function AdminOffersList({ offers }: Props) {
                 <td>{offer.company ?? "—"}</td>
                 <td>{offer.location ?? "—"}</td>
                 <td>{offer.source === "partner" ? "Partenaire" : "Autre"}</td>
+                <td>
+                  {offer.linkReportCount > 0 ? (
+                    <span
+                      className={
+                        offer.linkReportCount >= OFFER_DEAD_LINK_HIDE_THRESHOLD
+                          ? "admin-offers-report-count is-critical"
+                          : "admin-offers-report-count"
+                      }
+                    >
+                      {offer.linkReportCount}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
                 <td>{formatDate(offer.createdAt)}</td>
                 <td className="admin-offers-table-actions">
                   <Link href={`/admin/offres/${offer.id}`} className="admin-inline-link">
-                    Modifier
+                    {offer.hiddenAt ? "Corriger" : "Modifier"}
                   </Link>
                 </td>
               </tr>

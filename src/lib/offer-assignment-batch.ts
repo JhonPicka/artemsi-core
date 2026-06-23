@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { MatchableOffer } from "@/lib/offer-matching";
+import { filterAssignmentPairsForFreeTier } from "@/lib/freemium-access";
+import type { MatchableOffer, MatchableProfile } from "@/lib/offer-matching";
 
 function chunk<T>(arr: T[], size: number) {
   const out: T[][] = [];
@@ -14,14 +15,27 @@ export async function insertNewOfferAssignments(
   supabase: SupabaseClient,
   pairs: { user_id: string; offer_id: string }[],
   offersById: Map<string, MatchableOffer>,
+  profiles: MatchableProfile[],
   dryRun: boolean,
 ): Promise<{ insertedAssignments: number; insertedNotifications: number }> {
   if (pairs.length === 0 || dryRun) {
     return { insertedAssignments: 0, insertedNotifications: 0 };
   }
 
+  const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
+  const cappedPairs = await filterAssignmentPairsForFreeTier(
+    supabase,
+    pairs,
+    profilesById,
+    offersById,
+  );
+
+  if (cappedPairs.length === 0) {
+    return { insertedAssignments: 0, insertedNotifications: 0 };
+  }
+
   const existingPairs = new Set<string>();
-  const offerIds = Array.from(new Set(pairs.map((p) => p.offer_id)));
+  const offerIds = Array.from(new Set(cappedPairs.map((p) => p.offer_id)));
 
   for (const batch of chunk(offerIds, 200)) {
     const { data, error } = await supabase
@@ -34,7 +48,7 @@ export async function insertNewOfferAssignments(
     }
   }
 
-  const newAssignments = pairs.filter((p) => !existingPairs.has(`${p.user_id}:${p.offer_id}`));
+  const newAssignments = cappedPairs.filter((p) => !existingPairs.has(`${p.user_id}:${p.offer_id}`));
   if (newAssignments.length === 0) {
     return { insertedAssignments: 0, insertedNotifications: 0 };
   }

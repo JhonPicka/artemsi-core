@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 
 import { AuthPageShell } from "@/components/auth/auth-page-shell";
 import { LoginForm } from "@/components/auth/login-form";
-import { getFreshLoginPath } from "@/lib/auth-paths";
 import { getCurrentUser } from "@/lib/auth";
+import { resolvePostAuthRedirect } from "@/lib/auth-session";
 
 type Props = {
   searchParams: Promise<{ email?: string; error?: string }>;
@@ -13,11 +13,8 @@ export default async function LoginPage({ searchParams }: Props) {
   const { email, error } = await searchParams;
   const user = await getCurrentUser();
 
-  // Session persistante : on efface les cookies pour permettre un autre email.
   if (user) {
-    redirect(
-      getFreshLoginPath(typeof email === "string" ? { email } : undefined),
-    );
+    redirect(await resolvePostAuthRedirect(user));
   }
 
   const initialEmail = typeof email === "string" ? email : undefined;

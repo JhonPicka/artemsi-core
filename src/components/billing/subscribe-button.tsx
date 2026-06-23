@@ -52,7 +52,7 @@ export function SubscribeButton({ children, className, email, disabled }: Props)
   }
 
   return (
-    <span className="subscribe-button-wrap">
+    <>
       <button
         type="button"
         className={className}
@@ -67,6 +67,6 @@ export function SubscribeButton({ children, className, email, disabled }: Props)
           {error}
         </span>
       ) : null}
-    </span>
+    </>
   );
 }

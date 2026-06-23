@@ -4,10 +4,10 @@ import { redirect } from "next/navigation";
 
 import { getFreshLoginPath } from "@/lib/auth-paths";
 import { redirectAfterAuth } from "@/lib/auth-session";
-import { getPaidAccountSetupStatus, resendActivationEmail } from "@/lib/account-setup";
-import { getBillingStatusByEmail, userHasBillingAccess } from "@/lib/billing";
+import { resendActivationEmail } from "@/lib/account-setup";
+import { userHasBillingAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
-import { loginSchema } from "@/lib/validation";
+import { loginSchema, signupSchema } from "@/lib/validation";
 
 export type AuthFormState = {
   error?: string;
@@ -39,17 +39,6 @@ export async function loginAction(
   });
 
   if (error) {
-    const billingStatus = await getBillingStatusByEmail(email);
-    if (billingStatus === "active") {
-      const setupStatus = await getPaidAccountSetupStatus(email);
-      if (setupStatus.needsPasswordSetup) {
-        return {
-          error:
-            "Tu n'as pas encore créé ton mot de passe. Va sur Activer mon compte pour finaliser ton inscription.",
-        };
-      }
-      return { error: "Identifiants incorrects." };
-    }
     return { error: "Identifiants incorrects." };
   }
 
@@ -58,15 +47,55 @@ export async function loginAction(
     return { error: "Impossible de récupérer la session utilisateur." };
   }
 
-  if (!(await userHasBillingAccess(user.email))) {
-    await supabase.auth.signOut();
-    return {
-      error:
-        "Aucun abonnement actif pour cet email. Finalise ton paiement ou patiente quelques instants, puis réessaie.",
-    };
+  return redirectAfterAuth(user);
+}
+
+export async function signupAction(
+  _prevState: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const parsed = signupSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+    acceptLegal: formData.get("acceptLegal"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide" };
   }
 
-  return redirectAfterAuth(user);
+  const email = normalizeEmail(parsed.data.email);
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password: parsed.data.password,
+    options: {
+      data: {
+        password_set: true,
+        password_setup_pending: false,
+      },
+    },
+  });
+
+  if (error) {
+    const message = error.message.toLowerCase();
+    if (message.includes("registered") || message.includes("already")) {
+      return {
+        error: "Un compte existe déjà pour cet email. Connecte-toi directement.",
+      };
+    }
+    return { error: "Impossible de créer le compte pour le moment. Réessaie plus tard." };
+  }
+
+  if (data.session && data.user) {
+    return redirectAfterAuth(data.user);
+  }
+
+  return {
+    success:
+      "Compte créé. Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi.",
+  };
 }
 
 export async function resendSetupEmailAction(

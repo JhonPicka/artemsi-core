@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -48,13 +49,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} notranslate`}
       suppressHydrationWarning
     >
-      <head>
-        <meta name="google" content="notranslate" />
-        <script
+      <body>
+        <Script
+          id="theme-bootstrap"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
         />
-      </head>
-      <body>
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
         </ThemeProvider>

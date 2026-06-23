@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { adminUnauthorizedResponse, getAdminUserOrNull } from "@/lib/admin-api-auth";
 import { adminOfferBodySchema } from "@/lib/admin-offer-schema";
 import { normalizeApplicationGuide } from "@/lib/offer-application-guide";
-import { runOfferMatching } from "@/lib/run-offer-matching";
+import { runOfferMatchingForOffers } from "@/lib/run-offer-matching";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
@@ -64,10 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
-    let matching = null;
-    if (parsed.data.runMatching !== false) {
-      matching = await runOfferMatching({ dryRun: false });
-    }
+    const matching = await runOfferMatchingForOffers([inserted.id as string]);
 
     return NextResponse.json({
       ok: true,

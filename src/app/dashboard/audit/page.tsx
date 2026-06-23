@@ -1,5 +1,7 @@
 import { AuditCalendar } from "@/components/audit/audit-calendar";
+import { ProUpgradeCard } from "@/components/billing/pro-upgrade-card";
 import { requireUser } from "@/lib/auth";
+import { userHasProAccess } from "@/lib/billing";
 import { AUDIT_AVAILABILITY_LABEL, generateAuditDays } from "@/lib/audit-slots";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,6 +15,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function DashboardAuditPage() {
   const user = await requireUser();
   const supabase = await createClient();
+  const isPro = await userHasProAccess(user);
 
   const nowISO = new Date().toISOString();
 
@@ -22,11 +25,13 @@ export default async function DashboardAuditPage() {
       .select("id, slot_start, slot_end, status, user_notes, admin_notes")
       .eq("user_id", user.id)
       .order("slot_start", { ascending: false }),
-    supabase
-      .from("audit_bookings")
-      .select("slot_start")
-      .gte("slot_start", nowISO)
-      .in("status", ["pending", "confirmed"]),
+    isPro
+      ? supabase
+          .from("audit_bookings")
+          .select("slot_start")
+          .gte("slot_start", nowISO)
+          .in("status", ["pending", "confirmed"])
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   const bookings = bookingsRes.data ?? [];
@@ -34,7 +39,7 @@ export default async function DashboardAuditPage() {
     (takenRes.data ?? []).map((row) => new Date(row.slot_start).toISOString()),
   );
 
-  const days = generateAuditDays({ takenStarts, daysAhead: 7 });
+  const days = isPro ? generateAuditDays({ takenStarts, daysAhead: 7 }) : [];
 
   return (
     <>
@@ -45,17 +50,31 @@ export default async function DashboardAuditPage() {
           Un humain ARTEMSI relit ton CV et ta lettre avec toi, verifie qu&apos;ils collent a ton
           objectif alternance, et te dit quoi ajuster en priorite — echange reel, pas un score auto.
         </p>
-        <p className="muted audit-intro-practical">
-          Reserve un creneau ci-dessous. Disponibilites : {AUDIT_AVAILABILITY_LABEL}.
-          Une fois ta demande envoyee, tu recevras une
-          notification apres validation.
-        </p>
+        {isPro ? (
+          <p className="muted audit-intro-practical">
+            Reserve un creneau ci-dessous. Disponibilites : {AUDIT_AVAILABILITY_LABEL}.
+            Une fois ta demande envoyee, tu recevras une
+            notification apres validation.
+          </p>
+        ) : (
+          <p className="muted audit-intro-practical">
+            L&apos;audit humain CV / lettre est réservé aux abonnés Pro. Passe Pro pour réserver un
+            créneau avec l&apos;équipe ARTEMSI.
+          </p>
+        )}
       </section>
 
-      <section className="card">
-        <h3>Choisir un creneau</h3>
-        <AuditCalendar days={days} />
-      </section>
+      {isPro ? (
+        <section className="card">
+          <h3>Choisir un creneau</h3>
+          <AuditCalendar days={days} />
+        </section>
+      ) : (
+        <ProUpgradeCard
+          title="Audit CV réservé aux abonnés Pro"
+          description="Un échange humain pour adapter ton CV et ta lettre à ton objectif alternance — disponible avec l'abonnement Pro."
+        />
+      )}
 
       <section className="card">
         <h3>Mes reservations</h3>

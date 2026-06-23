@@ -120,7 +120,6 @@ export function AdminOfferForm() {
           isPublic,
           isPartnerExclusive: isExclusive,
           applicationGuide,
-          runMatching: true,
         }),
       });
       const data = await response.json();

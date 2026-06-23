@@ -32,6 +32,18 @@ const legalConsentSchema = z
     message: "Tu dois accepter les CGU et la politique de confidentialité.",
   });
 
+export const signupSchema = z
+  .object({
+    email: z.email("Email invalide"),
+    password: passwordFieldSchema,
+    confirmPassword: z.string(),
+    acceptLegal: legalConsentSchema,
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas",
+    path: ["confirmPassword"],
+  });
+
 export const loginSchema = z.object({
   email: z.email("Email invalide"),
   password: z.string().min(1, "Mot de passe requis"),
@@ -93,6 +105,12 @@ export const applicationUpdateSchema = z.object({
   status: z.enum(APPLICATION_STATUSES),
 });
 
+export const offerLinkReportSchema = z.object({
+  offerId: z.uuid("ID offre invalide"),
+  notes: z.string().max(500).optional(),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ApplicationCreateInput = z.infer<typeof applicationCreateSchema>;
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
+export type OfferLinkReportInput = z.infer<typeof offerLinkReportSchema>;

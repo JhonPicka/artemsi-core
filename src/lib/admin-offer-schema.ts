@@ -10,7 +10,6 @@ export const adminOfferBodySchema = z.object({
   isPublic: z.boolean(),
   isPartnerExclusive: z.boolean(),
   applicationGuide: z.record(z.string(), z.unknown()).optional().nullable(),
-  runMatching: z.boolean().optional().default(false),
 });
 
 export type AdminOfferBody = z.infer<typeof adminOfferBodySchema>;

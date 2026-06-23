@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { hasApiBillingAccess } from "@/lib/billing";
+import { hasApiAccountAccess } from "@/lib/billing";
 import { MAX_DOCUMENT_SIZE_BYTES, SUPPORTED_DOCUMENT_MIME_TYPES } from "@/lib/constants";
 import { getRequestKey, takeRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await hasApiBillingAccess(user))) {
+  if (!(await hasApiAccountAccess(user))) {
     return NextResponse.json({ error: "Abonnement actif requis." }, { status: 402 });
   }
 

@@ -14,6 +14,7 @@ export type MatchableOffer = {
   company: string | null;
   location: string | null;
   summary: string;
+  is_partner_exclusive?: boolean;
 };
 
 export const REGION_HINTS: Record<string, string[]> = {

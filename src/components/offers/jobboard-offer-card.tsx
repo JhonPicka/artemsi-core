@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { OfferFullscreenModal, type OfferCardData } from "@/components/offers/offer-card";
+import {
+  canOpenOfferExternally,
+  openOfferInNewTab,
+  type OfferCardData,
+} from "@/components/offers/offer-card";
+import { OfferReportDeadLinkButton } from "@/components/offers/offer-report-dead-link-button";
 
 const SOURCE_LABEL: Record<OfferCardData["source"], string> = {
   indeed: "Source externe",
@@ -14,16 +19,23 @@ const SOURCE_LABEL: Record<OfferCardData["source"], string> = {
 type JobboardOfferCardProps = {
   offer: OfferCardData;
   initialInterested: boolean;
+  isPro?: boolean;
 };
 
-export function JobboardOfferCard({ offer, initialInterested }: JobboardOfferCardProps) {
+export function JobboardOfferCard({ offer, initialInterested, isPro = true }: JobboardOfferCardProps) {
   const router = useRouter();
   const [interested, setInterested] = useState(initialInterested);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const opensExternally = canOpenOfferExternally(offer);
 
-  async function toggleInterest() {
+  function handleOpenOffer() {
+    if (!opensExternally) return;
+    openOfferInNewTab(offer.url);
+  }
+
+  async function toggleInterest(event: React.MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
     setLoading(true);
     setMessage(null);
     try {
@@ -60,7 +72,21 @@ export function JobboardOfferCard({ offer, initialInterested }: JobboardOfferCar
 
   return (
     <article
-      className={`offer-card offer-card--jobboard${interested ? " offer-card--interested" : ""}`}
+      className={`offer-card offer-card--jobboard${interested ? " offer-card--interested" : ""}${opensExternally ? " offer-card--clickable" : ""}`}
+      role={opensExternally ? "link" : undefined}
+      tabIndex={opensExternally ? 0 : undefined}
+      onClick={opensExternally ? handleOpenOffer : undefined}
+      onKeyDown={
+        opensExternally
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleOpenOffer();
+              }
+            }
+          : undefined
+      }
+      aria-label={opensExternally ? `Ouvrir l'offre ${offer.title} dans un nouvel onglet` : undefined}
     >
       <div className="offer-card-header">
         {interested ? (
@@ -84,18 +110,19 @@ export function JobboardOfferCard({ offer, initialInterested }: JobboardOfferCar
         >
           {loading ? "…" : interested ? "Interesse ✓" : "Ca m'interesse"}
         </button>
-        <button
-          type="button"
-          className="button-link offer-view-btn"
-          onClick={() => setDetailsOpen(true)}
-          aria-expanded={detailsOpen}
-        >
-          Voir l&apos;offre
-        </button>
+        {opensExternally ? (
+          <a
+            className="button-link offer-view-btn"
+            href={offer.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => event.stopPropagation()}
+          >
+            Voir l&apos;offre
+          </a>
+        ) : null}
+        <OfferReportDeadLinkButton offerId={offer.id} />
       </div>
-      {detailsOpen ? (
-        <OfferFullscreenModal offer={offer} onClose={() => setDetailsOpen(false)} />
-      ) : null}
       {message ? <p className="offer-interest-feedback muted">{message}</p> : null}
     </article>
   );

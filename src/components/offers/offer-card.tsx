@@ -2,10 +2,12 @@
 
 import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 
 import { OfferApplicationGuideBlock } from "@/components/offers/offer-application-guide-block";
+import { OfferReportDeadLinkButton } from "@/components/offers/offer-report-dead-link-button";
 import type { OfferApplicationGuide } from "@/lib/offer-application-guide";
 
 export type OfferCardData = {
@@ -25,6 +27,8 @@ type OfferCardProps = {
   offer: OfferCardData;
   badge?: ReactNode;
   tag?: ReactNode;
+  /** false = compte gratuit (pas de guide candidature, offres partenaires non postulables). */
+  isPro?: boolean;
 };
 
 const UUID_PATTERN =
@@ -34,15 +38,12 @@ function isPersistedOffer(offer: OfferCardData) {
   return UUID_PATTERN.test(offer.id);
 }
 
-function copyText(value: string, onDone: (message: string) => void, message: string) {
-  if (!navigator.clipboard) {
-    onDone("Copie indisponible sur ce navigateur.");
-    return;
-  }
-  navigator.clipboard
-    .writeText(value)
-    .then(() => onDone(message))
-    .catch(() => onDone("Copie impossible. Selectionne le texte manuellement."));
+export function canOpenOfferExternally(offer: Pick<OfferCardData, "id" | "url">) {
+  return isPersistedOffer(offer as OfferCardData) && Boolean(offer.url?.trim());
+}
+
+export function openOfferInNewTab(url: string) {
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 function buildMissionRecap(description?: string | null) {
@@ -69,7 +70,7 @@ function buildMissionRecap(description?: string | null) {
     : "";
 }
 
-function OfferDetailsBlock({ offer }: { offer: OfferCardData }) {
+function OfferDetailsBlock({ offer, isPro = true }: { offer: OfferCardData; isPro?: boolean }) {
   return (
     <div className="offer-details">
       <dl className="offer-details-grid">
@@ -101,7 +102,7 @@ function OfferDetailsBlock({ offer }: { offer: OfferCardData }) {
           l&apos;annonce.
         </p>
       )}
-      <OfferApplicationGuideBlock guide={offer.application_guide} />
+      {isPro ? <OfferApplicationGuideBlock guide={offer.application_guide} /> : null}
     </div>
   );
 }
@@ -435,23 +436,34 @@ function PartnerOfferApplyDialog({
   );
 }
 
-export function OfferApplicationButton({ offer }: { offer: OfferCardData }) {
+export function OfferApplicationButton({
+  offer,
+  isPro = true,
+}: {
+  offer: OfferCardData;
+  isPro?: boolean;
+}) {
   const router = useRouter();
   const [applying, setApplying] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const isPartner = offer.source === "partner" || offer.is_partner_exclusive;
+  const partnerApplyBlocked = isPartner && !isPro;
   const isPersisted = isPersistedOffer(offer);
-  const canApply = isPersisted;
-  const buttonTitle = !isPersisted
-    ? "Offre fictive : candidature désactivée."
-    : undefined;
-  const buttonLabel = !isPersisted
-    ? "Exemple"
-    : applying
-      ? "Ajout…"
-      : "Candidater";
+  const canApply = isPersisted && !partnerApplyBlocked;
+  const buttonTitle = partnerApplyBlocked
+    ? "Réservé aux abonnés Pro."
+    : !isPersisted
+      ? "Offre fictive : candidature désactivée."
+      : undefined;
+  const buttonLabel = partnerApplyBlocked
+    ? "Candidater (Pro)"
+    : !isPersisted
+      ? "Exemple"
+      : applying
+        ? "Ajout…"
+        : "Candidater";
 
   async function createApplicationDirect() {
     if (!canApply) return;
@@ -467,7 +479,8 @@ export function OfferApplicationButton({ offer }: { offer: OfferCardData }) {
     router.refresh();
   }
 
-  function handleClick() {
+  function handleClick(event: React.MouseEvent) {
+    event.stopPropagation();
     if (!canApply) return;
     if (isPartner) {
       setDialogOpen(true);
@@ -477,7 +490,10 @@ export function OfferApplicationButton({ offer }: { offer: OfferCardData }) {
   }
 
   return (
-    <span className={`offer-action-with-feedback${dialogOpen ? " is-dialog-open" : ""}`}>
+    <span
+      className={`offer-action-with-feedback${dialogOpen ? " is-dialog-open" : ""}`}
+      onClick={(event) => event.stopPropagation()}
+    >
       <button
         type="button"
         className="button-link offer-apply-btn"
@@ -489,6 +505,11 @@ export function OfferApplicationButton({ offer }: { offer: OfferCardData }) {
       </button>
       {applicationStatus ? (
         <span className="offer-apply-feedback muted">{applicationStatus}</span>
+      ) : null}
+      {partnerApplyBlocked ? (
+        <span className="offer-apply-feedback muted">
+          <Link href="/subscribe">Passe Pro</Link> pour candidater sur les offres partenaires.
+        </span>
       ) : null}
       {dialogOpen ? (
         <PartnerOfferApplyDialog
@@ -505,8 +526,14 @@ export function OfferApplicationButton({ offer }: { offer: OfferCardData }) {
   );
 }
 
-export function OfferOfficialActions({ offer }: { offer: OfferCardData }) {
-  const [copied, setCopied] = useState<string | null>(null);
+export function OfferOfficialActions({
+  offer,
+  isPro = true,
+}: {
+  offer: OfferCardData;
+  isPro?: boolean;
+}) {
+  const isPersisted = isPersistedOffer(offer);
 
   return (
     <div className="offer-official-actions">
@@ -519,30 +546,9 @@ export function OfferOfficialActions({ offer }: { offer: OfferCardData }) {
         >
           Aller sur le site
         </a>
-        <OfferApplicationButton offer={offer} />
+        <OfferApplicationButton offer={offer} isPro={isPro} />
       </div>
-      <div className="offer-secondary-actions" aria-label="Autres actions">
-        <button
-          type="button"
-          className="inline-link-button"
-          onClick={() => copyText(offer.title, setCopied, "Titre copie.")}
-        >
-          Copier le titre
-        </button>
-        <span aria-hidden="true">·</span>
-        <button
-          type="button"
-          className="inline-link-button"
-          onClick={() => copyText(offer.url, setCopied, "Lien copie.")}
-        >
-          Copier le lien
-        </button>
-      </div>
-      {copied ? <p className="offer-copy-feedback muted">{copied}</p> : null}
-      <p className="offer-source-hint muted">
-        Si le site entreprise bloque l&apos;ouverture, copie le titre et recherche-le directement sur le
-        site carrieres officiel.
-      </p>
+      <OfferReportDeadLinkButton offerId={offer.id} disabled={!isPersisted} />
     </div>
   );
 }
@@ -550,9 +556,11 @@ export function OfferOfficialActions({ offer }: { offer: OfferCardData }) {
 export function OfferFullscreenModal({
   offer,
   onClose,
+  isPro = true,
 }: {
   offer: OfferCardData;
   onClose: () => void;
+  isPro?: boolean;
 }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -594,8 +602,8 @@ export function OfferFullscreenModal({
         </header>
 
         <div className="offer-modal-body">
-          <OfferDetailsBlock offer={offer} />
-          <OfferOfficialActions offer={offer} />
+          <OfferDetailsBlock offer={offer} isPro={isPro} />
+          <OfferOfficialActions offer={offer} isPro={isPro} />
         </div>
       </section>
     </div>,
@@ -603,22 +611,32 @@ export function OfferFullscreenModal({
   );
 }
 
-export function OfferCard({ offer, badge, tag }: OfferCardProps) {
-  const [open, setOpen] = useState(false);
+export function OfferCard({ offer, badge, tag, isPro = true }: OfferCardProps) {
+  const isPersisted = isPersistedOffer(offer);
+  const opensExternally = canOpenOfferExternally(offer);
+
+  function handleOpenOffer() {
+    if (!opensExternally) return;
+    openOfferInNewTab(offer.url);
+  }
 
   return (
     <article
-      className={`offer-card offer-card--clickable${open ? " offer-card--open" : ""}`}
-      role="button"
-      tabIndex={0}
-      onClick={() => setOpen(true)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          setOpen(true);
-        }
-      }}
-      aria-label={`Voir le détail de l'offre ${offer.title}`}
+      className={`offer-card${opensExternally ? " offer-card--clickable" : ""}`}
+      role={opensExternally ? "link" : undefined}
+      tabIndex={opensExternally ? 0 : undefined}
+      onClick={opensExternally ? handleOpenOffer : undefined}
+      onKeyDown={
+        opensExternally
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleOpenOffer();
+              }
+            }
+          : undefined
+      }
+      aria-label={opensExternally ? `Ouvrir l'offre ${offer.title} dans un nouvel onglet` : undefined}
     >
       <div className="offer-card-header">
         <span className="offer-card-header-slot">{badge}</span>
@@ -631,19 +649,24 @@ export function OfferCard({ offer, badge, tag }: OfferCardProps) {
         {offer.location ? <span>{offer.location}</span> : null}
       </p>
       <div className="offer-card-actions offer-card-actions--compact">
-        <button
-          type="button"
-          className="button-link offer-view-btn"
-          onClick={(event) => {
-            event.stopPropagation();
-            setOpen(true);
-          }}
-          aria-expanded={open}
-        >
-          Voir l&apos;offre
-        </button>
+        {opensExternally ? (
+          <a
+            className="button-link offer-view-btn"
+            href={offer.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => event.stopPropagation()}
+          >
+            Voir l&apos;offre
+          </a>
+        ) : (
+          <span className="button-link offer-view-btn is-disabled" aria-disabled="true">
+            Voir l&apos;offre
+          </span>
+        )}
+        <OfferApplicationButton offer={offer} isPro={isPro} />
+        <OfferReportDeadLinkButton offerId={offer.id} disabled={!isPersisted} />
       </div>
-      {open ? <OfferFullscreenModal offer={offer} onClose={() => setOpen(false)} /> : null}
     </article>
   );
 }

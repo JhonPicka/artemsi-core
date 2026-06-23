@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { adminUnauthorizedResponse, getAdminUserOrNull } from "@/lib/admin-api-auth";
 import { parseOffersCsv } from "@/lib/offer-csv-import";
-import { runOfferMatching } from "@/lib/run-offer-matching";
+import { runOfferMatchingForOffers } from "@/lib/run-offer-matching";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -79,6 +79,7 @@ export async function POST(request: Request) {
   }
 
   let inserted = 0;
+  const insertedOfferIds: string[] = [];
 
   try {
     for (let i = 0; i < toInsert.length; i += INSERT_BATCH) {
@@ -94,7 +95,10 @@ export async function POST(request: Request) {
         application_guide: null,
       }));
 
-      const { error: insertError } = await supabase.from("offers").insert(batch);
+      const { data: insertedRows, error: insertError } = await supabase
+        .from("offers")
+        .insert(batch)
+        .select("id");
       if (insertError) {
         return NextResponse.json(
           {
@@ -105,10 +109,11 @@ export async function POST(request: Request) {
           { status: 500 },
         );
       }
-      inserted += batch.length;
+      inserted += insertedRows?.length ?? 0;
+      insertedOfferIds.push(...(insertedRows ?? []).map((row) => row.id as string));
     }
 
-    const matching = await runOfferMatching({ dryRun: false });
+    const matching = await runOfferMatchingForOffers(insertedOfferIds);
 
     return NextResponse.json({
       ok: true,

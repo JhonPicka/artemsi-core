@@ -28,11 +28,13 @@ export default function ConfidentialitePage() {
 
       <section>
         <h2>2. Données collectées</h2>
-        <p>Selon ton utilisation du service, nous pouvons traiter :</p>
+        <p>
+          Selon ton utilisation du service (formule Gratuite ou Pro), nous pouvons traiter :
+        </p>
         <ul>
           <li>
             <strong>Compte :</strong> adresse e-mail, mot de passe (hashé côté Supabase Auth),
-            identifiant utilisateur.
+            identifiant utilisateur, formule souscrite (Gratuit ou Pro).
           </li>
           <li>
             <strong>Profil candidat :</strong> nom, téléphone, établissement, niveau d&apos;études,
@@ -46,12 +48,17 @@ export default function ConfidentialitePage() {
             <strong>Candidatures :</strong> offres suivies, statuts, notes que tu saisis.
           </li>
           <li>
-            <strong>Audit CV/LM :</strong> créneaux réservés, messages optionnels liés à la
-            demande.
+            <strong>Matching et offres :</strong> historique des offres consultées, assignées ou
+            mises de côté selon ton profil.
           </li>
           <li>
-            <strong>Paiement :</strong> données gérées par Stripe (nous ne stockons pas ton numéro
-            de carte sur nos serveurs).
+            <strong>Accompagnement :</strong> créneaux réservés (appels Pro), offres promotionnelles
+            ponctuelles le cas échéant, échanges liés à ta demande, rapports rédigés disponibles dans
+            ton espace.
+          </li>
+          <li>
+            <strong>Paiement (Pro uniquement) :</strong> données gérées par Stripe (nous ne stockons
+            pas ton numéro de carte sur nos serveurs).
           </li>
           <li>
             <strong>Technique :</strong> logs de connexion, cookies de session nécessaires au
@@ -71,11 +78,11 @@ export default function ConfidentialitePage() {
           </thead>
           <tbody>
             <tr>
-              <td>Création et gestion de ton compte</td>
+              <td>Création et gestion de ton compte (Gratuit ou Pro)</td>
               <td>Exécution du contrat (CGU)</td>
             </tr>
             <tr>
-              <td>Matching et envoi d&apos;offres pertinentes</td>
+              <td>Matching et proposition d&apos;offres pertinentes</td>
               <td>Exécution du contrat</td>
             </tr>
             <tr>
@@ -83,11 +90,11 @@ export default function ConfidentialitePage() {
               <td>Exécution du contrat</td>
             </tr>
             <tr>
-              <td>Audit CV/LM et support</td>
+              <td>Accompagnement humain (audit, appels Pro) et support</td>
               <td>Exécution du contrat / intérêt légitime</td>
             </tr>
             <tr>
-              <td>Facturation et gestion de l&apos;abonnement</td>
+              <td>Facturation et gestion de l&apos;abonnement Pro</td>
               <td>Exécution du contrat / obligation légale</td>
             </tr>
             <tr>
@@ -102,16 +109,26 @@ export default function ConfidentialitePage() {
         <h2>4. Durées de conservation</h2>
         <ul>
           <li>
-            <strong>Compte actif :</strong> données conservées tant que l&apos;abonnement est actif
-            ou que tu utilises le service.
+            <strong>Compte actif :</strong> données conservées tant que tu utilises le service ou
+            que ton abonnement Pro est actif.
           </li>
           <li>
-            <strong>Après résiliation :</strong> suppression ou anonymisation dans un délai
-            raisonnable (sauf obligations légales de conservation, ex. facturation).
+            <strong>Compte Gratuit inactif :</strong> suppression ou anonymisation après une
+            période d&apos;inactivité prolongée, avec information préalable lorsque c&apos;est
+            possible.
+          </li>
+          <li>
+            <strong>Après résiliation Pro ou suppression de compte :</strong> suppression ou
+            anonymisation dans un délai raisonnable (sauf obligations légales de conservation, ex.
+            facturation).
           </li>
           <li>
             <strong>Documents :</strong> conservés tant qu&apos;ils restent actifs sur ton profil ;
             remplacement possible à tout moment.
+          </li>
+          <li>
+            <strong>Rapports d&apos;accompagnement :</strong> conservés dans ton espace tant que
+            ton compte est actif, sauf demande de suppression de ta part.
           </li>
         </ul>
       </section>
@@ -125,11 +142,11 @@ export default function ConfidentialitePage() {
             (hébergement selon région du projet).
           </li>
           <li>
-            <strong>Stripe</strong> — paiement et gestion de l&apos;abonnement.
+            <strong>Stripe</strong> — paiement et gestion de l&apos;abonnement Pro.
           </li>
           <li>
-            <strong>Resend</strong> (si activé) — envoi d&apos;e-mails transactionnels (audit,
-            notifications).
+            <strong>Resend</strong> (si activé) — envoi d&apos;e-mails transactionnels
+            (accompagnement, notifications).
           </li>
           <li>
             <strong>Hébergeur de l&apos;application</strong> — {c.hostName}.
@@ -167,7 +184,7 @@ export default function ConfidentialitePage() {
           </li>
         </ul>
         <p>
-          Pour demander la suppression de ton compte : envoie un email à{" "}
+          Pour demander la suppression de ton compte : envoie un e-mail à{" "}
           <a href={`mailto:${c.contactEmail}`}>{c.contactEmail}</a> depuis l&apos;adresse liée à
           ton compte (objet « suppression de compte »). Nous traitons la demande sous 30 jours.
         </p>

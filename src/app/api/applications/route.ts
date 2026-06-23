@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { hasApiBillingAccess } from "@/lib/billing";
+import { hasApiAccountAccess, userHasProAccess } from "@/lib/billing";
 import { normalizeToYyyyMmDd } from "@/lib/dates-fr";
+import {
+  assertFreeUserCanAccessPublicOffer,
+  PARTNER_APPLY_BLOCKED_MESSAGE,
+} from "@/lib/freemium-access";
 import { createClient } from "@/lib/supabase/server";
 import {
   applicationCreateSchema,
@@ -18,8 +22,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await hasApiBillingAccess(user))) {
-    return NextResponse.json({ error: "Abonnement actif requis." }, { status: 402 });
+  if (!(await hasApiAccountAccess(user))) {
+    return NextResponse.json({ error: "Compte requis." }, { status: 401 });
   }
 
   const payload = await request.json().catch(() => null);
@@ -35,6 +39,33 @@ export async function POST(request: Request) {
   const offerId = parsed.data.offerId ?? null;
 
   if (offerId) {
+    const { data: offer } = await supabase
+      .from("offers")
+      .select("id, is_partner_exclusive, is_public, hidden_at")
+      .eq("id", offerId)
+      .maybeSingle();
+
+    if (!offer || offer.hidden_at) {
+      return NextResponse.json({ error: "Offre introuvable." }, { status: 404 });
+    }
+
+    const isPro = await userHasProAccess(user);
+
+    if (offer.is_partner_exclusive && !isPro) {
+      return NextResponse.json({ error: PARTNER_APPLY_BLOCKED_MESSAGE }, { status: 403 });
+    }
+
+    if (offer.is_public && !isPro) {
+      try {
+        await assertFreeUserCanAccessPublicOffer(supabase, offerId);
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Offre non accessible." },
+          { status: 403 },
+        );
+      }
+    }
+
     const { data: existing } = await supabase
       .from("applications")
       .select("id")
@@ -83,8 +114,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await hasApiBillingAccess(user))) {
-    return NextResponse.json({ error: "Abonnement actif requis." }, { status: 402 });
+  if (!(await hasApiAccountAccess(user))) {
+    return NextResponse.json({ error: "Compte requis." }, { status: 401 });
   }
 
   const payload = await request.json().catch(() => null);
@@ -120,8 +151,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await hasApiBillingAccess(user))) {
-    return NextResponse.json({ error: "Abonnement actif requis." }, { status: 402 });
+  if (!(await hasApiAccountAccess(user))) {
+    return NextResponse.json({ error: "Compte requis." }, { status: 401 });
   }
 
   const url = new URL(request.url);

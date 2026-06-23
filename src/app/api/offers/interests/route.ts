@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { hasApiBillingAccess } from "@/lib/billing";
+import { hasApiAccountAccess, userHasProAccess } from "@/lib/billing";
+import { assertFreeUserCanAccessPublicOffer } from "@/lib/freemium-access";
 import { recordOfferInterest, removeOfferInterest } from "@/lib/record-offer-interest";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,8 +20,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await hasApiBillingAccess(user))) {
-    return NextResponse.json({ error: "Abonnement actif requis." }, { status: 402 });
+  if (!(await hasApiAccountAccess(user))) {
+    return NextResponse.json({ error: "Compte requis." }, { status: 401 });
   }
 
   const payload = await request.json().catch(() => null);
@@ -30,6 +31,18 @@ export async function POST(request: Request) {
       { error: parsed.error.issues[0]?.message ?? "Payload invalide" },
       { status: 400 },
     );
+  }
+
+  const isPro = await userHasProAccess(user);
+  if (!isPro) {
+    try {
+      await assertFreeUserCanAccessPublicOffer(supabase, parsed.data.offerId);
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Offre non accessible." },
+        { status: 403 },
+      );
+    }
   }
 
   try {
@@ -53,8 +66,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!(await hasApiBillingAccess(user))) {
-    return NextResponse.json({ error: "Abonnement actif requis." }, { status: 402 });
+  if (!(await hasApiAccountAccess(user))) {
+    return NextResponse.json({ error: "Compte requis." }, { status: 401 });
   }
 
   const url = new URL(request.url);

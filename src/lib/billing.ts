@@ -262,14 +262,17 @@ export async function requireActiveSubscription(user: Pick<User, "id" | "email">
     return;
   }
 
-  const status = await syncUserBilling(user);
-  if (!isActiveSubscriptionStatus(status)) {
-    redirect("/subscribe");
-  }
+  await syncUserBilling(user);
 }
 
-/** Guard API routes: true when paid access is allowed. */
-export async function hasApiBillingAccess(user: Pick<User, "id" | "email">) {
+/** Guard API routes: tout utilisateur authentifié (gratuit ou Pro). */
+export async function hasApiAccountAccess(user: Pick<User, "id" | "email">) {
+  if (isAdminUser(user)) return true;
+  return !!user.email;
+}
+
+/** Accès Pro : abonnement actif (audit, jobboard complet, offres partenaires). */
+export async function userHasProAccess(user: Pick<User, "id" | "email">) {
   if (isAdminUser(user)) return true;
   if (!user.email) return false;
   if (!isBillingEnforced()) return true;
@@ -279,4 +282,9 @@ export async function hasApiBillingAccess(user: Pick<User, "id" | "email">) {
   }
   const status = await syncUserBilling(user);
   return isActiveSubscriptionStatus(status);
+}
+
+/** @deprecated Préférer hasApiAccountAccess ou userHasProAccess. */
+export async function hasApiBillingAccess(user: Pick<User, "id" | "email">) {
+  return userHasProAccess(user);
 }
