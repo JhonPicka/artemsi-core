@@ -23,7 +23,6 @@ import {
   parseOffersView,
 } from "@/lib/offers-dashboard";
 import { offerFromAssignmentEmbed, type AssignmentEmbedRow } from "@/lib/offers-demo-preview";
-import { prioritizeItemsWithExternalLinkOffers } from "@/lib/offer-external-link";
 import { createClient } from "@/lib/supabase/server";
 
 type OfferStatus = "sent" | "seen" | "applied" | "archived";
@@ -110,20 +109,14 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
     .filter((row) => row.offer && !row.offer.is_partner_exclusive)
     .map((row) => ({ status: row.status, offer: row.offer! }));
 
-  const visiblePersonalAssignments = sliceVisiblePersonalAssignments(
-    prioritizeItemsWithExternalLinkOffers(personalAssignments, (row) => row.offer),
-    isPro,
-  );
+  const visiblePersonalAssignments = sliceVisiblePersonalAssignments(personalAssignments, isPro);
   const hiddenPersonalCount = hasHiddenPersonalAssignments(personalAssignments.length, isPro)
     ? personalAssignments.length - FREE_TIER_ASSIGNMENT_CAP
     : 0;
 
-  const exclusiveAssignments = prioritizeItemsWithExternalLinkOffers(
-    assignments
-      .filter((row) => row.offer && row.offer.is_partner_exclusive)
-      .map((row) => ({ status: row.status, offer: row.offer! })),
-    (row) => row.offer,
-  );
+  const exclusiveAssignments = assignments
+    .filter((row) => row.offer && row.offer.is_partner_exclusive)
+    .map((row) => ({ status: row.status, offer: row.offer! }));
 
   const tabCounts = {
     personal: visiblePersonalAssignments.length,

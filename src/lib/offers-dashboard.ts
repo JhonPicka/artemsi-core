@@ -1,5 +1,4 @@
 import type { OfferCardData } from "@/components/offers/offer-card";
-import { prioritizeExternalLinkOffers } from "@/lib/offer-external-link";
 
 export const OFFERS_VIEWS = ["pour-moi", "partenaires", "jobboard"] as const;
 export type OffersView = (typeof OFFERS_VIEWS)[number];
@@ -68,7 +67,7 @@ export function filterJobboardOffers(
   const needle = options.q?.trim().toLowerCase();
   const source = options.source ?? "all";
 
-  const filtered = offers.filter((offer) => {
+  return offers.filter((offer) => {
     if (source !== "all" && offer.source !== source) {
       return false;
     }
@@ -84,8 +83,6 @@ export function filterJobboardOffers(
 
     return haystack.includes(needle);
   });
-
-  return prioritizeExternalLinkOffers(filtered);
 }
 
 export function paginateOffers<T>(offers: readonly T[], page: number, pageSize: number) {
