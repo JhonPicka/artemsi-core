@@ -1,17 +1,13 @@
-import {
-  JOBBOARD_SOURCE_FILTERS,
-  type JobboardSourceFilter,
-} from "@/lib/offers-dashboard";
+import { buildOffersHref } from "@/lib/offers-dashboard";
 
 type JobboardToolbarProps = {
   q: string;
-  source: JobboardSourceFilter;
   resultCount: number;
   totalCount: number;
 };
 
-export function JobboardToolbar({ q, source, resultCount, totalCount }: JobboardToolbarProps) {
-  const hasFilters = Boolean(q.trim()) || source !== "all";
+export function JobboardToolbar({ q, resultCount, totalCount }: JobboardToolbarProps) {
+  const hasFilters = Boolean(q.trim());
 
   return (
     <div className="jobboard-toolbar">
@@ -27,16 +23,6 @@ export function JobboardToolbar({ q, source, resultCount, totalCount }: Jobboard
             className="jobboard-toolbar-input"
             autoComplete="off"
           />
-        </label>
-        <label className="jobboard-toolbar-field jobboard-toolbar-field--source">
-          <span className="jobboard-toolbar-label">Source</span>
-          <select name="source" defaultValue={source} className="jobboard-toolbar-select">
-            {JOBBOARD_SOURCE_FILTERS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         </label>
         <button type="submit" className="button-link secondary-link jobboard-toolbar-submit">
           Filtrer

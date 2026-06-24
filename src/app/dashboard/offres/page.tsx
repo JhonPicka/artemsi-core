@@ -19,7 +19,6 @@ import {
   JOBBOARD_PAGE_SIZE,
   paginateOffers,
   parseJobboardPage,
-  parseJobboardSource,
   parseOffersView,
 } from "@/lib/offers-dashboard";
 import { offerFromAssignmentEmbed, type AssignmentEmbedRow } from "@/lib/offers-demo-preview";
@@ -38,7 +37,6 @@ type PageProps = {
     view?: string;
     page?: string;
     q?: string;
-    source?: string;
   }>;
 };
 
@@ -49,17 +47,10 @@ const STATUS_LABEL: Record<OfferStatus, string> = {
   archived: "Archivée",
 };
 
-const SOURCE_LABEL: Record<OfferCardData["source"], string> = {
-  indeed: "Source externe",
-  partner: "Partenaire",
-  autre: "Autre",
-};
-
 export default async function DashboardOffersPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const view = parseOffersView(params.view);
   const jobboardQuery = params.q?.trim() ?? "";
-  const jobboardSource = parseJobboardSource(params.source);
   const jobboardPage = parseJobboardPage(params.page);
 
   const user = await requireUser();
@@ -89,7 +80,6 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
   const visibleJobboard = isPro ? allJobboard : sliceJobboardForFreeTier(allJobboard);
   const filteredJobboard = filterJobboardOffers(visibleJobboard, {
     q: jobboardQuery,
-    source: jobboardSource,
   });
   const jobboardPageData = paginateOffers(filteredJobboard, jobboardPage, JOBBOARD_PAGE_SIZE);
 
@@ -191,7 +181,6 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
                       {STATUS_LABEL[status]}
                     </span>
                   }
-                  tag={<span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>}
                 />
               ))}
             </div>
@@ -256,7 +245,6 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
             <>
               <JobboardToolbar
                 q={jobboardQuery}
-                source={jobboardSource}
                 resultCount={filteredJobboard.length}
                 totalCount={visibleJobboard.length}
               />
@@ -282,7 +270,6 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
                     page={jobboardPageData.page}
                     totalPages={jobboardPageData.totalPages}
                     q={jobboardQuery}
-                    source={jobboardSource}
                   />
                 </>
               )}

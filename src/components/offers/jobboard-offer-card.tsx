@@ -10,12 +10,6 @@ import {
 } from "@/components/offers/offer-card";
 import { OfferReportDeadLinkButton } from "@/components/offers/offer-report-dead-link-button";
 
-const SOURCE_LABEL: Record<OfferCardData["source"], string> = {
-  indeed: "Source externe",
-  partner: "Partenaire",
-  autre: "Autre",
-};
-
 type JobboardOfferCardProps = {
   offer: OfferCardData;
   initialInterested: boolean;
@@ -92,7 +86,6 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
         {interested ? (
           <span className="offer-tag offer-tag--interest">Dans tes interets</span>
         ) : null}
-        <span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>
       </div>
       <h3 className="offer-title">{offer.title}</h3>
       <p className="offer-meta">

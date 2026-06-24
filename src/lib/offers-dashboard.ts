@@ -5,15 +5,6 @@ export type OffersView = (typeof OFFERS_VIEWS)[number];
 
 export const JOBBOARD_PAGE_SIZE = 24;
 
-export const JOBBOARD_SOURCE_FILTERS = [
-  { value: "all", label: "Toutes les sources" },
-  { value: "indeed", label: "Source externe" },
-  { value: "partner", label: "Partenaire" },
-  { value: "autre", label: "Autre" },
-] as const;
-
-export type JobboardSourceFilter = (typeof JOBBOARD_SOURCE_FILTERS)[number]["value"];
-
 export function parseOffersView(raw?: string | null): OffersView {
   if (raw === "partenaires" || raw === "jobboard") return raw;
   return "pour-moi";
@@ -24,16 +15,10 @@ export function parseJobboardPage(raw?: string | null): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
-export function parseJobboardSource(raw?: string | null): JobboardSourceFilter {
-  if (raw === "indeed" || raw === "partner" || raw === "autre") return raw;
-  return "all";
-}
-
 export function buildOffersHref(params: {
   view?: OffersView;
   page?: number;
   q?: string;
-  source?: JobboardSourceFilter;
 }) {
   const search = new URLSearchParams();
   const view = params.view ?? "pour-moi";
@@ -47,11 +32,6 @@ export function buildOffersHref(params: {
     search.set("q", q);
   }
 
-  const source = params.source ?? "all";
-  if (source !== "all") {
-    search.set("source", source);
-  }
-
   if (view === "jobboard" && params.page && params.page > 1) {
     search.set("page", String(params.page));
   }
@@ -62,16 +42,11 @@ export function buildOffersHref(params: {
 
 export function filterJobboardOffers(
   offers: readonly OfferCardData[],
-  options: { q?: string; source?: JobboardSourceFilter },
+  options: { q?: string },
 ): OfferCardData[] {
   const needle = options.q?.trim().toLowerCase();
-  const source = options.source ?? "all";
 
   return offers.filter((offer) => {
-    if (source !== "all" && offer.source !== source) {
-      return false;
-    }
-
     if (!needle) {
       return true;
     }

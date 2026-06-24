@@ -86,10 +86,6 @@ function OfferDetailsBlock({ offer, isPro = true }: { offer: OfferCardData; isPr
           <dt>Lieu</dt>
           <dd>{offer.location ?? "Non renseigne"}</dd>
         </div>
-        <div>
-          <dt>Source</dt>
-          <dd>{offer.source === "partner" ? "Partenaire" : "Source officielle / externe"}</dd>
-        </div>
       </dl>
       {offer.description?.trim() ? (
         <div className="offer-details-description">
@@ -98,8 +94,7 @@ function OfferDetailsBlock({ offer, isPro = true }: { offer: OfferCardData; isPr
         </div>
       ) : (
         <p className="muted offer-details-empty">
-          Description non disponible dans ARTEMSI. Utilise le titre ou le lien officiel pour retrouver
-          l&apos;annonce.
+          Description non disponible pour le moment. Ouvre l&apos;offre pour voir le détail complet.
         </p>
       )}
       {isPro ? <OfferApplicationGuideBlock guide={offer.application_guide} /> : null}
