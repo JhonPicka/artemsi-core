@@ -1,8 +1,4 @@
 import { REGIONS, STUDY_DOMAINS, type StudyDomain } from "@/lib/constants";
-import {
-  normalizeApplicationGuide,
-  type OfferApplicationGuide,
-} from "@/lib/offer-application-guide";
 import { DOMAIN_HINTS, REGION_HINTS } from "@/lib/offer-matching";
 
 /** Réponse JSON attendue du modèle. */
@@ -15,7 +11,6 @@ export type OfferExtractModelOutput = {
   studyDomainHint?: StudyDomain | "AUTRE" | null;
   locationKeywords?: string[];
   jobKeywords?: string[];
-  applicationGuide?: { tips?: string[] } | null;
 };
 
 export type ExtractedOfferFields = {
@@ -24,7 +19,6 @@ export type ExtractedOfferFields = {
   location: string | null;
   description: string;
   contractHint: string | null;
-  applicationGuide: OfferApplicationGuide | null;
 };
 
 const REGION_SLUGS = REGIONS.map((r) =>
@@ -36,6 +30,55 @@ const REGION_SLUGS = REGIONS.map((r) =>
 );
 
 const DOMAIN_LIST = STUDY_DOMAINS.join(" | ");
+
+const TITLE_JUNK_PATTERNS = [
+  /\s*[-|–—]\s*offre\s*n[°o]?\s*\d+/i,
+  /\s*[-|–—]\s*hellowork\b.*/i,
+  /\s*[-|–—]\s*indeed\b.*/i,
+  /\s*[-|–—]\s*linkedin\b.*/i,
+  /\s*\|\s*recrutement\b.*/i,
+  /\s*[-|–—]\s*recrutement\b.*/i,
+  /\s+h\/f\s*$/i,
+  /\s+f\/h\s*$/i,
+  /\s*\(h\/f\)\s*$/i,
+  /\s*\(f\/h\)\s*$/i,
+];
+
+const CORPORATE_BULLET_PATTERNS = [
+  /écosystème\s+digital/i,
+  /environnement\s+de\s+travail/i,
+  /esprit\s+du\s+collectif/i,
+  /happy\s+trainees/i,
+  /afterworks?/i,
+  /séminaire\s+d['’]intégration/i,
+  /perspective\s+d['’]évolution\s+en\s+cdi/i,
+  /culture\s+d['’]entreprise/i,
+  /engagement\s+associatif/i,
+  /expérience\s+humaine\s+riche/i,
+  /innovant/i,
+  /stimulant/i,
+];
+
+const LOCATION_CANONICAL: Record<string, string> = {
+  "la defense": "La Défense (92)",
+  "la défense": "La Défense (92)",
+};
+
+const GENERIC_ROLE_TITLES = new Set([
+  "audit",
+  "commerce",
+  "marketing",
+  "finance",
+  "rh",
+  "ingenierie",
+  "ingénierie",
+  "informatique",
+  "logistique",
+  "communication",
+  "design",
+  "droit",
+  "industrie",
+]);
 
 function buildRegionMatchingGuide() {
   const lines: string[] = [];
@@ -56,16 +99,21 @@ function buildDomainMatchingGuide() {
     .join("\n");
 }
 
-export const OFFER_EXTRACT_SYSTEM_PROMPT = `Tu es l'assistant ARTEMSI pour les offres d'alternance / apprentissage en France.
-Tu extrais une fiche courte pour le candidat ET un raccourci concis pour adapter son CV et sa lettre.
+export const OFFER_EXTRACT_SYSTEM_PROMPT = `Tu es rédacteur données recrutement chez ARTEMSI (alternance & apprentissage, France).
+Tu extrais une fiche FACTUELLE à partir d'une annonce : aucun conseil, aucune recommandation, aucune reformulation marketing.
 
-## Règles
-- Réponds UNIQUEMENT en JSON valide, sans markdown.
-- N'invente JAMAIS : si une info manque, liste vide ou null.
-- Français professionnel, pas d'emojis.
-- Base-toi UNIQUEMENT sur l'annonce fournie.
+## Sortie
+Réponds UNIQUEMENT en JSON valide (pas de markdown, pas de commentaire).
 
-## JSON attendu
+## Principes
+1. Faits uniquement : reprendre ou condenser ce qui est écrit dans l'annonce.
+2. Zéro invention : si une info manque, null ou liste vide.
+3. Français neutre et professionnel. Pas d'emojis.
+4. Pas de conseils au candidat (« mettez en avant », « vérifiez », « soyez »…).
+5. Ne cite jamais HelloWork, Indeed, LinkedIn ni le nom d'un jobboard.
+6. Ignore le bruit (menus, cookies, footer, offres similaires).
+
+## Schéma JSON
 {
   "title": string,
   "company": string | null,
@@ -74,53 +122,59 @@ Tu extrais une fiche courte pour le candidat ET un raccourci concis pour adapter
   "contractHint": "alternance" | "apprentissage" | "pro" | null,
   "studyDomainHint": ${DOMAIN_LIST} | null,
   "locationKeywords": string[],
-  "jobKeywords": string[],
-  "applicationGuide": {
-    "tips": string[]
-  }
+  "jobKeywords": string[]
 }
 
-## title (5–90 car.)
-- Métier + type de contrat si possible : « Développeur web — Alternance »
-- Pas le nom d'entreprise (champ company).
+## title (25–90 caractères)
+- Intitulé métier précis + contrat : « Alternant(e) audit — Alternance », « Ingénieur supply chain — Apprentissage ».
+- Jamais un intitulé trop court ou générique seul (« Audit », « Commerce », « RH ») : précise le rôle (alternant, assistant, ingénieur, technicien…).
+- Déduis le métier des missions si le titre source est absent ou marketing.
+- Pas d'entreprise, pas de ville, pas de H/F, pas de n° d'offre.
 
-## company / location
-- company : raison sociale nettoyée.
-- location : ville principale du poste (« Lyon (69) », « Paris 13e », « France (remote) »). null seulement si aucun indice.
+Exemples :
+✓ « Alternant(e) audit — Alternance »
+✓ « Auditeur financier — Alternance »
+✗ « Audit — Alternance »
+✗ « KPMG — Alternance »
 
-## description (400–1200 car.)
-Raccourci lisible en 3 blocs avec puces « • » :
+## company
+- Raison sociale uniquement (ex. « KPMG », « Safran »).
+
+## location
+- Lieu de travail : ville + département si identifiable (« La Défense (92) », « Lyon (69) », « Paris 13e »).
+- Si un site ou campus est mentionné, tu peux l'ajouter : « La Défense (92) — Tour EQHO ».
+- « France (télétravail) » seulement si full remote explicite.
+- null si inconnu.
+
+## description (500–1100 caractères)
+Structure EXACTE — 3 blocs, titres de section + puces « • », phrases courtes et factuelles :
 
 Infos clés
-• Lieu, contrat, rythme/durée/début si présents
-• Niveau / formation si présent
+• Type de contrat et durée (ex. alternance 12 ou 24 mois)
+• Lieu, site ou campus + modalité (présentiel, hybride, télétravail)
+• Niveau / diplôme attendu
+• Date de début si mentionnée
+• Rémunération si mentionnée
 
 Missions
-• 2 à 5 missions concrètes
+• 3 à 5 actions concrètes tirées de l'annonce (audit, analyse, production, relation client opérationnelle…)
+• Verbes d'action : participer, réaliser, analyser, contribuer, accompagner…
 
 Profil
-• 2 à 4 exigences (compétences, outils, expériences)
+• 2 à 4 exigences mesurables : diplôme, domaine, outils, langues (niveau), expérience
 
-Interdit : blabla RH, valeurs corporate, copier l'annonce entière.
+Interdit dans description :
+- conseils au candidat, slogans RH, promesses employeur
+- soft skills vagues seules (« dynamique », « passionné », « esprit d'équipe » sans autre critère)
+- avantages lifestyle (afterworks, Happy Trainees, CDI, séminaire d'intégration, culture d'entreprise)
+- phrases corporate creuses (« écosystème digital innovant », « environnement de qualité »)
+- paragraphes continus sans puces
 
-## Champs matching internes (discrets)
+## Champs matching internes (ne pas mettre dans description)
 - locationKeywords : 1–4 villes réelles.
-- jobKeywords : 3–8 mots du métier (≥ 3 lettres).
+- jobKeywords : 3–8 termes métier (≥ 3 lettres).
 - studyDomainHint : code domaine le plus proche.
 
-## applicationGuide (raccourci candidat — 3 à 5 items max)
-Liste courte, actionnable, max 120 caractères par item. Pas de questions d'entretien.
-
-Exemples de tips :
-- « Mets en avant Python et SQL sur ton CV »
-- « Bac+3 informatique ou équivalent demandé »
-- « Démarrage septembre 2026 — Lyon »
-- « Rythme 3j entreprise / 2j école »
-
-Couvre si possible : compétences clés à reprendre, niveau/filière, info pratique (lieu, début, contrat).
-Interdit : slogans, « passion », « dynamique », phrases vides, listes longues.
-
-## Guides matching (pour locationKeywords / jobKeywords / description)
 Régions :
 ${buildRegionMatchingGuide()}
 
@@ -130,11 +184,11 @@ ${buildDomainMatchingGuide()}`;
 export function buildOfferExtractUserMessage(url: string, raw: string) {
   return `URL source : ${url}
 
+Extrais les faits de l'annonce ci-dessous (JSON uniquement, sans conseils candidat).
+
 --- ANNONCE BRUTE ---
 ${raw.slice(0, 12_000)}
---- FIN ---
-
-Extrais la fiche + le raccourci candidat (3 à 5 points). Reste factuel.`;
+--- FIN ---`;
 }
 
 function normalizeText(value: string) {
@@ -184,6 +238,7 @@ function extractLocationFromRaw(raw?: string) {
   const text = raw.replace(/\r/g, "\n");
 
   const patterns: RegExp[] = [
+    /localisation\s*:\s*([^\n•|]{2,90})/i,
     /(?:lieu|localisation|adresse|site|ville)\s*[:\-]\s*([^\n•|]{2,90})/i,
     /(?:poste\s+bas[ée]?\s+à|bas[ée]?\s+à|localis[ée]?\s+à|situ[ée]?\s+à|à\s+pourvoir\s+à|sur\s+le\s+site\s+de)\s+([A-ZÀ-Ÿ][A-Za-zÀ-ÿ'’.\- ]{2,70})/i,
     /\b(\d{5})\s+([A-ZÀ-Ÿ][A-Za-zÀ-ÿ'’.\-\s]{2,60})\b/,
@@ -210,7 +265,7 @@ function extractLocationFromRaw(raw?: string) {
   }
 
   if (/100\s*%\s*(?:télétravail|teletravail|remote)|full\s+remote/i.test(text)) {
-    return "France (remote)";
+    return "France (télétravail)";
   }
 
   return null;
@@ -228,26 +283,195 @@ function normalizeContractHint(
   return null;
 }
 
-function buildFallbackGuideFromText(
-  parsed: Partial<OfferExtractModelOutput>,
-  raw?: string,
-): OfferApplicationGuide | null {
-  const tips: string[] = [];
+function toTitleCase(value: string) {
+  const lower = value.toLowerCase();
+  return lower.replace(/(^|[\s/—-])(\p{L})/gu, (match, sep, letter) => `${sep}${letter.toUpperCase()}`);
+}
 
-  for (const kw of (parsed.jobKeywords ?? []).slice(0, 2)) {
-    tips.push(`Mets en avant : ${kw}`);
+function cleanExtractedTitle(title: string, company: string | null, contractHint: string | null) {
+  let cleaned = title.replace(/\s+/g, " ").trim();
+
+  for (const pattern of TITLE_JUNK_PATTERNS) {
+    cleaned = cleaned.replace(pattern, "");
   }
 
-  const haystack = normalizeText(
-    `${parsed.title ?? ""} ${parsed.description ?? ""} ${raw ?? ""}`,
-  );
-  if (/bac\s*\+\s*[345]/i.test(haystack)) {
-    tips.push("Précise ton niveau d'études (Bac+X) sur ton CV");
-  }
-  if (parsed.location) tips.push(`Poste basé à ${parsed.location}`);
-  if (parsed.contractHint) tips.push(`Contrat : ${parsed.contractHint}`);
+  cleaned = cleaned.replace(/\s*[-|–—]\s*$/g, "").trim();
 
-  return normalizeApplicationGuide({ tips });
+  if (company) {
+    const companyNorm = normalizeText(company);
+    const parts = cleaned.split(/\s*[-|–—]\s*/);
+    if (parts.length > 1 && normalizeText(parts[0] ?? "") === companyNorm) {
+      cleaned = parts.slice(1).join(" — ");
+    }
+  }
+
+  if (cleaned === cleaned.toUpperCase() && cleaned.length > 8) {
+    cleaned = toTitleCase(cleaned);
+  }
+
+  const hasContract = /alternance|apprentissage|contrat pro/i.test(cleaned);
+  if (!hasContract && contractHint) {
+    const suffix =
+      contractHint === "apprentissage"
+        ? "Apprentissage"
+        : contractHint === "pro"
+          ? "Contrat pro"
+          : "Alternance";
+    cleaned = `${cleaned} — ${suffix}`;
+  }
+
+  return cleaned.slice(0, 200);
+}
+
+function cleanExtractedCompany(company: string | null) {
+  if (!company) return null;
+  const cleaned = company
+    .replace(/\s+/g, " ")
+    .replace(/^(chez|entreprise|société|societe)\s+/i, "")
+    .replace(/\s*[-|–—].*$/, "")
+    .trim();
+  return cleaned.length >= 2 ? cleaned.slice(0, 200) : null;
+}
+
+function improveGenericTitle(title: string, contractHint: string | null, raw?: string) {
+  const suffixMatch = title.match(/\s*—\s*(Alternance|Apprentissage|Contrat pro)\s*$/i);
+  const suffix =
+    suffixMatch?.[1] ??
+    (contractHint === "apprentissage"
+      ? "Apprentissage"
+      : contractHint === "pro"
+        ? "Contrat pro"
+        : "Alternance");
+  const rolePart = suffixMatch ? title.replace(/\s*—\s*(Alternance|Apprentissage|Contrat pro)\s*$/i, "").trim() : title;
+  const roleNorm = normalizeText(rolePart);
+
+  if (roleNorm.length > 14 || !GENERIC_ROLE_TITLES.has(roleNorm)) {
+    return title;
+  }
+
+  const haystack = normalizeText(`${raw ?? ""} ${title}`);
+  const roleMap: [RegExp, string][] = [
+    [/\baudit\b/, "Alternant(e) audit"],
+    [/\bauditeur\b/, "Auditeur"],
+    [/\bingénieur\b|\bingenieur\b/, "Ingénieur"],
+    [/\bcommercial\b/, "Commercial"],
+    [/\bmarketing\b/, "Assistant(e) marketing"],
+    [/\bdeveloppeur\b|\bdéveloppeur\b/, "Développeur"],
+    [/\bdata\b/, "Alternant(e) data"],
+    [/\bsupply\s*chain\b/, "Alternant(e) supply chain"],
+    [/\bcomptab/, "Alternant(e) comptabilité"],
+  ];
+
+  for (const [pattern, label] of roleMap) {
+    if (pattern.test(haystack)) {
+      return `${label} — ${suffix}`.slice(0, 200);
+    }
+  }
+
+  return title;
+}
+
+function canonicalizeLocation(location: string | null, raw?: string) {
+  if (!location) return extractLocationFromRaw(raw);
+  const base = location.split(/[,—–-]/)[0]?.trim() ?? location;
+  const canonical = LOCATION_CANONICAL[normalizeText(base)];
+  if (canonical) {
+    const siteMatch = (raw ?? "").match(/localisation\s*:\s*([^,\n]+),\s*([^\n]+)/i);
+    if (siteMatch?.[2]?.trim()) {
+      return `${canonical} — ${siteMatch[2].trim()}`.slice(0, 200);
+    }
+    return canonical;
+  }
+  return location;
+}
+
+function isCorporateBullet(line: string) {
+  const normalized = normalizeText(line.replace(/^•\s*/, ""));
+  if (CORPORATE_BULLET_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
+  if (/^(rigueur|curiosité|sens critique|esprit d'équipe)$/i.test(normalized)) return true;
+  return false;
+}
+
+function sanitizeDescription(description: string) {
+  const lines = description.replace(/\r/g, "").split("\n");
+  const out: string[] = [];
+  let section = "";
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (out.at(-1) !== "") out.push("");
+      continue;
+    }
+
+    if (/^infos cl[eé]s$/i.test(trimmed)) {
+      section = "infos";
+      out.push("Infos clés");
+      continue;
+    }
+    if (/^missions?$/i.test(trimmed)) {
+      section = "missions";
+      out.push("Missions");
+      continue;
+    }
+    if (/^profil$/i.test(trimmed)) {
+      section = "profil";
+      out.push("Profil");
+      continue;
+    }
+
+    if (trimmed.startsWith("•") && section === "missions" && isCorporateBullet(trimmed)) {
+      continue;
+    }
+
+    if (trimmed.startsWith("•") && section === "profil") {
+      const body = trimmed.replace(/^•\s*/, "");
+      if (/compétences comportementales/i.test(body)) continue;
+      if (/^(rigueur|esprit d'équipe|curiosité|sens critique)/i.test(body)) continue;
+    }
+
+    out.push(trimmed);
+  }
+
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim().slice(0, 4000);
+}
+
+function normalizeDescriptionStructure(description: string) {
+  let text = description.replace(/\r/g, "").trim();
+  text = text.replace(/\n{3,}/g, "\n\n");
+
+  const hasSections = /infos cl[eé]s/i.test(text) && /missions?/i.test(text) && /profil/i.test(text);
+  if (hasSections) {
+    return sanitizeDescription(
+      text
+      .replace(/^infos cl[eé]s\s*:?\s*/im, "Infos clés\n")
+      .replace(/^missions?\s*:?\s*/im, "Missions\n")
+      .replace(/^profil\s*:?\s*/im, "Profil\n"),
+    );
+  }
+
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const bullets = lines
+    .flatMap((line) => {
+      if (/^(infos|missions?|profil)\b/i.test(line)) return [line];
+      if (line.startsWith("•")) return [line];
+      if (line.length > 20) return [`• ${line.replace(/^[-*]\s*/, "")}`];
+      return [];
+    })
+    .slice(0, 16);
+
+  if (bullets.length >= 4) {
+    return sanitizeDescription(
+      ["Infos clés", ...bullets.slice(0, 4), "", "Missions", ...bullets.slice(4, 9), "", "Profil", ...bullets.slice(9, 13)]
+      .join("\n"),
+    );
+  }
+
+  return sanitizeDescription(text);
 }
 
 export function finalizeExtractedOffer(
@@ -257,27 +481,20 @@ export function finalizeExtractedOffer(
   if (!parsed.title?.trim() || !parsed.description?.trim()) return null;
 
   const contractHint = normalizeContractHint(parsed.contractHint);
-  const title = String(parsed.title).trim().slice(0, 200);
-  const company = parsed.company ? String(parsed.company).trim().slice(0, 200) : null;
+  const company = cleanExtractedCompany(
+    parsed.company ? String(parsed.company).trim() : null,
+  );
+  const title = improveGenericTitle(
+    cleanExtractedTitle(String(parsed.title).trim(), company, contractHint),
+    contractHint,
+    raw,
+  );
   const parsedLocation = parsed.location ? cleanLocationCandidate(String(parsed.location)) : null;
-  const location = (parsedLocation ?? extractLocationFromRaw(raw))?.slice(0, 200) ?? null;
-  const description = String(parsed.description).trim().slice(0, 4000);
-
-  let applicationGuide =
-    normalizeApplicationGuide(parsed.applicationGuide) ??
-    buildFallbackGuideFromText(parsed, raw);
-
-  if (applicationGuide && location) {
-    const city = location.split(/[,(]/)[0]?.trim() ?? "";
-    const hasLocationTip = applicationGuide.tips.some((t) =>
-      normalizeText(t).includes(normalizeText(city)),
-    );
-    if (city.length >= 3 && !hasLocationTip) {
-      applicationGuide = normalizeApplicationGuide({
-        tips: [`Poste basé à ${location}`, ...applicationGuide.tips],
-      });
-    }
-  }
+  const location = canonicalizeLocation(
+    (parsedLocation ?? extractLocationFromRaw(raw))?.slice(0, 200) ?? null,
+    raw,
+  );
+  const description = normalizeDescriptionStructure(String(parsed.description).trim());
 
   return {
     title,
@@ -285,6 +502,5 @@ export function finalizeExtractedOffer(
     location,
     description,
     contractHint,
-    applicationGuide,
   };
 }

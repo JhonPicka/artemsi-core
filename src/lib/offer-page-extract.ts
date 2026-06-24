@@ -94,13 +94,10 @@ function heuristicExtract(url: string, raw: string): ExtractedOfferFields {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  const title = lines[0]?.slice(0, 200) || "Offre alternance";
-  const locationMatch = raw.match(
-    /\b(?:à|a)\s+([A-ZÀ-Ÿ][a-zà-ÿ\-\s]+(?:\(\d{2,3}\))?)/,
-  );
-  const companyMatch = raw.match(
-    /(?:chez|entreprise|société|societe)\s*[:\-]?\s*([^\n.]{2,80})/i,
-  );
+  const titleLine =
+    lines.find((line) => line.length >= 8 && line.length <= 120 && !/cookie|mentions légales/i.test(line)) ??
+    lines[0] ??
+    "Offre alternance";
 
   const contractHint = /apprentissage|apprenti/i.test(raw)
     ? "apprentissage"
@@ -110,26 +107,31 @@ function heuristicExtract(url: string, raw: string): ExtractedOfferFields {
         ? "alternance"
         : null;
 
+  const companyMatch = raw.match(
+    /(?:chez|entreprise|société|societe|employeur)\s*[:\-]?\s*([^\n.]{2,80})/i,
+  );
+
   const base: Partial<OfferExtractModelOutput> = {
-    title,
+    title: titleLine,
     company: companyMatch?.[1]?.trim() ?? null,
-    location: locationMatch?.[1]?.trim() ?? null,
-    description: raw.slice(0, 4000).trim() || `Offre importee depuis ${url}`,
+    location: null,
+    description: raw.slice(0, 4000).trim() || `Offre importée depuis ${url}`,
     contractHint,
-    jobKeywords: title.split(/\s+/).filter((t) => t.length >= 4),
-    locationKeywords: locationMatch?.[1]
-      ? [locationMatch[1].replace(/\s*\(\d{2,3}\)\s*/, "").trim()]
-      : [],
+    jobKeywords: titleLine
+      .split(/\s+/)
+      .map((t) => t.replace(/[^A-Za-zÀ-ÿ0-9+]/g, ""))
+      .filter((t) => t.length >= 4)
+      .slice(0, 6),
+    locationKeywords: [],
   };
 
   return (
     finalizeExtractedOffer(base, raw) ?? {
-      title,
+      title: titleLine,
       company: base.company ?? null,
       location: base.location ?? null,
       description: base.description ?? "",
       contractHint,
-      applicationGuide: null,
     }
   );
 }
@@ -151,7 +153,8 @@ async function extractWithOpenAI(
     },
     body: JSON.stringify({
       model,
-      temperature: 0.15,
+      temperature: 0.1,
+      max_tokens: 2200,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: OFFER_EXTRACT_SYSTEM_PROMPT },
@@ -220,7 +223,6 @@ export async function extractOfferFieldsFromUrl(input: {
         location: null,
         description: `URL: ${url}\n\nColle la description de l'offre.`,
         contractHint: null,
-        applicationGuide: null,
       },
       fetchWarning,
       usedAi: false,

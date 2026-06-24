@@ -5,7 +5,6 @@ import { useState } from "react";
 import {
   guideTipsToText,
   textToApplicationGuide,
-  type OfferApplicationGuide,
 } from "@/lib/offer-application-guide";
 
 type ExtractedFields = {
@@ -14,7 +13,6 @@ type ExtractedFields = {
   location: string | null;
   description: string;
   contractHint: string | null;
-  applicationGuide?: OfferApplicationGuide | null;
 };
 
 type PublishResult = {
@@ -42,6 +40,8 @@ export function AdminOfferForm() {
   const [extracting, setExtracting] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState<PublishResult | null>(null);
+
+  const isPartnerOffer = source === "partner" || isExclusive;
 
   async function handleExtract() {
     setError(null);
@@ -74,17 +74,16 @@ export function AdminOfferForm() {
       setCompany(fields.company ?? "");
       setLocation(fields.location ?? "");
       setDescription(fields.description ?? "");
-      setTips(guideTipsToText(fields.applicationGuide ?? null));
 
       const hints: string[] = [];
-      if (data.rawSource) hints.push(`Source analysee : ${data.rawSource}.`);
+      if (data.rawSource) hints.push(`Source analysée : ${data.rawSource}.`);
       if (data.fetchWarning) hints.push(data.fetchWarning);
-      if (data.usedAi) hints.push("Analyse IA appliquee — raccourci candidat genere.");
-      if (fields.contractHint) hints.push(`Contrat detecte : ${fields.contractHint}.`);
+      if (data.usedAi) hints.push("Analyse IA : faits extraits (sans conseils candidat).");
+      if (fields.contractHint) hints.push(`Contrat détecté : ${fields.contractHint}.`);
       setInfo(
         hints.length
           ? hints.join(" ")
-          : "Champs pre-remplis — verifie le raccourci candidat avant publication.",
+          : "Fiche pré-remplie — relis les faits avant publication.",
       );
     } catch {
       setError("Erreur reseau lors de l'analyse.");
@@ -103,7 +102,8 @@ export function AdminOfferForm() {
       return;
     }
 
-    const applicationGuide = textToApplicationGuide(tips);
+    const applicationGuide =
+      isPartnerOffer ? textToApplicationGuide(tips) : null;
 
     setPublishing(true);
     try {
@@ -145,17 +145,18 @@ export function AdminOfferForm() {
       <section className="card form admin-offer-step">
         <h2>Offre partenaire — publication unitaire</h2>
         <p className="muted admin-offer-lead">
-          Pour les offres partenaires ou exclusives ARTEMSI : analyse IA, raccourci candidat et
-          options de visibilité avancées.
+          L&apos;analyse IA extrait uniquement des <strong>faits</strong> (titre, entreprise, lieu,
+          description). Les conseils candidat se remplissent à la main pour les offres partenaires
+          uniquement.
         </p>
       </section>
 
       <section className="card form admin-offer-step">
         <h2>1. URL de l&apos;offre</h2>
         <p className="muted admin-offer-lead">
-          Colle en priorité le lien officiel de l&apos;annonce (site carrières entreprise, page
-          recrutement ou école partenaire). Si la page est bloquee, copie le texte de l&apos;annonce
-          dans le champ ci-dessous — recommandé pour un raccourci candidat de qualité.
+          Colle le lien officiel (site carrières entreprise). Pour une analyse propre, copie aussi le
+          texte de l&apos;annonce ci-dessous — indispensable si la page est chargée de menus ou de
+          bruit jobboard (HelloWork, etc.).
         </p>
         <label htmlFor="offer-url">URL</label>
         <input
@@ -202,33 +203,38 @@ export function AdminOfferForm() {
         />
       </section>
 
-      <section className="card form admin-offer-step">
-        <h2>3. Raccourci candidat</h2>
-        <p className="muted admin-offer-lead">
-          3 à 5 points max, affichés au candidat dans « Voir l&apos;offre ». Une ligne = un point.
-          L&apos;IA pré-remplit — relis et raccourcis si besoin.
-        </p>
-        <label htmlFor="guide-tips">L&apos;essentiel pour ce poste</label>
-        <textarea
-          id="guide-tips"
-          rows={5}
-          placeholder={"Ex. :\nMets en avant Excel et la gestion de projet sur ton CV\nBac+3 commerce minimum\nDémarrage septembre 2026 — Lyon"}
-          value={tips}
-          onChange={(e) => setTips(e.target.value)}
-        />
-        <p className="muted small-label">
-          Profil clé, compétences à reprendre, info pratique (lieu, début, rythme). Pas de questions
-          d&apos;entretien.
-        </p>
-      </section>
+      {isPartnerOffer ? (
+        <section className="card form admin-offer-step">
+          <h2>3. Raccourci candidat (partenaire)</h2>
+          <p className="muted admin-offer-lead">
+            Réservé aux offres partenaires : 3 à 5 conseils à saisir manuellement (une ligne =
+            un point). Non généré par l&apos;analyse IA.
+          </p>
+          <label htmlFor="guide-tips">L&apos;essentiel pour ce poste</label>
+          <textarea
+            id="guide-tips"
+            rows={5}
+            placeholder={"Ex. :\nReprends Excel et la gestion de projet sur ton CV\nBac+3 commerce minimum\nDémarrage septembre 2026 — Lyon"}
+            value={tips}
+            onChange={(e) => setTips(e.target.value)}
+          />
+          <p className="muted small-label">
+            Compétences à reprendre, niveau, infos pratiques. Pas de questions d&apos;entretien.
+          </p>
+        </section>
+      ) : null}
 
       <section className="card form admin-offer-step">
-        <h2>4. Publier</h2>
+        <h2>{isPartnerOffer ? "4" : "3"}. Publier</h2>
         <label htmlFor="offer-source">Source</label>
         <select
           id="offer-source"
           value={source}
-          onChange={(e) => setSource(e.target.value as "partner" | "autre")}
+          onChange={(e) => {
+            const next = e.target.value as "partner" | "autre";
+            setSource(next);
+            if (next === "autre") setTips("");
+          }}
         >
           <option value="partner">Partenaire</option>
           <option value="autre">Autre</option>
@@ -245,7 +251,10 @@ export function AdminOfferForm() {
           <input
             type="checkbox"
             checked={isExclusive}
-            onChange={(e) => setIsExclusive(e.target.checked)}
+            onChange={(e) => {
+            setIsExclusive(e.target.checked);
+            if (!e.target.checked && source === "autre") setTips("");
+          }}
           />
           Offre exclusive ARTEMSI
         </label>

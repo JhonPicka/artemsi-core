@@ -34,6 +34,7 @@ export function AdminOfferEditForm({ offer }: Props) {
 
   const isHidden = Boolean(offer.hiddenAt);
   const urlChanged = url.trim() !== offer.url;
+  const isPartnerOffer = source === "partner" || isExclusive;
 
   async function handleSave() {
     setError(null);
@@ -44,7 +45,7 @@ export function AdminOfferEditForm({ offer }: Props) {
       return;
     }
 
-    const applicationGuide = textToApplicationGuide(tips);
+    const applicationGuide = isPartnerOffer ? textToApplicationGuide(tips) : null;
 
     setSaving(true);
     try {
@@ -180,20 +181,22 @@ export function AdminOfferEditForm({ offer }: Props) {
         />
       </section>
 
-      <section className="card form admin-offer-step">
-        <h2>Raccourci candidat</h2>
-        <p className="muted admin-offer-lead">
-          3 à 5 points max, une ligne = un point. Laisse vide si non applicable (offres importées
-          CSV).
-        </p>
-        <label htmlFor="edit-guide-tips">L&apos;essentiel pour ce poste</label>
-        <textarea
-          id="edit-guide-tips"
-          rows={5}
-          value={tips}
-          onChange={(e) => setTips(e.target.value)}
-        />
-      </section>
+      {isPartnerOffer ? (
+        <section className="card form admin-offer-step">
+          <h2>Raccourci candidat (partenaire)</h2>
+          <p className="muted admin-offer-lead">
+            Conseils saisis manuellement pour les offres partenaires — 3 à 5 points max, une ligne =
+            un point.
+          </p>
+          <label htmlFor="edit-guide-tips">L&apos;essentiel pour ce poste</label>
+          <textarea
+            id="edit-guide-tips"
+            rows={5}
+            value={tips}
+            onChange={(e) => setTips(e.target.value)}
+          />
+        </section>
+      ) : null}
 
       <section className="card form admin-offer-step">
         <h2>Visibilité & enregistrement</h2>
@@ -201,7 +204,11 @@ export function AdminOfferEditForm({ offer }: Props) {
         <select
           id="edit-offer-source"
           value={source}
-          onChange={(e) => setSource(e.target.value as "partner" | "autre")}
+          onChange={(e) => {
+            const next = e.target.value as "partner" | "autre";
+            setSource(next);
+            if (next === "autre" && !isExclusive) setTips("");
+          }}
         >
           <option value="partner">Partenaire</option>
           <option value="autre">Autre (non partenaire)</option>
@@ -220,7 +227,10 @@ export function AdminOfferEditForm({ offer }: Props) {
           <input
             type="checkbox"
             checked={isExclusive}
-            onChange={(e) => setIsExclusive(e.target.checked)}
+            onChange={(e) => {
+            setIsExclusive(e.target.checked);
+            if (!e.target.checked && source === "autre") setTips("");
+          }}
           />
           Offre exclusive ARTEMSI
         </label>
