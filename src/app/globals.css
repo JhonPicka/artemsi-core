@@ -7534,28 +7534,6 @@ input[type="checkbox"] {
   background: var(--primary-soft);
 }
 
-.offer-card--external-link {
-  border-color: color-mix(in srgb, var(--primary-2) 28%, var(--border));
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--primary-soft) 88%, var(--surface)) 0%,
-    var(--surface) 52%
-  );
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--primary-2) 10%, transparent);
-}
-
-.offer-card--external-link:hover {
-  border-color: color-mix(in srgb, var(--primary-2) 42%, var(--border));
-}
-
-.offer-tag--platform {
-  background: var(--primary-2);
-  color: #fff;
-  border: 1px solid color-mix(in srgb, var(--primary-2) 80%, #000);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
 .offer-tag--interest {
   background: var(--primary-soft);
   color: var(--primary-2);

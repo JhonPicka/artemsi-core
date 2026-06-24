@@ -23,7 +23,7 @@ import {
   parseOffersView,
 } from "@/lib/offers-dashboard";
 import { offerFromAssignmentEmbed, type AssignmentEmbedRow } from "@/lib/offers-demo-preview";
-import { isExternalLinkOffer, prioritizeItemsWithExternalLinkOffers } from "@/lib/offer-external-link";
+import { prioritizeItemsWithExternalLinkOffers } from "@/lib/offer-external-link";
 import { createClient } from "@/lib/supabase/server";
 
 type OfferStatus = "sent" | "seen" | "applied" | "archived";
@@ -198,11 +198,7 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
                       {STATUS_LABEL[status]}
                     </span>
                   }
-                  tag={
-                    isExternalLinkOffer(offer) ? null : (
-                      <span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>
-                    )
-                  }
+                  tag={<span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>}
                 />
               ))}
             </div>
@@ -252,10 +248,8 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
             <h2 id="offers-jobboard-title">Jobboard public</h2>
           </div>
           <p className="muted">
-            Parcours les offres de la communauté — les annonces à lien externe (HelloWork, Indeed,
-            LinkedIn…) sont mises en avant et s&apos;ouvrent sur le site officiel. Clique sur{" "}
-            <strong>Ça m'intéresse</strong> pour recevoir plus d&apos;offres similaires dans{" "}
-            <em>Pour toi</em>.
+            Parcours les offres de la communauté. Clique sur <strong>Ça m'intéresse</strong> pour
+            recevoir plus d&apos;offres similaires dans <em>Pour toi</em>.
           </p>
 
           {jobboardRes.error ? (

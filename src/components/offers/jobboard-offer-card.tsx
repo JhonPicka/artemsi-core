@@ -8,12 +8,7 @@ import {
   openOfferInNewTab,
   type OfferCardData,
 } from "@/components/offers/offer-card";
-import { OfferPlatformTag } from "@/components/offers/offer-platform-tag";
 import { OfferReportDeadLinkButton } from "@/components/offers/offer-report-dead-link-button";
-import {
-  getExternalOfferHostShort,
-  isExternalLinkOffer,
-} from "@/lib/offer-external-link";
 
 const SOURCE_LABEL: Record<OfferCardData["source"], string> = {
   indeed: "Source externe",
@@ -33,8 +28,6 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const opensExternally = canOpenOfferExternally(offer);
-  const isExternalLink = isExternalLinkOffer(offer);
-  const externalHost = isExternalLink ? getExternalOfferHostShort(offer.url) : null;
 
   function handleOpenOffer() {
     if (!opensExternally) return;
@@ -79,7 +72,7 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
 
   return (
     <article
-      className={`offer-card offer-card--jobboard${interested ? " offer-card--interested" : ""}${isExternalLink ? " offer-card--external-link" : ""}${opensExternally ? " offer-card--clickable" : ""}`}
+      className={`offer-card offer-card--jobboard${interested ? " offer-card--interested" : ""}${opensExternally ? " offer-card--clickable" : ""}`}
       role={opensExternally ? "link" : undefined}
       tabIndex={opensExternally ? 0 : undefined}
       onClick={opensExternally ? handleOpenOffer : undefined}
@@ -99,10 +92,7 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
         {interested ? (
           <span className="offer-tag offer-tag--interest">Dans tes interets</span>
         ) : null}
-        <OfferPlatformTag offer={offer} />
-        {!isExternalLink ? (
-          <span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>
-        ) : null}
+        <span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>
       </div>
       <h3 className="offer-title">{offer.title}</h3>
       <p className="offer-meta">
@@ -110,9 +100,6 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
         {offer.company && offer.location ? <span> - </span> : null}
         {offer.location ? <span>{offer.location}</span> : null}
       </p>
-      {externalHost ? (
-        <p className="offer-source-hint muted">Lien externe · {externalHost}</p>
-      ) : null}
       <div className="offer-card-actions offer-card-actions--compact">
         <button
           type="button"
