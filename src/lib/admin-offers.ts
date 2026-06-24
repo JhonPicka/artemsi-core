@@ -3,7 +3,6 @@ import type { AdminOfferBody } from "@/lib/admin-offer-schema";
 import {
   clearOfferDeadLinkReports,
   getOfferLinkReportCounts,
-  restoreOfferVisibility,
 } from "@/lib/offer-link-reports";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -17,6 +16,7 @@ export type AdminOfferListRow = {
   isPublic: boolean;
   isPartnerExclusive: boolean;
   createdAt: string;
+  updatedAt: string;
   hiddenAt: string | null;
   hiddenReason: string | null;
   linkReportCount: number;
@@ -32,9 +32,9 @@ export async function loadAdminOffersList(limit = 100): Promise<AdminOfferListRo
   const { data, error } = await supabase
     .from("offers")
     .select(
-      "id, title, company, location, url, source, is_public, is_partner_exclusive, hidden_at, hidden_reason, created_at",
+      "id, title, company, location, url, source, is_public, is_partner_exclusive, hidden_at, hidden_reason, created_at, updated_at",
     )
-    .order("created_at", { ascending: false })
+    .order("updated_at", { ascending: false })
     .limit(limit);
 
   if (error) throw new Error(error.message);
@@ -55,6 +55,7 @@ export async function loadAdminOffersList(limit = 100): Promise<AdminOfferListRo
     isPublic: Boolean(row.is_public),
     isPartnerExclusive: Boolean(row.is_partner_exclusive),
     createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
     hiddenAt: (row.hidden_at as string | null) ?? null,
     hiddenReason: (row.hidden_reason as string | null) ?? null,
     linkReportCount: reportCounts.get(row.id as string) ?? 0,
@@ -63,7 +64,7 @@ export async function loadAdminOffersList(limit = 100): Promise<AdminOfferListRo
   return mapped.sort((a, b) => {
     if (a.hiddenAt && !b.hiddenAt) return -1;
     if (!a.hiddenAt && b.hiddenAt) return 1;
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
   });
 }
 
@@ -72,7 +73,7 @@ export async function loadAdminOfferById(id: string): Promise<AdminOfferDetail |
   const { data, error } = await supabase
     .from("offers")
     .select(
-      "id, title, company, location, url, description, source, is_public, is_partner_exclusive, application_guide, hidden_at, hidden_reason, created_at",
+      "id, title, company, location, url, description, source, is_public, is_partner_exclusive, application_guide, hidden_at, hidden_reason, created_at, updated_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -94,6 +95,7 @@ export async function loadAdminOfferById(id: string): Promise<AdminOfferDetail |
     isPartnerExclusive: Boolean(data.is_partner_exclusive),
     applicationGuide: normalizeApplicationGuide(data.application_guide),
     createdAt: data.created_at as string,
+    updatedAt: data.updated_at as string,
     hiddenAt: (data.hidden_at as string | null) ?? null,
     hiddenReason: (data.hidden_reason as string | null) ?? null,
     linkReportCount: reportCounts.get(id) ?? 0,
@@ -130,6 +132,7 @@ export async function updateAdminOffer(
   }
 
   const applicationGuide = normalizeApplicationGuide(body.applicationGuide);
+  const now = new Date().toISOString();
 
   const { error: updateError } = await supabase
     .from("offers")
@@ -140,10 +143,13 @@ export async function updateAdminOffer(
       url: body.url,
       description: body.description,
       source: body.source,
-      is_public: body.isPublic,
+      is_public: shouldRestoreVisibility ? true : body.isPublic,
       is_partner_exclusive: body.isPartnerExclusive,
       application_guide: applicationGuide,
-      updated_at: new Date().toISOString(),
+      ...(shouldRestoreVisibility
+        ? { hidden_at: null, hidden_reason: null }
+        : {}),
+      updated_at: now,
     })
     .eq("id", id);
 
@@ -152,7 +158,6 @@ export async function updateAdminOffer(
   }
 
   if (shouldRestoreVisibility) {
-    await restoreOfferVisibility(supabase, id);
     await clearOfferDeadLinkReports(supabase, id);
   }
 

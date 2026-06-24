@@ -328,9 +328,6 @@ export function OnboardingForm({ initialValues }: OnboardingFormProps) {
 
           {showAlternanceRhythm ? (
             <>
-              <p className="onboarding-callout">
-                <strong>Rythme alternance</strong> — très important pour les profils ingénieurs.
-              </p>
               <label htmlFor="alternanceRhythm">Rythme souhaité</label>
               <select
                 id="alternanceRhythm"

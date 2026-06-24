@@ -25,7 +25,7 @@ export function AdminOfferEditForm({ offer }: Props) {
   const [source, setSource] = useState<"partner" | "autre">(
     offer.source === "partner" ? "partner" : "autre",
   );
-  const [isPublic, setIsPublic] = useState(offer.isPublic);
+  const [isPublic, setIsPublic] = useState(offer.isPublic || Boolean(offer.hiddenAt));
   const [isExclusive, setIsExclusive] = useState(offer.isPartnerExclusive);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -74,6 +74,7 @@ export function AdminOfferEditForm({ offer }: Props) {
           ? "Offre mise a jour. Le lien a ete corrige et l'offre est de nouveau visible."
           : "Offre mise a jour.",
       );
+      router.push(`/admin/offres#admin-offer-${offer.id}`);
       router.refresh();
     } catch {
       setError("Erreur reseau lors de l'enregistrement.");

@@ -8590,7 +8590,98 @@ input[type="checkbox"] {
 
 .admin-offers-table-wrap {
   overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.admin-offers-filters {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.6fr) repeat(3, minmax(9rem, 1fr)) auto;
+  gap: 0.65rem 0.75rem;
+  align-items: end;
   margin-top: 1rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+}
+
+.admin-offers-filter-field {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.admin-offers-filter-field--search {
+  grid-column: span 1;
+}
+
+.admin-offers-filter-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.admin-offers-filter-field input,
+.admin-offers-filter-field select {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-offers-filter-reset {
+  align-self: end;
+  white-space: nowrap;
+}
+
+.admin-offers-filter-summary {
+  margin: 0.65rem 0 0;
+}
+
+.admin-offers-filter-empty {
+  margin: 1rem 0 0;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+  text-align: center;
+}
+
+.admin-offers-link-platform {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.admin-offers-link-host {
+  display: block;
+  word-break: break-all;
+  text-decoration: none;
+}
+
+.admin-offers-link-host:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .admin-offers-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-offers-filter-field--search {
+    grid-column: 1 / -1;
+  }
+
+  .admin-offers-filter-reset {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-offers-filters {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-offers-table {
@@ -9320,6 +9411,7 @@ input[type="checkbox"] {
 .admin-page-content {
   min-width: 0;
   width: 100%;
+  padding-inline: clamp(0.35rem, 1.5vw, 1.25rem);
 }
 
 .top-nav--admin {
@@ -9548,7 +9640,7 @@ input[type="checkbox"] {
 
 .admin-pilot-hero {
   display: grid;
-  gap: 1.15rem;
+  gap: 1.15rem 1.5rem;
   padding: 1.15rem 1.25rem;
   background: linear-gradient(
     145deg,
@@ -9559,10 +9651,23 @@ input[type="checkbox"] {
   border-color: rgba(168, 138, 255, 0.28);
 }
 
+@media (min-width: 900px) {
+  .admin-pilot-hero {
+    grid-template-columns: minmax(220px, 1fr) minmax(0, 2.4fr);
+    align-items: center;
+  }
+}
+
 .admin-pilot-hero h1 {
   margin: 0.35rem 0 0.5rem;
   font-size: clamp(1.35rem, 2.5vw, 1.75rem);
   letter-spacing: -0.02em;
+}
+
+.admin-pilot-hero-lead {
+  margin: 0;
+  max-width: 42rem;
+  line-height: 1.45;
 }
 
 .admin-pilot-hero-kpis {
@@ -9571,10 +9676,35 @@ input[type="checkbox"] {
   gap: 0.65rem;
 }
 
+.admin-pilot-layout {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.admin-pilot-section--money {
+  grid-column: 1 / span 8;
+}
+
+.admin-pilot-section--ops {
+  grid-column: 9 / -1;
+  align-self: stretch;
+}
+
+.admin-pilot-section--acquisition {
+  grid-column: 1 / -1;
+}
+
+.admin-pilot-section--candidates {
+  grid-column: 1 / -1;
+}
+
 .admin-pilot-section {
   display: grid;
   gap: 1rem;
   padding: 1rem 1.15rem 1.15rem;
+  min-width: 0;
 }
 
 .admin-pilot-section-title {
@@ -9588,6 +9718,14 @@ input[type="checkbox"] {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
   gap: 0.55rem;
+}
+
+.admin-pilot-kpi-grid--wide {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-pilot-kpi-grid--ops {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .admin-pilot-kpi-grid--compact {
@@ -9659,6 +9797,14 @@ input[type="checkbox"] {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.admin-charts-grid--acquisition {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-charts-grid--acquisition .admin-chart-card {
+  height: 100%;
+}
+
 .admin-progress-grid--pilot {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -9698,6 +9844,21 @@ input[type="checkbox"] {
   color: var(--foreground);
 }
 
+@media (max-width: 1200px) {
+  .admin-pilot-section--money,
+  .admin-pilot-section--ops {
+    grid-column: 1 / -1;
+  }
+
+  .admin-pilot-kpi-grid--wide {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-charts-grid--acquisition {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1100px) {
   .admin-pilot-hero-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -9710,7 +9871,20 @@ input[type="checkbox"] {
 }
 
 @media (max-width: 720px) {
+  .admin-pilot-hero {
+    grid-template-columns: 1fr;
+  }
+
   .admin-pilot-hero-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-pilot-kpi-grid--wide,
+  .admin-pilot-kpi-grid--ops {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-charts-grid--acquisition {
     grid-template-columns: 1fr;
   }
 }
