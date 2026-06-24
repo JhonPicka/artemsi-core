@@ -22,7 +22,6 @@ type Props = {
   series: DailyCount[];
   applicationChartSeries: DailyApplicationPoint[];
   applicationChartMonthLabel: string;
-  applicationChartIsDemo: boolean;
   kpi: DashboardKpiItem[];
   pipeline: DashboardPipelineStep[];
   applicationHotWeek: number;
@@ -36,7 +35,6 @@ export function AssignmentOffersPanel({
   series,
   applicationChartSeries,
   applicationChartMonthLabel,
-  applicationChartIsDemo,
   kpi,
   pipeline,
   applicationHotWeek,
@@ -55,12 +53,7 @@ export function AssignmentOffersPanel({
     <div className="dash-panel">
       <header className="dash-panel-head">
         <div className="dash-panel-titles">
-          <h2 className="dash-panel-title">
-            {title}
-            {applicationChartIsDemo && view === "chart" ? (
-              <span className="dash-panel-demo">Exemple</span>
-            ) : null}
-          </h2>
+          <h2 className="dash-panel-title">{title}</h2>
           {subtitle ? <p className="dash-panel-sub">{subtitle}</p> : null}
         </div>
 
@@ -89,7 +82,7 @@ export function AssignmentOffersPanel({
           <ApplicationsMonthChart
             series={applicationChartSeries}
             monthLabel={applicationChartMonthLabel}
-            isDemo={applicationChartIsDemo}
+            isDemo={false}
           />
         ) : (
           <p className="dash-empty muted">

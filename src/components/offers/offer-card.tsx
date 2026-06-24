@@ -7,7 +7,12 @@ import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 
 import { OfferApplicationGuideBlock } from "@/components/offers/offer-application-guide-block";
+import { OfferPlatformTag } from "@/components/offers/offer-platform-tag";
 import { OfferReportDeadLinkButton } from "@/components/offers/offer-report-dead-link-button";
+import {
+  getExternalOfferHostShort,
+  isExternalLinkOffer,
+} from "@/lib/offer-external-link";
 import type { OfferApplicationGuide } from "@/lib/offer-application-guide";
 
 export type OfferCardData = {
@@ -614,6 +619,8 @@ export function OfferFullscreenModal({
 export function OfferCard({ offer, badge, tag, isPro = true }: OfferCardProps) {
   const isPersisted = isPersistedOffer(offer);
   const opensExternally = canOpenOfferExternally(offer);
+  const isExternalLink = isExternalLinkOffer(offer);
+  const externalHost = isExternalLink ? getExternalOfferHostShort(offer.url) : null;
 
   function handleOpenOffer() {
     if (!opensExternally) return;
@@ -622,7 +629,7 @@ export function OfferCard({ offer, badge, tag, isPro = true }: OfferCardProps) {
 
   return (
     <article
-      className={`offer-card${opensExternally ? " offer-card--clickable" : ""}`}
+      className={`offer-card${isExternalLink ? " offer-card--external-link" : ""}${opensExternally ? " offer-card--clickable" : ""}`}
       role={opensExternally ? "link" : undefined}
       tabIndex={opensExternally ? 0 : undefined}
       onClick={opensExternally ? handleOpenOffer : undefined}
@@ -640,7 +647,10 @@ export function OfferCard({ offer, badge, tag, isPro = true }: OfferCardProps) {
     >
       <div className="offer-card-header">
         <span className="offer-card-header-slot">{badge}</span>
-        <span className="offer-card-header-slot">{tag}</span>
+        <span className="offer-card-header-slot">
+          <OfferPlatformTag offer={offer} />
+          {tag}
+        </span>
       </div>
       <h3 className="offer-title">{offer.title}</h3>
       <p className="offer-meta">
@@ -648,6 +658,9 @@ export function OfferCard({ offer, badge, tag, isPro = true }: OfferCardProps) {
         {offer.company && offer.location ? <span> - </span> : null}
         {offer.location ? <span>{offer.location}</span> : null}
       </p>
+      {externalHost ? (
+        <p className="offer-source-hint muted">Lien externe · {externalHost}</p>
+      ) : null}
       <div className="offer-card-actions offer-card-actions--compact">
         {opensExternally ? (
           <a

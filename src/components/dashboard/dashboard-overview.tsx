@@ -34,7 +34,6 @@ type Props = {
   assignmentSeries: DailyCount[];
   applicationChartSeries: DailyApplicationPoint[];
   applicationChartMonthLabel: string;
-  applicationChartIsDemo: boolean;
   pipeline: PipelineStep[];
   applicationHotWeek: number;
   momentum: Momentum;
@@ -53,7 +52,6 @@ export function DashboardOverview({
   assignmentSeries,
   applicationChartSeries,
   applicationChartMonthLabel,
-  applicationChartIsDemo,
   pipeline,
   applicationHotWeek,
   momentum,
@@ -162,15 +160,10 @@ export function DashboardOverview({
           series={assignmentSeries}
           applicationChartSeries={applicationChartSeries}
           applicationChartMonthLabel={applicationChartMonthLabel}
-          applicationChartIsDemo={applicationChartIsDemo}
           kpi={kpi}
           pipeline={pipeline}
           applicationHotWeek={applicationHotWeek}
-          subtitle={
-            applicationChartIsDemo
-              ? "Graphique d'exemple : courbe du mois (candidatures vs retours). Les chiffres KPI restent réels."
-              : "Graphique : courbe du mois — candidatures envoyées et retours / entretiens jour par jour."
-          }
+          subtitle="Graphique : courbe du mois — candidatures envoyées et retours / entretiens jour par jour."
         />
       </section>
 

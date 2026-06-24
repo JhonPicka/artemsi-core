@@ -5,7 +5,6 @@ import {
   buildApplicationsMomentum,
   buildAssignmentDailySeries,
   buildTodayActions,
-  buildApplicationChartSeriesWithFakeOverlay,
   buildApplicationMonthSeries,
   getCurrentMonthLabelParis,
   countApplicationsInLastNDays,
@@ -128,12 +127,6 @@ export default async function DashboardPage() {
       updated_at: row.updated_at,
     })),
   );
-  const applicationChartIsDemo = !applicationMonthSeries.some(
-    (d) => d.sent > 0 || d.responses > 0,
-  );
-  const applicationChartSeries = applicationChartIsDemo
-    ? buildApplicationChartSeriesWithFakeOverlay(applicationMonthSeries)
-    : applicationMonthSeries;
   const applicationChartMonthLabel = getCurrentMonthLabelParis();
   const nextA = nextAudits?.[0] ? formatNextAudit(nextAudits[0]) : null;
   const upcomingAuditsCount = (nextAudits ?? []).length;
@@ -212,9 +205,8 @@ export default async function DashboardPage() {
       publicOffersCount={publicOffersCount ?? 0}
       kpi={kpi}
       assignmentSeries={assignmentSeries}
-      applicationChartSeries={applicationChartSeries}
+      applicationChartSeries={applicationMonthSeries}
       applicationChartMonthLabel={applicationChartMonthLabel}
-      applicationChartIsDemo={applicationChartIsDemo}
       pipeline={pipeline}
       applicationHotWeek={applicationHot}
       momentum={momentum}

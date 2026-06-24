@@ -22,13 +22,8 @@ import {
   parseJobboardSource,
   parseOffersView,
 } from "@/lib/offers-dashboard";
-import {
-  DEMO_EXCLUSIVE_ASSIGNMENTS,
-  DEMO_JOBBOARD,
-  DEMO_PERSONAL_ASSIGNMENTS,
-  offerFromAssignmentEmbed,
-  type AssignmentEmbedRow,
-} from "@/lib/offers-demo-preview";
+import { offerFromAssignmentEmbed, type AssignmentEmbedRow } from "@/lib/offers-demo-preview";
+import { isExternalLinkOffer, prioritizeItemsWithExternalLinkOffers } from "@/lib/offer-external-link";
 import { createClient } from "@/lib/supabase/server";
 
 type OfferStatus = "sent" | "seen" | "applied" | "archived";
@@ -60,15 +55,6 @@ const SOURCE_LABEL: Record<OfferCardData["source"], string> = {
   partner: "Partenaire",
   autre: "Autre",
 };
-
-function DemoBanner() {
-  return (
-    <p className="offers-demo-banner">
-      Aperçu fictif — les cartes ci-dessous ne sont pas de vraies offres. Tes vraies propositions
-      apparaîtront ici dès qu&apos;elles seront disponibles.
-    </p>
-  );
-}
 
 export default async function DashboardOffersPage({ searchParams }: PageProps) {
   const params = await searchParams;
@@ -124,22 +110,24 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
     .filter((row) => row.offer && !row.offer.is_partner_exclusive)
     .map((row) => ({ status: row.status, offer: row.offer! }));
 
-  const visiblePersonalAssignments = sliceVisiblePersonalAssignments(personalAssignments, isPro);
+  const visiblePersonalAssignments = sliceVisiblePersonalAssignments(
+    prioritizeItemsWithExternalLinkOffers(personalAssignments, (row) => row.offer),
+    isPro,
+  );
   const hiddenPersonalCount = hasHiddenPersonalAssignments(personalAssignments.length, isPro)
     ? personalAssignments.length - FREE_TIER_ASSIGNMENT_CAP
     : 0;
 
-  const exclusiveAssignments = assignments
-    .filter((row) => row.offer && row.offer.is_partner_exclusive)
-    .map((row) => ({ status: row.status, offer: row.offer! }));
-
-  const showPersonalDemo = personalAssignments.length === 0;
-  const showExclusiveDemo = exclusiveAssignments.length === 0;
-  const showJobboardDemo = allJobboard.length === 0;
+  const exclusiveAssignments = prioritizeItemsWithExternalLinkOffers(
+    assignments
+      .filter((row) => row.offer && row.offer.is_partner_exclusive)
+      .map((row) => ({ status: row.status, offer: row.offer! })),
+    (row) => row.offer,
+  );
 
   const tabCounts = {
-    personal: showPersonalDemo ? DEMO_PERSONAL_ASSIGNMENTS.length : visiblePersonalAssignments.length,
-    exclusive: showExclusiveDemo ? DEMO_EXCLUSIVE_ASSIGNMENTS.length : exclusiveAssignments.length,
+    personal: visiblePersonalAssignments.length,
+    exclusive: exclusiveAssignments.length,
     jobboard: visibleJobboard.length,
   };
 
@@ -192,29 +180,11 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
 
           {assignmentsRes.error ? (
             <p className="error">Erreur perso : {assignmentsRes.error.message}</p>
-          ) : showPersonalDemo ? (
-            <>
-              <DemoBanner />
-              <div className="offers-grid">
-                {DEMO_PERSONAL_ASSIGNMENTS.map(({ status, offer }) => (
-                  <OfferCard
-                    key={offer.id}
-                    offer={offer}
-                    isPro={isPro}
-                    badge={
-                      <span className={`offer-status status-${status}`}>
-                        {STATUS_LABEL[status]}
-                      </span>
-                    }
-                    tag={<span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>}
-                  />
-                ))}
-              </div>
-            </>
           ) : visiblePersonalAssignments.length === 0 ? (
-            <p className="muted">
-              Aucune offre personnalisée pour le moment. Marque des offres en intérêt dans le{" "}
-              <Link href="/dashboard/offres?view=jobboard">jobboard</Link> pour affiner ton profil.
+            <p className="muted offers-empty-hint">
+              Aucune offre personnalisée pour le moment. Explore le{" "}
+              <Link href="/dashboard/offres?view=jobboard">jobboard</Link> et marque des offres en
+              intérêt pour affiner ton profil — les propositions arrivent ensuite ici.
             </p>
           ) : (
             <div className="offers-grid">
@@ -228,7 +198,11 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
                       {STATUS_LABEL[status]}
                     </span>
                   }
-                  tag={<span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>}
+                  tag={
+                    isExternalLinkOffer(offer) ? null : (
+                      <span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>
+                    )
+                  }
                 />
               ))}
             </div>
@@ -247,27 +221,8 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
           </p>
           {assignmentsRes.error ? (
             <p className="error">Erreur offres partenaires : {assignmentsRes.error.message}</p>
-          ) : showExclusiveDemo ? (
-            <>
-              <DemoBanner />
-              <div className="offers-grid">
-                {DEMO_EXCLUSIVE_ASSIGNMENTS.map(({ status, offer }) => (
-                  <OfferCard
-                    key={offer.id}
-                    offer={offer}
-                    isPro={isPro}
-                    badge={
-                      <span className={`offer-status status-${status}`}>
-                        {STATUS_LABEL[status]}
-                      </span>
-                    }
-                    tag={<span className="offer-tag">Partenaire</span>}
-                  />
-                ))}
-              </div>
-            </>
           ) : exclusiveAssignments.length === 0 ? (
-            <p className="muted">
+            <p className="muted offers-empty-hint">
               Pas encore d&apos;offre partenaire assignée. Les nouvelles propositions apparaîtront
               ici en priorité.
             </p>
@@ -297,26 +252,19 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
             <h2 id="offers-jobboard-title">Jobboard public</h2>
           </div>
           <p className="muted">
-            Parcours les offres de la communauté. Clique sur <strong>Ça m'intéresse</strong> pour
-            recevoir plus d&apos;offres similaires dans <em>Pour toi</em>.
+            Parcours les offres de la communauté — les annonces à lien externe (HelloWork, Indeed,
+            LinkedIn…) sont mises en avant et s&apos;ouvrent sur le site officiel. Clique sur{" "}
+            <strong>Ça m'intéresse</strong> pour recevoir plus d&apos;offres similaires dans{" "}
+            <em>Pour toi</em>.
           </p>
 
           {jobboardRes.error ? (
             <p className="error">Erreur offres publiques : {jobboardRes.error.message}</p>
-          ) : showJobboardDemo ? (
-            <>
-              <DemoBanner />
-              <div className="offers-grid">
-                {DEMO_JOBBOARD.map((offer) => (
-                  <OfferCard
-                    key={offer.id}
-                    offer={offer}
-                    isPro={isPro}
-                    tag={<span className="offer-tag muted-tag">{SOURCE_LABEL[offer.source]}</span>}
-                  />
-                ))}
-              </div>
-            </>
+          ) : allJobboard.length === 0 ? (
+            <p className="muted offers-empty-hint">
+              Le catalogue est en cours d&apos;alimentation. Reviens sous peu pour parcourir les
+              offres disponibles.
+            </p>
           ) : (
             <>
               <JobboardToolbar
