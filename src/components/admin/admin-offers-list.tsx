@@ -1,22 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 
-import type { AdminOfferListRow } from "@/lib/admin-offers";
+import { AdminOffersPagination } from "@/components/admin/admin-offers-pagination";
+import type { AdminOfferListRow, AdminOffersTotals } from "@/lib/admin-offers";
 import {
-  detectOfferUrlPlatform,
+  ADMIN_OFFERS_SORT_OPTIONS,
+  buildAdminOffersHref,
+  type AdminOffersListMeta,
+  type AdminOffersListQuery,
+} from "@/lib/admin-offers-query";
+import {
   OFFER_URL_PLATFORM_FILTERS,
   OFFER_URL_PLATFORM_LABELS,
-  type OfferSourceFilter,
-  type OfferUrlPlatformFilter,
-  type OfferVisibilityFilter,
+  detectOfferUrlPlatform,
   offerUrlHostShort,
 } from "@/lib/admin-offer-url-platform";
 import { OFFER_DEAD_LINK_HIDE_THRESHOLD } from "@/lib/offer-link-reports";
 
 type Props = {
   offers: AdminOfferListRow[];
+  totals: AdminOffersTotals | null;
+  meta: AdminOffersListMeta;
+  query: AdminOffersListQuery;
 };
 
 function formatDate(iso: string) {
@@ -27,56 +35,51 @@ function formatDate(iso: string) {
   });
 }
 
-function matchesSourceFilter(source: string, filter: OfferSourceFilter): boolean {
-  if (filter === "all") return true;
-  return source === filter;
-}
+export function AdminOffersList({ offers, totals, meta, query }: Props) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [search, setSearch] = useState(query.search);
+  const [platform, setPlatform] = useState(query.platform);
+  const [visibility, setVisibility] = useState(query.visibility);
+  const [source, setSource] = useState(query.source);
+  const [sort, setSort] = useState(query.sort);
 
-function matchesVisibilityFilter(
-  offer: AdminOfferListRow,
-  filter: OfferVisibilityFilter,
-): boolean {
-  if (filter === "all") return true;
-  if (filter === "hidden") return Boolean(offer.hiddenAt);
-  if (filter === "public") return !offer.hiddenAt && offer.isPublic;
-  return !offer.hiddenAt && !offer.isPublic;
-}
+  useEffect(() => {
+    setSearch(query.search);
+    setPlatform(query.platform);
+    setVisibility(query.visibility);
+    setSource(query.source);
+    setSort(query.sort);
+  }, [query]);
 
-function matchesSearch(offer: AdminOfferListRow, query: string): boolean {
-  if (!query) return true;
-  const haystack = [
-    offer.title,
-    offer.company ?? "",
-    offer.location ?? "",
-    offer.url,
-    offerUrlHostShort(offer.url),
-  ]
-    .join(" ")
-    .toLowerCase();
-  return haystack.includes(query);
-}
-
-export function AdminOffersList({ offers }: Props) {
-  const [search, setSearch] = useState("");
-  const [platform, setPlatform] = useState<OfferUrlPlatformFilter>("all");
-  const [visibility, setVisibility] = useState<OfferVisibilityFilter>("all");
-  const [source, setSource] = useState<OfferSourceFilter>("all");
-
-  const normalizedSearch = search.trim().toLowerCase();
-
-  const filteredOffers = useMemo(() => {
-    return offers.filter((offer) => {
-      if (!matchesSearch(offer, normalizedSearch)) return false;
-      if (platform !== "all" && detectOfferUrlPlatform(offer.url) !== platform) return false;
-      if (!matchesVisibilityFilter(offer, visibility)) return false;
-      if (!matchesSourceFilter(offer.source, source)) return false;
-      return true;
-    });
-  }, [offers, normalizedSearch, platform, visibility, source]);
-
-  const hiddenCount = offers.filter((offer) => offer.hiddenAt).length;
   const hasActiveFilters =
-    normalizedSearch.length > 0 || platform !== "all" || visibility !== "all" || source !== "all";
+    query.search.length > 0 ||
+    query.platform !== "all" ||
+    query.visibility !== "all" ||
+    query.source !== "all" ||
+    query.sort !== "updated_desc";
+
+  function navigate(next: Partial<AdminOffersListQuery>) {
+    const href = buildAdminOffersHref(query, { page: 1, ...next });
+    startTransition(() => {
+      router.push(href);
+    });
+  }
+
+  function applyFilters() {
+    navigate({ search, platform, visibility, source, sort });
+  }
+
+  function resetFilters() {
+    setSearch("");
+    setPlatform("all");
+    setVisibility("all");
+    setSource("all");
+    setSort("updated_desc");
+    startTransition(() => {
+      router.push("/admin/offres");
+    });
+  }
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.location.hash) return;
@@ -85,16 +88,9 @@ export function AdminOffersList({ offers }: Props) {
     if (row) {
       row.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-  }, [filteredOffers]);
+  }, [offers]);
 
-  function resetFilters() {
-    setSearch("");
-    setPlatform("all");
-    setVisibility("all");
-    setSource("all");
-  }
-
-  if (offers.length === 0) {
+  if ((totals?.total ?? 0) === 0) {
     return (
       <section className="card admin-offer-step">
         <h2>Offres en base</h2>
@@ -103,18 +99,33 @@ export function AdminOffersList({ offers }: Props) {
     );
   }
 
+  const rangeStart = meta.totalFiltered === 0 ? 0 : (meta.page - 1) * meta.pageSize + 1;
+  const rangeEnd = Math.min(meta.page * meta.pageSize, meta.totalFiltered);
+
   return (
-    <section className="card admin-offer-step admin-offers-list">
-      <h2>Offres en base ({offers.length})</h2>
+    <section className={`card admin-offer-step admin-offers-list${isPending ? " admin-offers-list--pending" : ""}`}>
+      <h2>Offres en base ({totals?.total ?? meta.totalFiltered})</h2>
       <p className="muted admin-offer-lead">
         Modifie une offre pour corriger le titre, la description, la visibilité ou le raccourci
         candidat.
-        {hiddenCount > 0
-          ? ` ${hiddenCount} offre(s) masquée(s) après ${OFFER_DEAD_LINK_HIDE_THRESHOLD} signalements.`
-          : null}
+        {totals ? (
+          <>
+            {" "}
+            Jobboard candidat (Pro) : <strong>{totals.jobboardVisible}</strong> offre(s) publiques
+            visibles
+            {totals.privateOnly > 0 ? ` · ${totals.privateOnly} privée(s)` : null}
+            {totals.hidden > 0 ? ` · ${totals.hidden} masquée(s)` : null}.
+          </>
+        ) : null}
       </p>
 
-      <div className="admin-offers-filters">
+      <form
+        className="admin-offers-filters"
+        onSubmit={(event) => {
+          event.preventDefault();
+          applyFilters();
+        }}
+      >
         <label className="admin-offers-filter-field admin-offers-filter-field--search">
           <span className="admin-offers-filter-label">Recherche</span>
           <input
@@ -130,7 +141,7 @@ export function AdminOffersList({ offers }: Props) {
           <span className="admin-offers-filter-label">Plateforme lien</span>
           <select
             value={platform}
-            onChange={(e) => setPlatform(e.target.value as OfferUrlPlatformFilter)}
+            onChange={(e) => setPlatform(e.target.value as typeof platform)}
           >
             {OFFER_URL_PLATFORM_FILTERS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -144,7 +155,7 @@ export function AdminOffersList({ offers }: Props) {
           <span className="admin-offers-filter-label">Visibilité</span>
           <select
             value={visibility}
-            onChange={(e) => setVisibility(e.target.value as OfferVisibilityFilter)}
+            onChange={(e) => setVisibility(e.target.value as typeof visibility)}
           >
             <option value="all">Toutes</option>
             <option value="public">Publiques</option>
@@ -155,10 +166,7 @@ export function AdminOffersList({ offers }: Props) {
 
         <label className="admin-offers-filter-field">
           <span className="admin-offers-filter-label">Source ARTEMSI</span>
-          <select
-            value={source}
-            onChange={(e) => setSource(e.target.value as OfferSourceFilter)}
-          >
+          <select value={source} onChange={(e) => setSource(e.target.value as typeof source)}>
             <option value="all">Toutes</option>
             <option value="partner">Partenaire</option>
             <option value="autre">Autre</option>
@@ -166,20 +174,43 @@ export function AdminOffersList({ offers }: Props) {
           </select>
         </label>
 
-        {hasActiveFilters ? (
-          <button type="button" className="button-link secondary-link admin-offers-filter-reset" onClick={resetFilters}>
-            Réinitialiser
+        <label className="admin-offers-filter-field">
+          <span className="admin-offers-filter-label">Tri</span>
+          <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}>
+            {ADMIN_OFFERS_SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="admin-offers-filter-actions">
+          <button type="submit" className="button-link" disabled={isPending}>
+            {isPending ? "Chargement…" : "Appliquer"}
           </button>
-        ) : null}
-      </div>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              className="button-link secondary-link"
+              onClick={resetFilters}
+              disabled={isPending}
+            >
+              Réinitialiser
+            </button>
+          ) : null}
+        </div>
+      </form>
 
       <p className="muted small-label admin-offers-filter-summary">
-        {filteredOffers.length === offers.length
-          ? `${offers.length} offre(s) affichée(s)`
-          : `${filteredOffers.length} / ${offers.length} offre(s) affichée(s)`}
+        {meta.totalFiltered === 0
+          ? "Aucun résultat"
+          : `${rangeStart}–${rangeEnd} sur ${meta.totalFiltered} offre(s) · ${meta.pageSize} par page`}
       </p>
 
-      {filteredOffers.length === 0 ? (
+      <AdminOffersPagination query={query} page={meta.page} totalPages={meta.totalPages} />
+
+      {offers.length === 0 ? (
         <p className="muted admin-offers-filter-empty">Aucune offre ne correspond à ces filtres.</p>
       ) : (
         <div className="admin-offers-table-wrap">
@@ -199,7 +230,7 @@ export function AdminOffersList({ offers }: Props) {
               </tr>
             </thead>
             <tbody>
-              {filteredOffers.map((offer) => {
+              {offers.map((offer) => {
                 const urlPlatform = detectOfferUrlPlatform(offer.url);
                 return (
                   <tr
@@ -270,6 +301,8 @@ export function AdminOffersList({ offers }: Props) {
           </table>
         </div>
       )}
+
+      <AdminOffersPagination query={query} page={meta.page} totalPages={meta.totalPages} />
     </section>
   );
 }

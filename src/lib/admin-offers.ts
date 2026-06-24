@@ -6,6 +6,17 @@ import {
 } from "@/lib/offer-link-reports";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export type { AdminOffersListMeta, AdminOffersListQuery } from "@/lib/admin-offers-query";
+export { ADMIN_OFFERS_PAGE_SIZE, ADMIN_OFFERS_SORT_OPTIONS } from "@/lib/admin-offers-query";
+import {
+  ADMIN_OFFERS_PAGE_SIZE,
+  adminOffersListMeta,
+  applyAdminOffersFilters,
+  applyAdminOffersSort,
+  type AdminOffersListMeta,
+  type AdminOffersListQuery,
+} from "@/lib/admin-offers-query";
+
 export type AdminOfferListRow = {
   id: string;
   title: string;
@@ -27,25 +38,57 @@ export type AdminOfferDetail = AdminOfferListRow & {
   applicationGuide: OfferApplicationGuide | null;
 };
 
-export async function loadAdminOffersList(limit = 100): Promise<AdminOfferListRow[]> {
+export type AdminOffersTotals = {
+  total: number;
+  /** Comme le jobboard candidat Pro : public + non masquée */
+  jobboardVisible: number;
+  hidden: number;
+  privateOnly: number;
+};
+
+export async function loadAdminOffersTotals(): Promise<AdminOffersTotals> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("offers")
-    .select(
-      "id, title, company, location, url, source, is_public, is_partner_exclusive, hidden_at, hidden_reason, created_at, updated_at",
-    )
-    .order("updated_at", { ascending: false })
-    .limit(limit);
+  const [totalRes, jobboardRes, hiddenRes, privateRes] = await Promise.all([
+    supabase.from("offers").select("id", { count: "exact", head: true }),
+    supabase
+      .from("offers")
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", true)
+      .is("hidden_at", null),
+    supabase
+      .from("offers")
+      .select("id", { count: "exact", head: true })
+      .not("hidden_at", "is", null),
+    supabase
+      .from("offers")
+      .select("id", { count: "exact", head: true })
+      .eq("is_public", false)
+      .is("hidden_at", null),
+  ]);
 
-  if (error) throw new Error(error.message);
+  if (totalRes.error) throw new Error(totalRes.error.message);
+  if (jobboardRes.error) throw new Error(jobboardRes.error.message);
+  if (hiddenRes.error) throw new Error(hiddenRes.error.message);
+  if (privateRes.error) throw new Error(privateRes.error.message);
 
-  const rows = data ?? [];
-  const reportCounts = await getOfferLinkReportCounts(
-    supabase,
-    rows.map((row) => row.id as string),
-  );
+  return {
+    total: totalRes.count ?? 0,
+    jobboardVisible: jobboardRes.count ?? 0,
+    hidden: hiddenRes.count ?? 0,
+    privateOnly: privateRes.count ?? 0,
+  };
+}
 
-  const mapped = rows.map((row) => ({
+export type AdminOffersPageResult = {
+  offers: AdminOfferListRow[];
+  meta: AdminOffersListMeta;
+};
+
+function mapAdminOfferRows(
+  rows: Record<string, unknown>[],
+  reportCounts: Map<string, number>,
+): AdminOfferListRow[] {
+  return rows.map((row) => ({
     id: row.id as string,
     title: row.title as string,
     company: (row.company as string | null) ?? null,
@@ -60,12 +103,43 @@ export async function loadAdminOffersList(limit = 100): Promise<AdminOfferListRo
     hiddenReason: (row.hidden_reason as string | null) ?? null,
     linkReportCount: reportCounts.get(row.id as string) ?? 0,
   }));
+}
 
-  return mapped.sort((a, b) => {
-    if (a.hiddenAt && !b.hiddenAt) return -1;
-    if (!a.hiddenAt && b.hiddenAt) return 1;
-    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-  });
+export async function loadAdminOffersPage(
+  query: AdminOffersListQuery,
+): Promise<AdminOffersPageResult> {
+  const supabase = createAdminClient();
+  const selectFields =
+    "id, title, company, location, url, source, is_public, is_partner_exclusive, hidden_at, hidden_reason, created_at, updated_at";
+
+  let countQuery = supabase.from("offers").select("id", { count: "exact", head: true });
+  countQuery = applyAdminOffersFilters(countQuery, query);
+  const { count: totalFiltered, error: countError } = await countQuery;
+
+  if (countError) throw new Error(countError.message);
+
+  const meta = adminOffersListMeta(totalFiltered ?? 0, query.page);
+  const from = (meta.page - 1) * ADMIN_OFFERS_PAGE_SIZE;
+  const to = from + ADMIN_OFFERS_PAGE_SIZE - 1;
+
+  let listQuery = supabase.from("offers").select(selectFields);
+  listQuery = applyAdminOffersFilters(listQuery, query);
+  listQuery = applyAdminOffersSort(listQuery, query.sort);
+
+  const { data, error } = await listQuery.range(from, to);
+
+  if (error) throw new Error(error.message);
+
+  const rows = data ?? [];
+  const reportCounts = await getOfferLinkReportCounts(
+    supabase,
+    rows.map((row) => row.id as string),
+  );
+
+  return {
+    offers: mapAdminOfferRows(rows as Record<string, unknown>[], reportCounts),
+    meta,
+  };
 }
 
 export async function loadAdminOfferById(id: string): Promise<AdminOfferDetail | null> {
