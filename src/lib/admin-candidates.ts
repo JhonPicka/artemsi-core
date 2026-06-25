@@ -289,8 +289,14 @@ export async function loadAdminCandidateDetail(
 
   type OfferEmbed = { title: string; company: string | null; location: string | null } | null;
 
+  function offerFromRowEmbed(raw: unknown): OfferEmbed {
+    if (Array.isArray(raw)) return (raw[0] as OfferEmbed) ?? null;
+    if (raw && typeof raw === "object") return raw as OfferEmbed;
+    return null;
+  }
+
   const interestList: AdminCandidateInterest[] = (interests ?? []).map((row) => {
-    const offer = row.offers as OfferEmbed;
+    const offer = offerFromRowEmbed(row.offers);
     return {
       offerId: row.offer_id as string,
       createdAt: row.created_at as string,
@@ -301,7 +307,7 @@ export async function loadAdminCandidateDetail(
   });
 
   const assignmentList: AdminCandidateAssignment[] = (assignments ?? []).map((row) => {
-    const offer = row.offers as OfferEmbed;
+    const offer = offerFromRowEmbed(row.offers);
     return {
       id: row.id as string,
       status: row.status as string,

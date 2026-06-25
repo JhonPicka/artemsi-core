@@ -121,7 +121,9 @@ async function fetchOfferPage(url: string): Promise<FetchedPage> {
   }
 }
 
-function hintsToSourceHints(hints: StructuredOfferHints): OfferExtractSource["structuredHints"] {
+function hintsToSourceHints(
+  hints: StructuredOfferHints,
+): NonNullable<OfferExtractSource["structuredHints"]> {
   return {
     title: hints.title,
     company: hints.company,
@@ -192,7 +194,8 @@ function heuristicExtract(
     title: hints.title ?? "Offre alternance",
     company: hints.company ?? companyFromUrl(url),
     location: hints.location,
-    description: hints.rawDescription ?? raw.slice(0, 4000).trim() || `Offre importée depuis ${url}`,
+    description:
+      hints.rawDescription ?? (raw.slice(0, 4000).trim() || `Offre importée depuis ${url}`),
     contractHint: hints.contractHint,
   };
 
