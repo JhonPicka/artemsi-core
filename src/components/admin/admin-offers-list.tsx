@@ -7,10 +7,12 @@ import { useEffect, useState, useTransition } from "react";
 import { AdminOffersPagination } from "@/components/admin/admin-offers-pagination";
 import type { AdminOfferListRow, AdminOffersTotals } from "@/lib/admin-offers";
 import {
+  ADMIN_OFFERS_DOMAIN_FILTER_OPTIONS,
   ADMIN_OFFERS_SORT_OPTIONS,
   buildAdminOffersHref,
   type AdminOffersListMeta,
   type AdminOffersListQuery,
+  type OfferDomainFilter,
 } from "@/lib/admin-offers-query";
 import {
   OFFER_URL_PLATFORM_FILTERS,
@@ -48,6 +50,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
   const [platform, setPlatform] = useState(query.platform);
   const [visibility, setVisibility] = useState(query.visibility);
   const [source, setSource] = useState(query.source);
+  const [domain, setDomain] = useState<OfferDomainFilter>(query.domain);
   const [sort, setSort] = useState(query.sort);
 
   useEffect(() => {
@@ -55,6 +58,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
     setPlatform(query.platform);
     setVisibility(query.visibility);
     setSource(query.source);
+    setDomain(query.domain);
     setSort(query.sort);
   }, [query]);
 
@@ -63,6 +67,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
     query.platform !== "all" ||
     query.visibility !== "all" ||
     query.source !== "all" ||
+    query.domain !== "all" ||
     query.sort !== "updated_desc";
 
   function navigate(next: Partial<AdminOffersListQuery>) {
@@ -73,7 +78,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
   }
 
   function applyFilters() {
-    navigate({ search, platform, visibility, source, sort });
+    navigate({ search, platform, visibility, source, domain, sort });
   }
 
   function resetFilters() {
@@ -81,6 +86,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
     setPlatform("all");
     setVisibility("all");
     setSource("all");
+    setDomain("all");
     setSort("updated_desc");
     startTransition(() => {
       router.push("/admin/offres");
@@ -129,6 +135,25 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
           </>
         ) : null}
       </p>
+
+      {(totals?.untagged ?? 0) > 0 && query.domain !== "missing" ? (
+        <section className="card admin-offer-alert admin-offer-alert--warning" role="status">
+          <p>
+            <strong>{totals?.untagged}</strong> offre(s) sans tag domaine — le matching et la
+            distribution sont faussés.{" "}
+            <Link href="/admin/offres/distribution" className="admin-inline-link">
+              Voir le plan d&apos;action
+            </Link>
+            {" · "}
+            <Link
+              href={buildAdminOffersHref(query, { domain: "missing", page: 1 })}
+              className="admin-inline-link"
+            >
+              Filtrer à taguer
+            </Link>
+          </p>
+        </section>
+      ) : null}
 
       <form
         className="admin-offers-filters"
@@ -182,6 +207,17 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
             <option value="partner">Partenaire</option>
             <option value="autre">Autre</option>
             <option value="indeed">Indeed (import)</option>
+          </select>
+        </label>
+
+        <label className="admin-offers-filter-field">
+          <span className="admin-offers-filter-label">Domaine</span>
+          <select value={domain} onChange={(e) => setDomain(e.target.value as OfferDomainFilter)}>
+            {ADMIN_OFFERS_DOMAIN_FILTER_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -261,6 +297,9 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
                       )}
                       {offer.isPartnerExclusive ? (
                         <span className="admin-offers-badge accent-badge">Exclusive</span>
+                      ) : null}
+                      {!offer.studyDomain ? (
+                        <span className="admin-offers-badge danger-badge">Sans domaine</span>
                       ) : null}
                     </td>
                     <td>

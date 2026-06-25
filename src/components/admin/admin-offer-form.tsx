@@ -32,7 +32,11 @@ type PublishResult = {
 
 const INITIAL_STUDY_DOMAIN: StudyDomain = "AUTRE";
 
-export function AdminOfferForm() {
+type AdminOfferFormProps = {
+  initialStudyDomain?: StudyDomain;
+};
+
+export function AdminOfferForm({ initialStudyDomain }: AdminOfferFormProps = {}) {
   const urlInputRef = useRef<HTMLInputElement>(null);
   const [inputMode, setInputMode] = useState<InputMode>("scan");
   const [url, setUrl] = useState("");
@@ -41,7 +45,9 @@ export function AdminOfferForm() {
   const [company, setCompany] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
-  const [studyDomain, setStudyDomain] = useState<StudyDomain>(INITIAL_STUDY_DOMAIN);
+  const [studyDomain, setStudyDomain] = useState<StudyDomain>(
+    initialStudyDomain ?? INITIAL_STUDY_DOMAIN,
+  );
   const [tips, setTips] = useState("");
   const [source, setSource] = useState<"partner" | "autre">("partner");
   const [isPublic, setIsPublic] = useState(true);

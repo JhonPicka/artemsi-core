@@ -4,6 +4,9 @@ import type {
   OfferUrlPlatformFilter,
   OfferVisibilityFilter,
 } from "@/lib/admin-offer-url-platform";
+import { STUDY_DOMAINS, STUDY_DOMAIN_LABEL, type StudyDomain } from "@/lib/constants";
+
+export type OfferDomainFilter = "all" | "missing" | StudyDomain;
 
 export const ADMIN_OFFERS_PAGE_SIZE = 40;
 
@@ -37,6 +40,7 @@ export type AdminOffersListQuery = {
   platform: OfferUrlPlatformFilter;
   visibility: OfferVisibilityFilter;
   source: OfferSourceFilter;
+  domain: OfferDomainFilter;
 };
 
 export type AdminOffersListMeta = {
@@ -105,6 +109,26 @@ function parseSource(value: string | undefined): OfferSourceFilter {
   return "all";
 }
 
+function parseDomain(value: string | undefined): OfferDomainFilter {
+  if (value === "missing") return "missing";
+  if (value && (STUDY_DOMAINS as readonly string[]).includes(value)) {
+    return value as StudyDomain;
+  }
+  return "all";
+}
+
+export const ADMIN_OFFERS_DOMAIN_FILTER_OPTIONS: {
+  value: OfferDomainFilter;
+  label: string;
+}[] = [
+  { value: "all", label: "Tous domaines" },
+  { value: "missing", label: "Sans tag domaine" },
+  ...STUDY_DOMAINS.map((domain) => ({
+    value: domain as OfferDomainFilter,
+    label: STUDY_DOMAIN_LABEL[domain],
+  })),
+];
+
 export function parseAdminOffersListQuery(
   params: Record<string, string | undefined>,
 ): AdminOffersListQuery {
@@ -115,6 +139,7 @@ export function parseAdminOffersListQuery(
     platform: parsePlatform(params.platform),
     visibility: parseVisibility(params.visibility),
     source: parseSource(params.source),
+    domain: parseDomain(params.domain),
   };
 }
 
@@ -131,6 +156,7 @@ export function buildAdminOffersHref(
   if (merged.platform !== "all") params.set("platform", merged.platform);
   if (merged.visibility !== "all") params.set("visibility", merged.visibility);
   if (merged.source !== "all") params.set("source", merged.source);
+  if (merged.domain !== "all") params.set("domain", merged.domain);
 
   const qs = params.toString();
   return qs ? `/admin/offres?${qs}` : "/admin/offres";
@@ -145,7 +171,10 @@ type OffersFilterQuery = any;
 
 export function applyAdminOffersFilters(
   query: OffersFilterQuery,
-  filters: Pick<AdminOffersListQuery, "search" | "platform" | "visibility" | "source">,
+  filters: Pick<
+    AdminOffersListQuery,
+    "search" | "platform" | "visibility" | "source" | "domain"
+  >,
 ): OffersFilterQuery {
   let next = query;
 
@@ -179,6 +208,12 @@ export function applyAdminOffersFilters(
     next = next.or(
       `title.ilike.${pattern},company.ilike.${pattern},location.ilike.${pattern},url.ilike.${pattern}`,
     );
+  }
+
+  if (filters.domain === "missing") {
+    next = next.is("study_domain", null);
+  } else if (filters.domain !== "all") {
+    next = next.eq("study_domain", filters.domain);
   }
 
   return next;

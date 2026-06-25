@@ -45,11 +45,12 @@ export type AdminOffersTotals = {
   jobboardVisible: number;
   hidden: number;
   privateOnly: number;
+  untagged: number;
 };
 
 export async function loadAdminOffersTotals(): Promise<AdminOffersTotals> {
   const supabase = createAdminClient();
-  const [totalRes, jobboardRes, hiddenRes, privateRes] = await Promise.all([
+  const [totalRes, jobboardRes, hiddenRes, privateRes, untaggedRes] = await Promise.all([
     supabase.from("offers").select("id", { count: "exact", head: true }),
     supabase
       .from("offers")
@@ -65,18 +66,25 @@ export async function loadAdminOffersTotals(): Promise<AdminOffersTotals> {
       .select("id", { count: "exact", head: true })
       .eq("is_public", false)
       .is("hidden_at", null),
+    supabase
+      .from("offers")
+      .select("id", { count: "exact", head: true })
+      .is("hidden_at", null)
+      .is("study_domain", null),
   ]);
 
   if (totalRes.error) throw new Error(totalRes.error.message);
   if (jobboardRes.error) throw new Error(jobboardRes.error.message);
   if (hiddenRes.error) throw new Error(hiddenRes.error.message);
   if (privateRes.error) throw new Error(privateRes.error.message);
+  if (untaggedRes.error) throw new Error(untaggedRes.error.message);
 
   return {
     total: totalRes.count ?? 0,
     jobboardVisible: jobboardRes.count ?? 0,
     hidden: hiddenRes.count ?? 0,
     privateOnly: privateRes.count ?? 0,
+    untagged: untaggedRes.count ?? 0,
   };
 }
 

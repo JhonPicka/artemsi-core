@@ -8551,6 +8551,54 @@ input[type="checkbox"] {
   background: #28d39a;
 }
 
+.admin-offer-dist-swatch--target {
+  background: transparent;
+  border: 2px solid #ffb547;
+}
+
+.admin-offer-dist-health--ok {
+  border-color: rgba(40, 211, 154, 0.45);
+}
+
+.admin-offer-dist-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-offer-dist-kpis div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.admin-offer-dist-kpis strong {
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.admin-offer-dist-kpis span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.admin-offer-dist-kpi-warn strong {
+  color: #ffb547;
+}
+
+.admin-offer-dist-playbook-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-offer-dist-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
 .admin-offer-header h1 {
   margin: 0.35rem 0 0.5rem;
 }

@@ -1,4 +1,5 @@
 import { STUDY_DOMAINS, type StudyDomain } from "@/lib/constants";
+import { DOMAIN_HINTS } from "@/lib/offer-matching";
 
 const DOMAIN_ALIASES: Record<string, StudyDomain> = {
   informatique: "INFORMATIQUE",
@@ -45,4 +46,33 @@ export function normalizeStudyDomain(value: string | null | undefined): StudyDom
 
 export function isStudyDomain(value: string | null | undefined): value is StudyDomain {
   return normalizeStudyDomain(value) !== null;
+}
+
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+/** Devine le domaine à partir du titre / description (offres historiques sans tag). */
+export function inferStudyDomainFromText(text: string): StudyDomain | null {
+  const norm = normalizeText(text);
+  if (!norm) return null;
+
+  let best: StudyDomain | null = null;
+  let bestHits = 0;
+
+  for (const domain of STUDY_DOMAINS) {
+    if (domain === "AUTRE") continue;
+    const hints = DOMAIN_HINTS[domain] ?? [];
+    const hits = hints.filter((hint) => norm.includes(normalizeText(hint))).length;
+    if (hits > bestHits) {
+      bestHits = hits;
+      best = domain;
+    }
+  }
+
+  return bestHits > 0 ? best : null;
 }

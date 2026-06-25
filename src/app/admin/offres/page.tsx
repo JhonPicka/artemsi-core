@@ -22,6 +22,7 @@ export default async function AdminOffersPage({ searchParams }: PageProps) {
     platform: firstParam(raw.platform),
     visibility: firstParam(raw.visibility),
     source: firstParam(raw.source),
+    domain: firstParam(raw.domain),
   });
 
   let pageResult: Awaited<ReturnType<typeof loadAdminOffersPage>> | null = null;
