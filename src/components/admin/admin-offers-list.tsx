@@ -286,7 +286,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
                     id={`admin-offer-${offer.id}`}
                     className={offer.hiddenAt ? "admin-offers-row--hidden" : undefined}
                   >
-                    <td>
+                    <td data-label="Titre">
                       <span className="admin-offers-table-title">{offer.title}</span>
                       {offer.hiddenAt ? (
                         <span className="admin-offers-badge danger-badge">Masquée</span>
@@ -302,7 +302,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
                         <span className="admin-offers-badge danger-badge">Sans domaine</span>
                       ) : null}
                     </td>
-                    <td>
+                    <td data-label="Lien">
                       <span className="admin-offers-link-platform">
                         {OFFER_URL_PLATFORM_LABELS[urlPlatform]}
                       </span>
@@ -315,17 +315,17 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
                         {offerUrlHostShort(offer.url)}
                       </a>
                     </td>
-                    <td>{offer.company ?? "—"}</td>
-                    <td>{formatDomain(offer.studyDomain)}</td>
-                    <td>{offer.location ?? "—"}</td>
-                    <td>
+                    <td data-label="Entreprise">{offer.company ?? "—"}</td>
+                    <td data-label="Domaine">{formatDomain(offer.studyDomain)}</td>
+                    <td data-label="Lieu">{offer.location ?? "—"}</td>
+                    <td data-label="Type">
                       {offer.source === "partner"
                         ? "Partenaire"
                         : offer.source === "indeed"
                           ? "Indeed"
                           : "Autre"}
                     </td>
-                    <td>
+                    <td data-label="Signalements">
                       {offer.linkReportCount > 0 ? (
                         <span
                           className={
@@ -340,8 +340,8 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
                         "—"
                       )}
                     </td>
-                    <td>{formatDate(offer.updatedAt)}</td>
-                    <td className="admin-offers-table-actions">
+                    <td data-label="Modifiée">{formatDate(offer.updatedAt)}</td>
+                    <td className="admin-offers-table-actions" data-label="Actions">
                       <Link href={`/admin/offres/${offer.id}`} className="admin-inline-link">
                         {offer.hiddenAt ? "Corriger" : "Modifier"}
                       </Link>
