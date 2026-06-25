@@ -1,4 +1,5 @@
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
+import { ActivityPageTracker } from "@/components/activity/activity-page-tracker";
 import { requireUser } from "@/lib/auth";
 import {
   buildActivationSteps,
@@ -13,6 +14,7 @@ import {
   countByOfferAssignmentStatus,
   countStaleSentApplications,
 } from "@/lib/dashboard-stats";
+import { USER_ACTIVITY_EVENTS } from "@/lib/user-activity";
 import { createClient } from "@/lib/supabase/server";
 
 function getFirstName(fullName: string | null | undefined) {
@@ -198,7 +200,9 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <DashboardOverview
+    <>
+      <ActivityPageTracker eventType={USER_ACTIVITY_EVENTS.DASHBOARD_VIEW} />
+      <DashboardOverview
       firstName={firstName}
       heroSubtitle={heroSubtitle}
       documentsCount={documentsCount ?? 0}
@@ -215,5 +219,6 @@ export default async function DashboardPage() {
       nextAuditLabel={nextA?.label ?? null}
       nextAuditDetail={nextA?.detail ?? null}
     />
+    </>
   );
 }

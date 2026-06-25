@@ -8,6 +8,8 @@ import { createPortal } from "react-dom";
 
 import { OfferApplicationGuideBlock } from "@/components/offers/offer-application-guide-block";
 import { OfferReportDeadLinkButton } from "@/components/offers/offer-report-dead-link-button";
+import { trackActivity } from "@/lib/track-activity-client";
+import { USER_ACTIVITY_EVENTS } from "@/lib/user-activity";
 import type { OfferApplicationGuide } from "@/lib/offer-application-guide";
 
 export type OfferCardData = {
@@ -477,6 +479,12 @@ export function OfferApplicationButton({
   function handleClick(event: React.MouseEvent) {
     event.stopPropagation();
     if (!canApply) return;
+    trackActivity(USER_ACTIVITY_EVENTS.OFFER_APPLY_CLICK, {
+      offerId: offer.id,
+      offerTitle: offer.title,
+      company: offer.company,
+      source: offer.source,
+    });
     if (isPartner) {
       setDialogOpen(true);
       return;
@@ -612,6 +620,12 @@ export function OfferCard({ offer, badge, tag, isPro = true }: OfferCardProps) {
 
   function handleOpenOffer() {
     if (!opensExternally) return;
+    trackActivity(USER_ACTIVITY_EVENTS.OFFER_OPEN_EXTERNAL, {
+      offerId: offer.id,
+      offerTitle: offer.title,
+      company: offer.company,
+      source: offer.source,
+    });
     openOfferInNewTab(offer.url);
   }
 

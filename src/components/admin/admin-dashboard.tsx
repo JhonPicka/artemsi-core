@@ -1,10 +1,5 @@
-import {
-  AdminFunnelSteps,
-  AdminPieChart,
-  AdminProgressBar,
-  AdminRankedBars,
-  AdminVerticalBars,
-} from "@/components/admin/admin-charts";
+import Link from "next/link";
+
 import { AdminDashboardLive } from "@/components/admin/admin-dashboard-live";
 import { BILLING_MONTHLY_PRICE_EUR } from "@/lib/billing-offer";
 import type { AdminDashboardStats } from "@/lib/admin-stats";
@@ -23,14 +18,8 @@ function formatDate(iso: string) {
   });
 }
 
-function subscriptionLabel(status: string) {
-  const map: Record<string, string> = {
-    active: "Actif",
-    inactive: "Gratuit",
-    past_due: "Impayé",
-    canceled: "Résilié",
-  };
-  return map[status] ?? status;
+function formatPct(value: number) {
+  return `${value.toLocaleString("fr-FR")} %`;
 }
 
 function KpiCard({
@@ -38,361 +27,192 @@ function KpiCard({
   value,
   hint,
   tone,
-  hero,
 }: {
   label: string;
   value: number | string;
   hint?: string;
-  tone?: "accent" | "success" | "warning" | "danger";
-  hero?: boolean;
+  tone?: "accent" | "success" | "warning";
 }) {
   return (
-    <article
-      className={[
-        "admin-pilot-kpi",
-        tone ? `admin-pilot-kpi--${tone}` : "",
-        hero ? "admin-pilot-kpi--hero" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <p className="admin-pilot-kpi-label">{label}</p>
-      <p className="admin-pilot-kpi-value">{value}</p>
-      {hint ? <p className="admin-pilot-kpi-hint">{hint}</p> : null}
+    <article className={`admin-home-kpi${tone ? ` admin-home-kpi--${tone}` : ""}`}>
+      <p className="admin-home-kpi-label">{label}</p>
+      <p className="admin-home-kpi-value">{value}</p>
+      {hint ? <p className="admin-home-kpi-hint">{hint}</p> : null}
     </article>
   );
 }
 
-function joinOrDash(values: string[]) {
-  return values.length ? values.join(", ") : "—";
-}
-
-function formatPct(value: number) {
-  return `${value.toLocaleString("fr-FR")} %`;
-}
-
 export function AdminDashboard({ stats }: Props) {
-  const { kpis, charts, funnel } = stats;
-
-  const funnelSteps = [
-    {
-      label: "Inscriptions",
-      value: funnel.signups,
-      pct: 100,
-    },
-    {
-      label: "Onboarding terminé",
-      value: funnel.onboardingCompleted,
-      pct: kpis.activationRatePct,
-    },
-    {
-      label: "≥ 1 candidature",
-      value: funnel.engagedUsers,
-      pct: kpis.engagementRatePct,
-    },
-    {
-      label: "Pro actif",
-      value: funnel.proActive,
-      pct: kpis.conversionRatePct,
-    },
-  ];
-
-  const refundLabel =
-    kpis.stripeRefundsCount === null
-      ? "—"
-      : `${kpis.stripeRefundsCount} (${formatPct(kpis.stripeRefundRatePct ?? 0)})`;
+  const { kpis, funnel, usage } = stats;
+  const recentCandidates = stats.candidates.slice(0, 8);
 
   return (
     <AdminDashboardLive generatedAt={stats.generatedAt}>
-      <div className="admin-dashboard admin-dashboard--pilot">
-        <header className="admin-pilot-hero card">
-          <div className="admin-pilot-hero-copy">
-            <span className="brand-chip">PILOTAGE</span>
-            <h1>Tableau de bord acquisition</h1>
-            <p className="muted admin-pilot-hero-lead">
-              Métriques live Supabase + Stripe (candidats hors admin). Dernière synchro :{" "}
-              {formatDate(stats.generatedAt)}.
-              {kpis.auditsPending > 0 ? (
-                <>
-                  {" "}
-                  <a href="/admin/audits" className="admin-inline-link">
-                    {kpis.auditsPending} audit(s) à traiter →
-                  </a>
-                </>
-              ) : null}
+      <div className="admin-home">
+        <header className="card admin-home-hero">
+          <div>
+            <span className="brand-chip">ACCUEIL ADMIN</span>
+            <h1>Vue d&apos;ensemble</h1>
+            <p className="muted admin-home-lead">
+              Synthèse rapide — stats détaillées et graphiques dans{" "}
+              <Link href="/admin/stats" className="admin-inline-link">
+                Statistiques
+              </Link>
+              . MAJ {formatDate(stats.generatedAt)}.
             </p>
           </div>
-          <div className="admin-pilot-hero-kpis">
-            <KpiCard
-              hero
-              label="Inscrits"
-              value={kpis.totalAccounts}
-              hint={`+${kpis.signupsLast7Days} sur 7 j`}
-              tone="accent"
-            />
-            <KpiCard
-              hero
-              label="Gratuits"
-              value={kpis.freeAccounts}
-              hint="Comptes sans Pro actif"
-            />
-            <KpiCard
-              hero
-              label="Pro actifs"
-              value={kpis.activeSubscriptions}
-              hint={`Stripe ${kpis.billingActiveTotal}`}
-              tone="success"
-            />
-            <KpiCard
-              hero
-              label="MRR estimé"
-              value={`${kpis.mrrEstimateEur.toLocaleString("fr-FR")} €`}
-              hint={`${BILLING_MONTHLY_PRICE_EUR.toLocaleString("fr-FR")} € / abonné`}
-              tone="success"
-            />
-          </div>
+          <nav className="admin-home-quicklinks" aria-label="Raccourcis admin">
+            <Link href="/admin/stats" className="admin-home-quicklink">
+              Statistiques
+            </Link>
+            <Link href="/admin/candidats" className="admin-home-quicklink">
+              Candidats
+            </Link>
+            <Link href="/admin/offres" className="admin-home-quicklink">
+              Offres
+            </Link>
+            <Link href="/admin/audits" className="admin-home-quicklink">
+              Audits
+              {kpis.auditsPending > 0 ? ` (${kpis.auditsPending})` : ""}
+            </Link>
+          </nav>
         </header>
 
-        <div className="admin-pilot-layout">
-          <section className="card admin-pilot-section admin-pilot-section--money">
-            <h2 className="admin-pilot-section-title">Monétisation & rétention</h2>
-            <div className="admin-pilot-kpi-grid admin-pilot-kpi-grid--wide">
-              <KpiCard
-                label="Conversion Gratuit → Pro"
-                value={formatPct(kpis.conversionRatePct)}
-                hint={`${kpis.activeSubscriptions} / ${kpis.totalAccounts} inscrits`}
-                tone="success"
-              />
-              <KpiCard
-                label="Activation onboarding"
-                value={formatPct(kpis.activationRatePct)}
-                hint={`${kpis.onboardingCompleted} profils complets`}
-                tone="accent"
-              />
-              <KpiCard
-                label="Engagement candidatures"
-                value={formatPct(kpis.engagementRatePct)}
-                hint={`${kpis.usersWithApplications} users actifs`}
-              />
-              <KpiCard
-                label="Taux de churn"
-                value={formatPct(kpis.churnRatePct)}
-                hint={`${kpis.canceledSubscriptions} résiliés`}
-                tone={kpis.churnRatePct > 15 ? "warning" : undefined}
-              />
-              <KpiCard
-                label="Remboursements (90 j)"
-                value={refundLabel}
-                hint={
-                  kpis.stripeRefundsCount === null
-                    ? "Stripe non configuré côté serveur"
-                    : "Volume remboursé / paiements"
-                }
-                tone={(kpis.stripeRefundRatePct ?? 0) > 10 ? "danger" : undefined}
-              />
-              <KpiCard
-                label="Résiliations 30 j"
-                value={kpis.cancellationsLast30Days}
-                hint="billing_customers"
-                tone={kpis.cancellationsLast30Days > 0 ? "warning" : undefined}
-              />
-              <KpiCard
-                label="Suppressions compte 30 j"
-                value={kpis.accountDeletionsLast30Days}
-                hint="Feedback RGPD"
-              />
-              <KpiCard
-                label="Impayés"
-                value={kpis.pastDueSubscriptions}
-                hint="past_due"
-                tone={kpis.pastDueSubscriptions > 0 ? "danger" : undefined}
-              />
-              <KpiCard
-                label="Payés non activés"
-                value={kpis.paidNotActivated}
-                hint="Pro sans onboarding"
-                tone={kpis.paidNotActivated > 0 ? "warning" : undefined}
-              />
-              <KpiCard
-                label="Nouveaux 30 j"
-                value={kpis.signupsLast30Days}
-                hint="Inscriptions"
-                tone="accent"
-              />
-            </div>
-
-            <div className="admin-charts-grid admin-charts-grid--pilot">
-              <AdminPieChart
-                title="Répartition des comptes"
-                slices={charts.accountTiers}
-                empty="Aucun compte candidat."
-              />
-              <AdminPieChart
-                title="Statuts abonnement"
-                slices={charts.subscriptions}
-                empty="Aucun abonnement."
-              />
-              <AdminFunnelSteps steps={funnelSteps} />
-            </div>
-
-            <div className="admin-progress-grid admin-progress-grid--pilot">
-              <AdminProgressBar
-                label="Onboarding complété"
-                value={kpis.onboardingCompleted}
-                max={kpis.totalAccounts}
-                hint="Étape clé avant matching"
-                tone="success"
-              />
-              <AdminProgressBar
-                label="Conversion Pro"
-                value={kpis.activeSubscriptions}
-                max={kpis.totalAccounts}
-                hint="Objectif acquisition"
-                tone="accent"
-              />
-              <AdminProgressBar
-                label="Users avec candidature"
-                value={kpis.usersWithApplications}
-                max={Math.max(kpis.onboardingCompleted, 1)}
-                hint="Valeur produit perçue"
-              />
-            </div>
-          </section>
-
-          <section className="card admin-pilot-section admin-pilot-section--ops">
-            <h2 className="admin-pilot-section-title">Produit & catalogue</h2>
-            <div className="admin-pilot-kpi-grid admin-pilot-kpi-grid--ops">
-              <KpiCard label="Offres en base" value={kpis.totalOffers} />
-              <KpiCard label="Offres publiques" value={kpis.publicOffers} />
-              <KpiCard
-                label="Offres masquées"
-                value={kpis.hiddenOffers}
-                hint="Liens morts"
-                tone={kpis.hiddenOffers > 0 ? "warning" : undefined}
-              />
-              <KpiCard
-                label="Signalements liens"
-                value={kpis.linkReportsTotal}
-                tone={kpis.linkReportsTotal > 0 ? "warning" : undefined}
-              />
-              <KpiCard label="Assignations" value={kpis.assignmentsTotal} />
-              <KpiCard
-                label="Matching 7 j"
-                value={kpis.assignmentsLast7Days}
-                tone="accent"
-              />
-              <KpiCard label="Candidatures" value={kpis.applicationsTotal} />
-              <KpiCard
-                label="Audits en attente"
-                value={kpis.auditsPending}
-                tone="warning"
-              />
-              <KpiCard
-                label="Clients Stripe"
-                value={kpis.billingCustomersTotal}
-                hint="Tous statuts"
-              />
-            </div>
-          </section>
-
-          <section className="card admin-pilot-section admin-pilot-section--acquisition">
-            <h2 className="admin-pilot-section-title">Acquisition & tendances</h2>
-            <div className="admin-charts-grid admin-charts-grid--acquisition">
-              <AdminVerticalBars
-                title="Inscriptions / jour (14 j)"
-                items={charts.signupsTrend}
-                empty="Pas encore d'inscriptions."
-              />
-              <AdminVerticalBars
-                title="Profils Pro mis à jour (14 j)"
-                items={charts.proActivationsTrend}
-                empty="Pas de mouvement Pro récent."
-              />
-              <AdminPieChart
-                title="Source ARTEMSI"
-                slices={charts.acquisitionSources}
-                empty="Sources onboarding vides."
-              />
-              <AdminPieChart
-                title="Niveau d'urgence recherche"
-                slices={charts.searchLevels}
-                empty="Niveaux non renseignés."
-              />
-              <AdminRankedBars
-                title="Canaux d'acquisition"
-                items={stats.topAcquisitionSources}
-                empty="Aucun canal."
-              />
-              <AdminRankedBars
-                title="Régions ciblées"
-                items={stats.topRegions}
-                empty="Aucune région."
-              />
-              <AdminRankedBars
-                title="Métiers les plus demandés"
-                items={stats.topTargetJobs}
-                empty="Aucun métier."
-              />
-            </div>
-          </section>
-
-          <section className="card admin-dash-panel admin-dash-recent admin-candidates-panel admin-pilot-section--candidates">
-            <h2 className="admin-dash-panel-title">
-              Tous les candidats ({stats.candidates.length})
-            </h2>
-            {stats.candidates.length === 0 ? (
-              <p className="muted small-label">Aucun candidat inscrit pour le moment.</p>
-            ) : (
-              <>
-                <p className="admin-scroll-hint muted small-label">
-                  Tableau défilable — fais glisser horizontalement pour voir toutes les colonnes.
-                </p>
-                <div className="admin-candidates-scroll">
-                  <table className="admin-table admin-table--candidates">
-                    <thead>
-                      <tr>
-                        <th>Inscription</th>
-                        <th>Email</th>
-                        <th>Nom</th>
-                        <th>Poste</th>
-                        <th>Source</th>
-                        <th>Recherche</th>
-                        <th>Profil</th>
-                        <th>Abonnement</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {stats.candidates.map((row) => (
-                        <tr key={row.id}>
-                          <td>{formatDate(row.createdAt)}</td>
-                          <td>{row.email}</td>
-                          <td>{row.fullName ?? "—"}</td>
-                          <td>{row.targetJob ?? "—"}</td>
-                          <td>{row.acquisitionSource ?? "—"}</td>
-                          <td>{row.searchLevel ?? "—"}</td>
-                          <td>{row.onboardingCompleted ? "Complet" : "En cours"}</td>
-                          <td>
-                            <span
-                              className={
-                                row.subscriptionStatus === "active"
-                                  ? "admin-pill admin-pill--ok"
-                                  : row.subscriptionStatus === "canceled"
-                                    ? "admin-pill admin-pill--warn"
-                                    : "admin-pill"
-                              }
-                            >
-                              {subscriptionLabel(row.subscriptionStatus)}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </section>
+        <div className="admin-home-kpi-grid">
+          <KpiCard
+            label="Inscrits"
+            value={kpis.totalAccounts}
+            hint={`+${kpis.signupsLast7Days} / 7 j`}
+            tone="accent"
+          />
+          <KpiCard
+            label="Pro actifs"
+            value={kpis.activeSubscriptions}
+            hint={`${kpis.mrrEstimateEur.toLocaleString("fr-FR")} € MRR`}
+            tone="success"
+          />
+          <KpiCard label="Gratuits" value={kpis.freeAccounts} />
+          <KpiCard
+            label="Candidatures"
+            value={kpis.applicationsTotal}
+            hint={`${kpis.usersWithApplications} users actifs`}
+          />
+          <KpiCard
+            label="Activité 7 j"
+            value={usage.activityLast7Days}
+            hint="Clics, vues, intérêts…"
+            tone="accent"
+          />
+          <KpiCard label="Intérêts offres" value={usage.totalInterests} />
+          <KpiCard
+            label="Conversion Pro"
+            value={formatPct(kpis.conversionRatePct)}
+            hint={`${BILLING_MONTHLY_PRICE_EUR} € / mois`}
+            tone="success"
+          />
+          <KpiCard
+            label="Offres publiques"
+            value={kpis.publicOffers}
+            hint={`${kpis.hiddenOffers} masquée(s)`}
+          />
         </div>
+
+        <section className="card admin-home-funnel">
+          <h2 className="admin-home-section-title">Funnel en un coup d&apos;œil</h2>
+          <ol className="admin-home-funnel-steps">
+            <li>
+              <span>Inscriptions</span>
+              <strong>{funnel.signups}</strong>
+            </li>
+            <li>
+              <span>Onboarding OK</span>
+              <strong>
+                {funnel.onboardingCompleted}{" "}
+                <em className="muted">({formatPct(kpis.activationRatePct)})</em>
+              </strong>
+            </li>
+            <li>
+              <span>≥ 1 candidature</span>
+              <strong>
+                {funnel.engagedUsers}{" "}
+                <em className="muted">({formatPct(kpis.engagementRatePct)})</em>
+              </strong>
+            </li>
+            <li>
+              <span>Pro actif</span>
+              <strong>
+                {funnel.proActive}{" "}
+                <em className="muted">({formatPct(kpis.conversionRatePct)})</em>
+              </strong>
+            </li>
+          </ol>
+        </section>
+
+        <section className="card admin-home-funnel">
+          <h2 className="admin-home-section-title">Candidats par étape (kanban)</h2>
+          <ul className="admin-home-stage-list">
+            <li>
+              <span>Nouveaux</span>
+              <strong>{usage.kanbanStages.new}</strong>
+            </li>
+            <li>
+              <span>Profil prêt</span>
+              <strong>{usage.kanbanStages.profile_ready}</strong>
+            </li>
+            <li>
+              <span>Explore offres</span>
+              <strong>{usage.kanbanStages.exploring}</strong>
+            </li>
+            <li>
+              <span>En candidature</span>
+              <strong>{usage.kanbanStages.applying}</strong>
+            </li>
+          </ul>
+          <p className="muted small-label">
+            <Link href="/admin/candidats" className="admin-inline-link">
+              Ouvrir le kanban candidats →
+            </Link>
+          </p>
+        </section>
+
+        <section className="card admin-home-recent">
+          <h2 className="admin-home-section-title">
+            Derniers inscrits —{" "}
+            <Link href="/admin/candidats" className="admin-inline-link">
+              tout voir
+            </Link>
+          </h2>
+          {recentCandidates.length === 0 ? (
+            <p className="muted">Aucun candidat pour le moment.</p>
+          ) : (
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>École</th>
+                    <th>Métier</th>
+                    <th>Profil</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentCandidates.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <Link href={`/admin/candidats/${row.id}`} className="admin-inline-link">
+                          {row.fullName ?? row.email}
+                        </Link>
+                      </td>
+                      <td>{row.schoolName ?? "—"}</td>
+                      <td>{row.targetJob ?? "—"}</td>
+                      <td>{row.onboardingCompleted ? "Complet" : "En cours"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
       </div>
     </AdminDashboardLive>
   );

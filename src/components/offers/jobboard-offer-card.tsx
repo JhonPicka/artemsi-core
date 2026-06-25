@@ -9,6 +9,8 @@ import {
   type OfferCardData,
 } from "@/components/offers/offer-card";
 import { OfferReportDeadLinkButton } from "@/components/offers/offer-report-dead-link-button";
+import { trackActivity } from "@/lib/track-activity-client";
+import { USER_ACTIVITY_EVENTS } from "@/lib/user-activity";
 
 type JobboardOfferCardProps = {
   offer: OfferCardData;
@@ -25,6 +27,12 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
 
   function handleOpenOffer() {
     if (!opensExternally) return;
+    trackActivity(USER_ACTIVITY_EVENTS.OFFER_OPEN_EXTERNAL, {
+      offerId: offer.id,
+      offerTitle: offer.title,
+      company: offer.company,
+      source: "jobboard",
+    });
     openOfferInNewTab(offer.url);
   }
 
@@ -40,6 +48,10 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
         const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.error ?? "Erreur");
         setInterested(false);
+        trackActivity(USER_ACTIVITY_EVENTS.OFFER_INTEREST_REMOVE, {
+          offerId: offer.id,
+          offerTitle: offer.title,
+        });
         setMessage("Retire de tes centres d'interet.");
       } else {
         const res = await fetch("/api/offers/interests", {
@@ -50,6 +62,11 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
         const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.error ?? "Erreur");
         setInterested(true);
+        trackActivity(USER_ACTIVITY_EVENTS.OFFER_INTEREST_ADD, {
+          offerId: offer.id,
+          offerTitle: offer.title,
+          company: offer.company,
+        });
         setMessage(
           body.assignmentCreated
             ? "Ajoute a ton profil — des offres similaires t'arriveront dans « Pour toi »."

@@ -1,11 +1,24 @@
 import { env } from "@/lib/env";
 import {
+  buildOfferDescriptionExtractUserMessage,
   buildOfferExtractUserMessage,
   finalizeExtractedOffer,
+  OFFER_DESCRIPTION_EXTRACT_PROMPT,
   OFFER_EXTRACT_SYSTEM_PROMPT,
+  primaryOfferSourceText,
   type ExtractedOfferFields,
   type OfferExtractModelOutput,
+  type OfferExtractSource,
 } from "@/lib/offer-extract-prompt";
+import { mergeAiWithStructuredHints } from "@/lib/offer-extract-merge";
+import {
+  cleanPastedOfferText,
+  companyFromUrl,
+  extractMetadataFromPastedText,
+  extractStructuredOfferFromHtml,
+  mergeStructuredHints,
+  type StructuredOfferHints,
+} from "@/lib/offer-structured-extract";
 
 export type { ExtractedOfferFields };
 
@@ -42,11 +55,30 @@ function metaContent(html: string, property: string) {
   return decodeHtmlEntities(html.match(regex)?.[1] ?? html.match(alt)?.[1] ?? "").trim();
 }
 
-export async function fetchOfferPageText(url: string): Promise<{
+type FetchedPage = {
   ok: boolean;
+  html: string;
   text: string;
+  structured: StructuredOfferHints;
   fetchError?: string;
-}> {
+};
+
+async function fetchOfferPage(url: string): Promise<FetchedPage> {
+  const empty: FetchedPage = {
+    ok: false,
+    html: "",
+    text: "",
+    structured: {
+      title: null,
+      company: null,
+      location: null,
+      rawDescription: null,
+      contractHint: null,
+      confidence: "low",
+      sources: [],
+    },
+  };
+
   try {
     const response = await fetch(url, {
       headers: {
@@ -60,8 +92,7 @@ export async function fetchOfferPageText(url: string): Promise<{
 
     if (!response.ok) {
       return {
-        ok: false,
-        text: "",
+        ...empty,
         fetchError: `Impossible de lire la page (${response.status}). Colle le texte de l'annonce ci-dessous.`,
       };
     }
@@ -71,15 +102,17 @@ export async function fetchOfferPageText(url: string): Promise<{
     const titleTag = decodeHtmlEntities(html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ?? "");
     const prefix = ogTitle || titleTag;
     const body = stripHtml(html).slice(0, 12_000);
+    const structured = extractStructuredOfferFromHtml(html);
 
     return {
       ok: true,
+      html,
       text: prefix ? `${prefix}\n\n${body}` : body,
+      structured,
     };
   } catch (cause) {
     return {
-      ok: false,
-      text: "",
+      ...empty,
       fetchError:
         cause instanceof Error
           ? `${cause.message}. Colle le texte de l'annonce ci-dessous.`
@@ -88,60 +121,26 @@ export async function fetchOfferPageText(url: string): Promise<{
   }
 }
 
-function heuristicExtract(url: string, raw: string): ExtractedOfferFields {
-  const lines = raw
-    .split(/\n+/)
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  const titleLine =
-    lines.find((line) => line.length >= 8 && line.length <= 120 && !/cookie|mentions légales/i.test(line)) ??
-    lines[0] ??
-    "Offre alternance";
-
-  const contractHint = /apprentissage|apprenti/i.test(raw)
-    ? "apprentissage"
-    : /contrat pro|professionnalisation/i.test(raw)
-      ? "pro"
-      : /alternance/i.test(raw)
-        ? "alternance"
-        : null;
-
-  const companyMatch = raw.match(
-    /(?:chez|entreprise|société|societe|employeur)\s*[:\-]?\s*([^\n.]{2,80})/i,
-  );
-
-  const base: Partial<OfferExtractModelOutput> = {
-    title: titleLine,
-    company: companyMatch?.[1]?.trim() ?? null,
-    location: null,
-    description: raw.slice(0, 4000).trim() || `Offre importée depuis ${url}`,
-    contractHint,
-    jobKeywords: titleLine
-      .split(/\s+/)
-      .map((t) => t.replace(/[^A-Za-zÀ-ÿ0-9+]/g, ""))
-      .filter((t) => t.length >= 4)
-      .slice(0, 6),
-    locationKeywords: [],
+function hintsToSourceHints(hints: StructuredOfferHints): OfferExtractSource["structuredHints"] {
+  return {
+    title: hints.title,
+    company: hints.company,
+    location: hints.location,
+    contractHint: hints.contractHint,
+    sources: hints.sources,
   };
-
-  return (
-    finalizeExtractedOffer(base, raw) ?? {
-      title: titleLine,
-      company: base.company ?? null,
-      location: base.location ?? null,
-      description: base.description ?? "",
-      contractHint,
-    }
-  );
 }
 
-async function extractWithOpenAI(
-  url: string,
-  raw: string,
-): Promise<{ fields: ExtractedOfferFields | null; error: string | null }> {
+function hasReliableMetadata(hints: StructuredOfferHints) {
+  return Boolean(hints.title && hints.company && hints.confidence !== "low");
+}
+
+async function callOpenAI(
+  systemPrompt: string,
+  userMessage: string,
+): Promise<{ parsed: Partial<OfferExtractModelOutput> | null; error: string | null }> {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) return { fields: null, error: "OPENAI_API_KEY non configuree" };
+  if (!apiKey) return { parsed: null, error: "OPENAI_API_KEY non configuree" };
 
   const model = process.env.OPENAI_MODEL?.trim() || "gpt-4o";
 
@@ -157,8 +156,8 @@ async function extractWithOpenAI(
       max_tokens: 2200,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: OFFER_EXTRACT_SYSTEM_PROMPT },
-        { role: "user", content: buildOfferExtractUserMessage(url, raw) },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
       ],
     }),
   });
@@ -166,7 +165,7 @@ async function extractWithOpenAI(
   if (!response.ok) {
     const body = await response.text().catch(() => "");
     return {
-      fields: null,
+      parsed: null,
       error: `OpenAI a refuse l'analyse (${response.status})${body ? ` : ${body.slice(0, 180)}` : ""}`,
     };
   }
@@ -175,14 +174,90 @@ async function extractWithOpenAI(
     choices?: { message?: { content?: string } }[];
   };
   const content = data.choices?.[0]?.message?.content;
-  if (!content) return { fields: null, error: "OpenAI n'a retourne aucun contenu" };
+  if (!content) return { parsed: null, error: "OpenAI n'a retourne aucun contenu" };
 
   try {
-    const parsed = JSON.parse(content) as Partial<OfferExtractModelOutput>;
-    return { fields: finalizeExtractedOffer(parsed, raw), error: null };
+    return { parsed: JSON.parse(content) as Partial<OfferExtractModelOutput>, error: null };
   } catch {
-    return { fields: null, error: "OpenAI a retourne un JSON illisible" };
+    return { parsed: null, error: "OpenAI a retourne un JSON illisible" };
   }
+}
+
+function heuristicExtract(
+  url: string,
+  raw: string,
+  hints: StructuredOfferHints,
+): ExtractedOfferFields {
+  const base: Partial<OfferExtractModelOutput> = {
+    title: hints.title ?? "Offre alternance",
+    company: hints.company ?? companyFromUrl(url),
+    location: hints.location,
+    description: hints.rawDescription ?? raw.slice(0, 4000).trim() || `Offre importée depuis ${url}`,
+    contractHint: hints.contractHint,
+  };
+
+  return (
+    mergeAiWithStructuredHints(base, hints, raw, url) ??
+    finalizeExtractedOffer(base, raw, url) ?? {
+      title: base.title ?? "Offre alternance",
+      company: base.company ?? null,
+      location: base.location ?? null,
+      description: base.description ?? "",
+      contractHint: hints.contractHint,
+    }
+  );
+}
+
+async function extractWithPipeline(
+  url: string,
+  source: OfferExtractSource,
+  hints: StructuredOfferHints,
+): Promise<{ fields: ExtractedOfferFields | null; error: string | null; mode: string }> {
+  const raw = primaryOfferSourceText(source);
+  const cleanedPasted = source.pastedText ? cleanPastedOfferText(source.pastedText) : "";
+
+  if (hasReliableMetadata(hints) && cleanedPasted.length >= 80) {
+    const descAi = await callOpenAI(
+      OFFER_DESCRIPTION_EXTRACT_PROMPT,
+      buildOfferDescriptionExtractUserMessage(url, cleanedPasted, hintsToSourceHints(hints)),
+    );
+    if (descAi.parsed?.description) {
+      const fields = mergeAiWithStructuredHints(
+        {
+          title: hints.title!,
+          company: hints.company,
+          location: hints.location,
+          description: descAi.parsed.description,
+          contractHint: descAi.parsed.contractHint ?? hints.contractHint,
+          studyDomainHint: descAi.parsed.studyDomainHint,
+          locationKeywords: descAi.parsed.locationKeywords,
+          jobKeywords: descAi.parsed.jobKeywords,
+        },
+        hints,
+        raw,
+        url,
+      );
+      if (fields) return { fields, error: null, mode: "metadata-deterministe + ia-description" };
+    }
+  }
+
+  const fullSource: OfferExtractSource = {
+    ...source,
+    pastedText: cleanedPasted || source.pastedText,
+    structuredHints: hintsToSourceHints(hints),
+  };
+
+  const fullAi = await callOpenAI(
+    OFFER_EXTRACT_SYSTEM_PROMPT,
+    buildOfferExtractUserMessage(url, fullSource),
+  );
+
+  if (fullAi.parsed) {
+    const fields = mergeAiWithStructuredHints(fullAi.parsed, hints, raw, url);
+    if (fields) return { fields, error: null, mode: "ia-complete + fusion" };
+  }
+
+  return { fields: null, error: fullAi.error, mode: "echec" };
 }
 
 export async function extractOfferFieldsFromUrl(input: {
@@ -193,29 +268,42 @@ export async function extractOfferFieldsFromUrl(input: {
   fetchWarning: string | null;
   usedAi: boolean;
   rawSource: string;
+  extractMode?: string;
 }> {
   const url = input.url.trim();
   const pasted = input.pastedText?.trim() ?? "";
 
-  let raw = "";
   let rawSource = "";
   let fetchWarning: string | null = null;
 
-  const fetched = await fetchOfferPageText(url);
+  const fetched = await fetchOfferPage(url);
   if (!fetched.ok) fetchWarning = fetched.fetchError ?? null;
 
-  if (pasted && fetched.ok && fetched.text) {
-    raw = `TEXTE COLLE PAR L'ADMIN (source prioritaire):\n${pasted}\n\nTEXTE RECUPERE DE LA PAGE OFFICIELLE (complement):\n${fetched.text}`;
-    rawSource = "texte colle + page officielle";
-  } else if (pasted) {
-    raw = pasted;
-    rawSource = "texte colle";
-  } else {
-    raw = fetched.text;
-    rawSource = fetched.ok ? "page officielle" : "aucune source lisible";
-  }
+  const pastedHints = pasted ? extractMetadataFromPastedText(pasted) : null;
+  const urlHints: StructuredOfferHints = {
+    title: null,
+    company: companyFromUrl(url),
+    location: null,
+    rawDescription: null,
+    contractHint: null,
+    confidence: "low",
+    sources: companyFromUrl(url) ? ["url:hostname"] : [],
+  };
 
-  if (!raw) {
+  const hints = mergeStructuredHints(pastedHints, fetched.structured, urlHints);
+
+  const cleanedPasted = pasted ? cleanPastedOfferText(pasted) : "";
+  const source: OfferExtractSource = {};
+  if (cleanedPasted) source.pastedText = cleanedPasted;
+  if (fetched.ok && fetched.text) source.pageText = fetched.text;
+
+  if (pasted && fetched.ok) rawSource = "texte colle + page (pipeline v2)";
+  else if (pasted) rawSource = "texte colle (pipeline v2)";
+  else if (fetched.ok) rawSource = "page officielle (pipeline v2)";
+  else rawSource = "aucune source lisible";
+
+  const primaryText = primaryOfferSourceText(source);
+  if (!primaryText) {
     return {
       fields: {
         title: "Offre a completer",
@@ -230,19 +318,32 @@ export async function extractOfferFieldsFromUrl(input: {
     };
   }
 
-  const ai = await extractWithOpenAI(url, raw);
-  if (ai.fields) {
-    return { fields: ai.fields, fetchWarning, usedAi: true, rawSource };
+  const pipeline = await extractWithPipeline(url, source, hints);
+  if (pipeline.fields) {
+    return {
+      fields: pipeline.fields,
+      fetchWarning,
+      usedAi: true,
+      rawSource: `${rawSource} — ${pipeline.mode}`,
+      extractMode: pipeline.mode,
+    };
   }
 
   return {
-    fields: heuristicExtract(url, raw),
+    fields: heuristicExtract(url, primaryText, hints),
     fetchWarning: fetchWarning
-      ? `${fetchWarning} Analyse IA non appliquee (${ai.error ?? "raison inconnue"}). Extraction basique utilisee.`
+      ? `${fetchWarning} Analyse IA non appliquee (${pipeline.error ?? "raison inconnue"}). Extraction deterministe utilisee.`
       : env.OPENAI_API_KEY
-        ? `Analyse IA non appliquee (${ai.error ?? "raison inconnue"}). Extraction basique utilisee.`
-        : "OPENAI_API_KEY non configure : extraction basique. Ajoute la cle pour une meilleure analyse.",
+        ? `Analyse IA non appliquee (${pipeline.error ?? "raison inconnue"}). Extraction deterministe utilisee.`
+        : "OPENAI_API_KEY non configure : extraction deterministe. Ajoute la cle pour l'IA.",
     usedAi: false,
-    rawSource,
+    rawSource: `${rawSource} — heuristique`,
+    extractMode: "heuristique",
   };
+}
+
+/** @deprecated Utilise fetchOfferPage en interne. Conservé pour compatibilité. */
+export async function fetchOfferPageText(url: string) {
+  const page = await fetchOfferPage(url);
+  return { ok: page.ok, text: page.text, fetchError: page.fetchError };
 }

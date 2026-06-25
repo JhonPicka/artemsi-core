@@ -5,6 +5,7 @@ import { hasApiAccountAccess, userHasProAccess } from "@/lib/billing";
 import { assertFreeUserCanAccessPublicOffer } from "@/lib/freemium-access";
 import { recordOfferInterest, removeOfferInterest } from "@/lib/record-offer-interest";
 import { createClient } from "@/lib/supabase/server";
+import { recordUserActivityAdmin, USER_ACTIVITY_EVENTS } from "@/lib/user-activity";
 
 const bodySchema = z.object({
   offerId: z.string().uuid(),
@@ -47,6 +48,9 @@ export async function POST(request: Request) {
 
   try {
     const result = await recordOfferInterest(supabase, user.id, parsed.data.offerId);
+    void recordUserActivityAdmin(user.id, USER_ACTIVITY_EVENTS.OFFER_INTEREST_ADD, {
+      offerId: parsed.data.offerId,
+    });
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     return NextResponse.json(
@@ -79,6 +83,9 @@ export async function DELETE(request: Request) {
 
   try {
     const result = await removeOfferInterest(supabase, user.id, parsed.data);
+    void recordUserActivityAdmin(user.id, USER_ACTIVITY_EVENTS.OFFER_INTEREST_REMOVE, {
+      offerId: parsed.data,
+    });
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     return NextResponse.json(

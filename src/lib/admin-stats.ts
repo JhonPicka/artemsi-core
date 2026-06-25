@@ -1,27 +1,15 @@
 import { getAdminEmail, getAdminUserId } from "@/lib/admin-auth";
 import { BILLING_MONTHLY_PRICE_EUR } from "@/lib/billing-offer";
+import { mapCandidate } from "@/lib/admin-candidate-map";
 import {
   ACQUISITION_SOURCE_LABEL,
-  ALTERNANCE_RHYTHM_LABEL,
-  APPLICATIONS_SENT_RANGE_LABEL,
-  CONTRACT_DURATION_LABEL,
-  CONTRACT_TYPE_LABEL,
-  PREFERRED_SECTOR_LABEL,
   SEARCH_LEVEL_LABEL,
-  STUDY_DOMAIN_LABEL,
-  STUDY_LEVEL_LABEL,
   type AcquisitionSource,
-  type AlternanceRhythm,
-  type ApplicationsSentRange,
-  type ContractDuration,
-  type ContractType,
-  type PreferredSector,
   type SearchLevel,
-  type StudyDomain,
-  type StudyLevel,
 } from "@/lib/constants";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripeClient, isStripeConfigured } from "@/lib/stripe";
+import { USER_ACTIVITY_EVENT_LABELS } from "@/lib/user-activity";
 
 export type RankedItem = { label: string; count: number };
 
@@ -62,6 +50,21 @@ export type AdminDashboardStats = {
     searchLevels: ChartSlice[];
     signupsTrend: RankedItem[];
     proActivationsTrend: RankedItem[];
+    activityTrend: RankedItem[];
+    applicationsTrend: RankedItem[];
+    activityByType: RankedItem[];
+  };
+  usage: {
+    totalActivityEvents: number;
+    activityLast7Days: number;
+    totalInterests: number;
+    offerClicks: number;
+    kanbanStages: {
+      new: number;
+      profile_ready: number;
+      exploring: number;
+      applying: number;
+    };
   };
   funnel: {
     signups: number;
@@ -274,54 +277,61 @@ function rankedToSlices(items: RankedItem[], max = 6): ChartSlice[] {
   );
 }
 
-function mapCandidate(row: Record<string, unknown>): AdminCandidateProfile {
-  return {
-    id: row.id as string,
-    email: row.email as string,
-    fullName: (row.full_name as string | null) ?? null,
-    phone: (row.phone as string | null) ?? null,
-    schoolName: (row.school_name as string | null) ?? null,
-    studyLevel: row.study_level
-      ? (STUDY_LEVEL_LABEL[row.study_level as StudyLevel] ?? String(row.study_level))
-      : null,
-    studyDomain: row.study_domain
-      ? (STUDY_DOMAIN_LABEL[row.study_domain as StudyDomain] ?? String(row.study_domain))
-      : null,
-    targetJob: (row.target_job as string | null) ?? null,
-    regions: (row.regions as string[] | null) ?? [],
-    startDate: (row.start_date as string | null) ?? null,
-    contractType: row.contract_type
-      ? (CONTRACT_TYPE_LABEL[row.contract_type as ContractType] ?? String(row.contract_type))
-      : null,
-    contractDuration: row.contract_duration
-      ? (CONTRACT_DURATION_LABEL[row.contract_duration as ContractDuration] ??
-        String(row.contract_duration))
-      : null,
-    alternanceRhythm: row.alternance_rhythm
-      ? (ALTERNANCE_RHYTHM_LABEL[row.alternance_rhythm as AlternanceRhythm] ??
-        String(row.alternance_rhythm))
-      : null,
-    alternanceRhythmOther: (row.alternance_rhythm_other as string | null) ?? null,
-    preferredSectors: ((row.preferred_sectors as string[] | null) ?? []).map(
-      (sector) => PREFERRED_SECTOR_LABEL[sector as PreferredSector] ?? sector,
-    ),
-    acquisitionSource: row.acquisition_source
-      ? (ACQUISITION_SOURCE_LABEL[row.acquisition_source as AcquisitionSource] ??
-        String(row.acquisition_source))
-      : null,
-    acquisitionSourceOther: (row.acquisition_source_other as string | null) ?? null,
-    applicationsSentRange: row.applications_sent_range
-      ? (APPLICATIONS_SENT_RANGE_LABEL[row.applications_sent_range as ApplicationsSentRange] ??
-        String(row.applications_sent_range))
-      : null,
-    searchLevel: row.search_level
-      ? (SEARCH_LEVEL_LABEL[row.search_level as SearchLevel] ?? String(row.search_level))
-      : null,
-    onboardingCompleted: Boolean(row.onboarding_completed),
-    subscriptionStatus: String(row.subscription_status ?? "inactive"),
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
-  };
+function countByUser(rows: { user_id: string }[]) {
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    map.set(row.user_id, (map.get(row.user_id) ?? 0) + 1);
+  }
+  return map;
+}
+
+function countClicksByUser(rows: { user_id: string; event_type: string }[]) {
+  const map = new Map<string, number>();
+  const clickTypes = new Set(["offer_open_external", "offer_view_modal", "offer_apply_click"]);
+  for (const row of rows) {
+    if (!clickTypes.has(row.event_type)) continue;
+    map.set(row.user_id, (map.get(row.user_id) ?? 0) + 1);
+  }
+  return map;
+}
+
+function computeKanbanStages(
+  profiles: { id: string; onboarding_completed?: boolean | null }[],
+  applicationsByUser: Map<string, number>,
+  interestsByUser: Map<string, number>,
+  clicksByUser: Map<string, number>,
+  assignmentsByUser: Map<string, number>,
+) {
+  const stages = { new: 0, profile_ready: 0, exploring: 0, applying: 0 };
+  for (const profile of profiles) {
+    const applicationsCount = applicationsByUser.get(profile.id) ?? 0;
+    const interestsCount = interestsByUser.get(profile.id) ?? 0;
+    const offerClicksCount = clicksByUser.get(profile.id) ?? 0;
+    const assignmentsCount = assignmentsByUser.get(profile.id) ?? 0;
+    const onboardingCompleted = Boolean(profile.onboarding_completed);
+
+    if (!onboardingCompleted) {
+      stages.new += 1;
+    } else if (applicationsCount > 0) {
+      stages.applying += 1;
+    } else if (interestsCount > 0 || offerClicksCount > 0 || assignmentsCount > 0) {
+      stages.exploring += 1;
+    } else {
+      stages.profile_ready += 1;
+    }
+  }
+  return stages;
+}
+
+function countActivityByType(rows: { event_type: string }[]) {
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    const label = USER_ACTIVITY_EVENT_LABELS[row.event_type] ?? row.event_type;
+    map.set(label, (map.get(label) ?? 0) + 1);
+  }
+  return [...map.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
@@ -377,6 +387,12 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
     { count: billingCustomersTotal },
     { count: cancellationsLast30Days },
     { count: accountDeletionsLast30Days },
+    { count: totalActivityEvents },
+    activity14dRes,
+    applications14dRes,
+    { data: interestUserRows },
+    { data: assignmentUserRows },
+    { count: interestsTotal },
     stripeRefundMetrics,
   ] = await Promise.all([
     profileFilter(supabase.from("profiles").select("id", { count: "exact", head: true })),
@@ -490,8 +506,56 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
       .from("account_deletion_feedback")
       .select("id", { count: "exact", head: true })
       .gte("created_at", since30d),
+    supabase.from("user_activity_events").select("id", { count: "exact", head: true }),
+    supabase
+      .from("user_activity_events")
+      .select("user_id, event_type, created_at")
+      .gte("created_at", since14d),
+    supabase
+      .from("applications")
+      .select("created_at")
+      .gte("created_at", since14d),
+    supabase.from("offer_interests").select("user_id"),
+    supabase.from("offer_assignments").select("user_id"),
+    supabase.from("offer_interests").select("id", { count: "exact", head: true }),
     fetchStripeRefundMetrics(),
   ]);
+
+  const activityRows14d = activity14dRes.error ? [] : activity14dRes.data ?? [];
+  const applicationsRows14d = applications14dRes.data ?? [];
+  const activityLast7d = activityRows14d.filter(
+    (row) => String(row.created_at) >= since7d,
+  ).length;
+  const offerClicks = activityRows14d.filter((row) =>
+    ["offer_open_external", "offer_view_modal", "offer_apply_click"].includes(
+      String(row.event_type),
+    ),
+  ).length;
+
+  const applicationsByUser = countByUser((applicationUserRows ?? []) as { user_id: string }[]);
+  const interestsByUser = countByUser((interestUserRows ?? []) as { user_id: string }[]);
+  const assignmentsByUser = countByUser((assignmentUserRows ?? []) as { user_id: string }[]);
+  const clicksByUser = countClicksByUser(
+    activityRows14d as { user_id: string; event_type: string }[],
+  );
+
+  const profileIdsForKanban = (candidateRows ?? []).map((row) => ({
+    id: row.id as string,
+    onboarding_completed: row.onboarding_completed as boolean | null,
+  }));
+  const kanbanStages = computeKanbanStages(
+    profileIdsForKanban,
+    applicationsByUser,
+    interestsByUser,
+    clicksByUser,
+    assignmentsByUser,
+  );
+
+  const activityTrend = groupCountByRecentDays(activityRows14d, 14);
+  const applicationsTrend = groupCountByRecentDays(applicationsRows14d, 14);
+  const activityByType = countActivityByType(
+    activityRows14d as { event_type: string }[],
+  ).slice(0, 10);
 
   const profiles = profileRows ?? [];
   const total = totalAccounts ?? 0;
@@ -580,6 +644,16 @@ export async function loadAdminDashboardStats(): Promise<AdminDashboardStats> {
       searchLevels: rankedToSlices(topSearchLevels),
       signupsTrend: groupCountByRecentDays(signupTrendRows ?? [], 14),
       proActivationsTrend: groupCountByRecentDays(proTrendRows ?? [], 14),
+      activityTrend,
+      applicationsTrend,
+      activityByType,
+    },
+    usage: {
+      totalActivityEvents: totalActivityEvents ?? 0,
+      activityLast7Days: activityLast7d,
+      totalInterests: interestsTotal ?? 0,
+      offerClicks,
+      kanbanStages,
     },
     kpis: {
       totalAccounts: total,

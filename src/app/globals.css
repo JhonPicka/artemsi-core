@@ -9951,3 +9951,785 @@ input[type="checkbox"] {
   font-weight: 700;
   margin: 0;
 }
+
+/* =====================================================
+   Admin — candidats (kanban + fiche)
+   ===================================================== */
+
+.admin-candidates-shell {
+  display: grid;
+  gap: 1.25rem;
+  padding-bottom: 2rem;
+}
+
+.admin-candidate-page-header {
+  padding: 1.25rem 1.35rem;
+}
+
+.admin-candidate-page-header h1 {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.admin-candidate-page-lead {
+  margin: 0;
+  max-width: 62ch;
+}
+
+.admin-candidates-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-candidates-search input {
+  min-width: min(100%, 320px);
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.admin-candidates-count {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.admin-candidates-kanban {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 1rem;
+  align-items: start;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.admin-candidates-column {
+  min-width: 240px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--background) 12%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  max-height: calc(100vh - 220px);
+}
+
+.admin-candidates-column-head {
+  padding: 0.85rem 0.9rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: inherit;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.admin-candidates-column-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  display: inline;
+}
+
+.admin-candidates-column-count {
+  margin-left: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+
+.admin-candidates-column-head p {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.admin-candidates-column-body {
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.65rem;
+  overflow-y: auto;
+}
+
+.admin-candidates-column--new {
+  border-top: 3px solid var(--admin-chart-3);
+}
+
+.admin-candidates-column--profile_ready {
+  border-top: 3px solid var(--admin-chart-4);
+}
+
+.admin-candidates-column--exploring {
+  border-top: 3px solid var(--admin-chart-1);
+}
+
+.admin-candidates-column--applying {
+  border-top: 3px solid var(--admin-chart-2);
+}
+
+.admin-candidate-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-candidate-card:hover {
+  border-color: color-mix(in srgb, var(--primary-2) 45%, var(--border));
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.admin-candidate-card-top {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.admin-candidate-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--primary-2) 18%, var(--surface));
+  color: var(--primary-2);
+  flex-shrink: 0;
+}
+
+.admin-candidate-name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.admin-candidate-school {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.admin-candidate-target {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--foreground-soft);
+}
+
+.admin-candidate-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.55rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.admin-candidate-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+}
+
+.admin-candidates-empty {
+  margin: 0;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.82rem;
+}
+
+.admin-candidate-detail {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-candidate-detail-hero {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1.4fr 1fr;
+  padding: 1.25rem 1.35rem;
+}
+
+.admin-candidate-detail-hero h1 {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.admin-candidate-detail-lead {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.admin-candidate-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.admin-candidate-detail-meta {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.admin-candidate-detail-meta div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.admin-candidate-detail-meta dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.admin-candidate-detail-meta dd {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.admin-candidate-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-candidate-kpi {
+  padding: 0.9rem 1rem;
+}
+
+.admin-candidate-kpi-label {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.admin-candidate-kpi-value {
+  margin: 0.25rem 0 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--primary-2);
+}
+
+.admin-candidate-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-candidate-panel {
+  padding: 1rem 1.1rem;
+}
+
+.admin-candidate-panel h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+}
+
+.admin-candidate-panel-sub {
+  margin: 0.85rem 0 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-candidate-fields {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+}
+
+.admin-candidate-fields div {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.admin-candidate-fields dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.admin-candidate-fields dd {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.admin-candidate-keywords {
+  margin-top: 0.5rem;
+}
+
+.admin-candidate-keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-candidate-docs {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-candidate-doc {
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.admin-candidate-doc-type {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.admin-candidate-doc-name {
+  margin: 0.35rem 0 0.15rem;
+  font-weight: 600;
+}
+
+.admin-candidate-offers-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-candidate-offer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-candidate-offer-list li {
+  display: grid;
+  gap: 0.15rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-candidate-offer-list li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.admin-candidate-activity-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.admin-candidate-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-candidate-timeline li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.admin-candidate-timeline-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  margin-top: 0.35rem;
+  background: var(--primary-2);
+}
+
+.admin-candidate-timeline-label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+@media (max-width: 1100px) {
+  .admin-candidates-kanban {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+
+  .admin-candidate-detail-hero,
+  .admin-candidate-detail-grid,
+  .admin-candidate-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-candidates-kanban {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-candidates-column {
+    max-height: none;
+  }
+}
+
+/* =====================================================
+   Admin — accueil épuré
+   ===================================================== */
+
+.admin-home {
+  display: grid;
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+
+.admin-home-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.2rem 1.35rem;
+}
+
+.admin-home-hero h1 {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.admin-home-lead {
+  margin: 0;
+  max-width: 52ch;
+}
+
+.admin-home-quicklinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-home-quicklink {
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-2);
+  text-decoration: none;
+}
+
+.admin-home-quicklink:hover {
+  border-color: color-mix(in srgb, var(--primary-2) 40%, var(--border));
+}
+
+.admin-home-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-home-kpi {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.admin-home-kpi--accent {
+  border-color: color-mix(in srgb, var(--primary-2) 35%, var(--border));
+}
+
+.admin-home-kpi--success {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+}
+
+.admin-home-kpi-label {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-home-kpi-value {
+  margin: 0.2rem 0 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.admin-home-kpi-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.admin-home-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.admin-home-funnel,
+.admin-home-recent {
+  padding: 1rem 1.1rem;
+}
+
+.admin-home-funnel-steps,
+.admin-home-stage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.admin-home-funnel-steps li,
+.admin-home-stage-list li {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  display: grid;
+  gap: 0.2rem;
+}
+
+.admin-home-funnel-steps span,
+.admin-home-stage-list span {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.admin-home-funnel-steps strong,
+.admin-home-stage-list strong {
+  font-size: 1.1rem;
+}
+
+.admin-home-funnel-steps em {
+  font-style: normal;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .admin-home-kpi-grid,
+  .admin-home-funnel-steps,
+  .admin-home-stage-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-home-kpi-grid,
+  .admin-home-funnel-steps,
+  .admin-home-stage-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =====================================================
+   Admin — statistiques analytiques (SVG)
+   ===================================================== */
+
+.admin-stats-page {
+  display: grid;
+  gap: 1.25rem;
+  padding-bottom: 2.5rem;
+}
+
+.admin-stats-hero {
+  padding: 1.2rem 1.35rem;
+}
+
+.admin-stats-hero h1 {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.admin-stats-section {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-stats-section-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding-left: 0.15rem;
+}
+
+.admin-stats-kpi-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-stats-kpi-grid--overview {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-stats-kpi-grid--dense {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-stats-kpi {
+  padding: 0.8rem 0.9rem;
+}
+
+.admin-stats-kpi-label {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.admin-stats-kpi-value {
+  margin: 0.2rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.admin-stats-kpi-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.76rem;
+}
+
+.admin-stats-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-stats-charts-grid--half {
+  margin-top: 0.5rem;
+}
+
+.admin-analytics-chart {
+  padding: 0.9rem 1rem 1rem;
+  overflow: hidden;
+}
+
+.admin-analytics-chart-head h3,
+.admin-analytics-chart-title-only {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.admin-analytics-chart-axes {
+  margin: 0 0 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.admin-analytics-chart-body {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-analytics-svg {
+  width: 100%;
+  height: auto;
+  min-width: 320px;
+  display: block;
+}
+
+.admin-analytics-grid-line {
+  stroke: color-mix(in srgb, var(--border) 85%, var(--foreground) 15%);
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-analytics-axis-line {
+  stroke: color-mix(in srgb, var(--foreground-soft) 70%, var(--border) 30%);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-analytics-axis-label {
+  fill: var(--muted);
+  font-size: 10px;
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+.admin-analytics-x-label {
+  font-size: 9px;
+}
+
+.admin-analytics-value-label {
+  fill: var(--foreground-soft);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+.admin-analytics-line {
+  vector-effect: non-scaling-stroke;
+}
+
+.admin-analytics-empty {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+
+.admin-analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.admin-analytics-table th,
+.admin-analytics-table td {
+  text-align: left;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-analytics-table th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.admin-analytics-table-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+@media (max-width: 1100px) {
+  .admin-stats-kpi-grid--overview,
+  .admin-stats-kpi-grid--dense,
+  .admin-stats-charts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-stats-kpi-grid--overview,
+  .admin-stats-kpi-grid--dense,
+  .admin-stats-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}

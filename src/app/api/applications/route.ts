@@ -11,6 +11,7 @@ import {
   applicationCreateSchema,
   applicationUpdateSchema,
 } from "@/lib/validation";
+import { recordUserActivityAdmin, USER_ACTIVITY_EVENTS } from "@/lib/user-activity";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -100,6 +101,12 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  void recordUserActivityAdmin(user.id, USER_ACTIVITY_EVENTS.APPLICATION_CREATE, {
+    offerId,
+    title: parsed.data.title,
+    company: parsed.data.company || null,
+  });
 
   return NextResponse.json({ ok: true });
 }

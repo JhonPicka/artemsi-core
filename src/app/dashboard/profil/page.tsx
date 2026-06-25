@@ -1,4 +1,5 @@
 import { ProfileMainClient } from "@/components/profile/profile-main-client";
+import { ActivityPageTracker } from "@/components/activity/activity-page-tracker";
 import { requireUser } from "@/lib/auth";
 import { userHasProAccess } from "@/lib/billing";
 import {
@@ -30,6 +31,7 @@ import {
   type StudyLevel,
 } from "@/lib/constants";
 import { formatFrenchLongDate } from "@/lib/dates-fr";
+import { USER_ACTIVITY_EVENTS } from "@/lib/user-activity";
 import { createClient } from "@/lib/supabase/server";
 
 function fmt<T extends string>(
@@ -155,7 +157,9 @@ export default async function DashboardProfilePage() {
   ];
 
   return (
-    <div className="profile-page">
+    <>
+      <ActivityPageTracker eventType={USER_ACTIVITY_EVENTS.PROFILE_VIEW} />
+      <div className="profile-page">
       <header className="card profile-hero">
         <div className="profile-hero-avatar" aria-hidden="true">
           {initials(profile?.full_name, user.email ?? "")}
@@ -220,5 +224,6 @@ export default async function DashboardProfilePage() {
         }}
       />
     </div>
+    </>
   );
 }

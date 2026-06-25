@@ -79,6 +79,7 @@ export function AdminOfferForm() {
       if (data.rawSource) hints.push(`Source analysée : ${data.rawSource}.`);
       if (data.fetchWarning) hints.push(data.fetchWarning);
       if (data.usedAi) hints.push("Analyse IA : faits extraits (sans conseils candidat).");
+      if (data.extractMode) hints.push(`Mode : ${data.extractMode}.`);
       if (fields.contractHint) hints.push(`Contrat détecté : ${fields.contractHint}.`);
       setInfo(
         hints.length

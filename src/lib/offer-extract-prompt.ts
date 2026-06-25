@@ -112,6 +112,8 @@ Réponds UNIQUEMENT en JSON valide (pas de markdown, pas de commentaire).
 4. Pas de conseils au candidat (« mettez en avant », « vérifiez », « soyez »…).
 5. Ne cite jamais HelloWork, Indeed, LinkedIn ni le nom d'un jobboard.
 6. Ignore le bruit (menus, cookies, footer, offres similaires).
+7. Si deux blocs sont fournis (texte collé + page), extrais titre, entreprise et description UNIQUEMENT du texte collé. Utilise la page seulement pour confirmer lieu ou entreprise si absents du texte collé.
+8. Ne reprends JAMAIS un en-tête technique, une URL, ni une phrase d'accroche marketing comme titre ou entreprise.
 
 ## Schéma JSON
 {
@@ -181,14 +183,236 @@ ${buildRegionMatchingGuide()}
 Domaines :
 ${buildDomainMatchingGuide()}`;
 
-export function buildOfferExtractUserMessage(url: string, raw: string) {
-  return `URL source : ${url}
+/** Prompt allégé : métadonnées déjà connues, l'IA ne structure que la description. */
+export const OFFER_DESCRIPTION_EXTRACT_PROMPT = `Tu es rédacteur données recrutement chez ARTEMSI (alternance & apprentissage, France).
+Le titre, l'entreprise et le lieu sont DÉJÀ FIXÉS — ne les modifie pas.
+
+Ta seule mission : produire une description FACTUELLE structurée à partir du texte d'annonce.
+
+## Sortie
+JSON uniquement :
+{
+  "description": string,
+  "contractHint": "alternance" | "apprentissage" | "pro" | null,
+  "studyDomainHint": ${DOMAIN_LIST} | null,
+  "locationKeywords": string[],
+  "jobKeywords": string[]
+}
+
+## description (500–1100 caractères)
+Structure EXACTE — 3 blocs avec puces « • » :
+
+Infos clés
+• Type de contrat et durée
+• Lieu / modalité
+• Niveau diplôme
+• Date de début si mentionnée
+• Rémunération si mentionnée
+
+Missions
+• 3 à 5 actions concrètes (verbes : participer, analyser, réaliser…)
+
+Profil
+• 2 à 4 exigences mesurables (diplôme, outils, langues)
+
+Interdit : conseils candidat, slogans RH, afterworks, soft skills vagues seules, paragraphes sans puces.`;
+
+export type OfferExtractSource = {
+  pastedText?: string;
+  pageText?: string;
+  structuredHints?: {
+    title?: string | null;
+    company?: string | null;
+    location?: string | null;
+    contractHint?: string | null;
+    sources?: string[];
+  };
+};
+
+function trimSourceBlock(value?: string, max = 10_000) {
+  return value?.replace(/\r/g, "\n").trim().slice(0, max) ?? "";
+}
+
+function formatStructuredHintsBlock(source: OfferExtractSource) {
+  const h = source.structuredHints;
+  if (!h) return "";
+  const lines = [
+    h.title ? `- Titre confirmé : ${h.title}` : null,
+    h.company ? `- Entreprise confirmée : ${h.company}` : null,
+    h.location ? `- Lieu confirmé : ${h.location}` : null,
+    h.contractHint ? `- Contrat : ${h.contractHint}` : null,
+  ].filter(Boolean);
+  if (!lines.length) return "";
+  return `\nMétadonnées déjà extraites (ne pas modifier titre/entreprise/lieu) :\n${lines.join("\n")}\n`;
+}
+
+export function buildOfferExtractUserMessage(url: string, source: OfferExtractSource | string) {
+  if (typeof source === "string") {
+    return `URL source : ${url}
 
 Extrais les faits de l'annonce ci-dessous (JSON uniquement, sans conseils candidat).
 
---- ANNONCE BRUTE ---
-${raw.slice(0, 12_000)}
+--- ANNONCE ---
+${source.slice(0, 12_000)}
 --- FIN ---`;
+  }
+
+  const pasted = trimSourceBlock(source.pastedText);
+  const page = trimSourceBlock(source.pageText);
+  const hintsBlock = formatStructuredHintsBlock(source);
+
+  if (pasted && page) {
+    return `URL source : ${url}
+${hintsBlock}
+Extrais les faits de l'annonce (JSON uniquement).
+Priorité absolue au texte collé. La page sert uniquement de complément.
+
+--- TEXTE COLLÉ (prioritaire) ---
+${pasted}
+--- FIN TEXTE COLLÉ ---
+
+--- PAGE OFFICIELLE (complément) ---
+${page}
+--- FIN PAGE ---`;
+  }
+
+  const body = pasted || page;
+  return `URL source : ${url}
+${hintsBlock}
+Extrais les faits de l'annonce ci-dessous (JSON uniquement, sans conseils candidat).
+
+--- ANNONCE ---
+${body}
+--- FIN ---`;
+}
+
+export function buildOfferDescriptionExtractUserMessage(
+  url: string,
+  cleanedText: string,
+  hints: NonNullable<OfferExtractSource["structuredHints"]>,
+) {
+  return `URL source : ${url}
+
+Métadonnées FIXÉES (ne pas les inclure dans ta réponse) :
+- Titre : ${hints.title ?? "—"}
+- Entreprise : ${hints.company ?? "—"}
+- Lieu : ${hints.location ?? "—"}
+- Contrat probable : ${hints.contractHint ?? "—"}
+
+Structure uniquement la DESCRIPTION à partir du texte ci-dessous.
+
+--- ANNONCE ---
+${cleanedText.slice(0, 10_000)}
+--- FIN ---`;
+}
+
+/** Texte utile pour les heuristiques (texte collé en priorité). */
+export function primaryOfferSourceText(source: OfferExtractSource | string) {
+  if (typeof source === "string") return source;
+  return source.pastedText?.trim() || source.pageText?.trim() || "";
+}
+
+const INVALID_TITLE_PATTERNS = [
+  /texte\s+colle/i,
+  /source\s+prioritaire/i,
+  /texte\s+recupere/i,
+  /page\s+officielle/i,
+  /annonce\s+brute/i,
+  /^url\s*:/i,
+  /^https?:\/\//i,
+  /vous\s+(?:cherchez|reconnaissez)/i,
+  /et\s+si\s+cette\s+alternance/i,
+];
+
+const INVALID_COMPANY_PATTERNS = [
+  /vous\s+(?:cherchez|reconnaissez|pourrez)/i,
+  /alternance\s+de\s+\d+/i,
+  /profil\s+suivant/i,
+  /texte\s+colle/i,
+  /source\s+prioritaire/i,
+  /^(?:une|un)\s+(?:alternance|apprentissage|stage)\b/i,
+  /\b(?:dans|pour|avec)\s+le\s+profil\b/i,
+];
+
+function isInvalidExtractedTitle(title: string) {
+  const normalized = normalizeText(title);
+  if (normalized.length < 4) return true;
+  if (INVALID_TITLE_PATTERNS.some((pattern) => pattern.test(title))) return true;
+  if (GENERIC_ROLE_TITLES.has(normalized.replace(/\s*—\s*alternance$/i, "").trim())) {
+    return normalized.length < 12;
+  }
+  return false;
+}
+
+function isInvalidExtractedCompany(company: string | null) {
+  if (!company) return true;
+  const cleaned = company.trim();
+  if (cleaned.length < 2 || cleaned.length > 80) return true;
+  if (INVALID_COMPANY_PATTERNS.some((pattern) => pattern.test(cleaned))) return true;
+  const words = cleaned.split(/\s+/);
+  if (words.length > 8) return true;
+  if (/\b(?:vous|nous|votre|notre|cherchez|reconnaissez|pourrez|souhaitez)\b/i.test(cleaned)) {
+    return true;
+  }
+  return false;
+}
+
+function extractTitleFromRaw(raw?: string) {
+  if (!raw) return null;
+  const lines = raw
+    .replace(/\r/g, "\n")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  for (const line of lines) {
+    if (line.length < 8 || line.length > 120) continue;
+    if (/cookie|mentions l[eé]gales|postuler|t[eé]l[eé]charger/i.test(line)) continue;
+    if (INVALID_TITLE_PATTERNS.some((pattern) => pattern.test(line))) continue;
+    if (/^(infos|missions?|profil|localisation|description)\b/i.test(line)) continue;
+    if (/^[A-Z0-9][A-Z0-9\s/&.-]{6,}$/.test(line) && !/\b(alternant|alternance|apprenti|ing[eé]nieur|assistant|technicien|auditeur|commercial)\b/i.test(line)) {
+      continue;
+    }
+    return line;
+  }
+
+  const roleMatch = raw.match(
+    /\b((?:alternant(?:e)?|apprenti(?:e)?|assistant(?:e)?|ing[eé]nieur|technicien(?:ne)?|auditeur(?:ice)?|commercial(?:e)?|stagiaire)\s+[^.\n]{3,70})/i,
+  );
+  return roleMatch?.[1]?.trim() ?? null;
+}
+
+function extractCompanyFromRaw(raw?: string, url?: string) {
+  if (!raw) return null;
+
+  const patterns: RegExp[] = [
+    /(?:chez|rejoignez|au sein de|groupe)\s+([A-ZÀ-Ÿ][A-Za-zÀ-ÿ0-9&.'’\- ]{1,50})/,
+    /(?:entreprise|société|societe|employeur)\s*[:\-]\s*([^\n.]{2,60})/i,
+    /(?:cabinet|groupe)\s+([A-ZÀ-Ÿ][A-Za-zÀ-ÿ0-9&.'’\- ]{1,50})/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = raw.match(pattern);
+    const candidate = cleanExtractedCompany(match?.[1]?.trim() ?? null);
+    if (candidate && !isInvalidExtractedCompany(candidate)) return candidate;
+  }
+
+  if (url) {
+    try {
+      const host = new URL(url).hostname.replace(/^www\./, "");
+      const segment = host.split(".")[0] ?? "";
+      if (segment.length >= 3 && segment.length <= 30 && !/^(careers|jobs|recrutement|emploi)$/i.test(segment)) {
+        const fromHost = cleanExtractedCompany(segment.replace(/-/g, " "));
+        if (fromHost && !isInvalidExtractedCompany(fromHost)) {
+          return toTitleCase(fromHost);
+        }
+      }
+    } catch {
+      // ignore invalid URL
+    }
+  }
+
+  return null;
 }
 
 function normalizeText(value: string) {
@@ -291,7 +515,7 @@ function toTitleCase(value: string) {
 function cleanExtractedTitle(title: string, company: string | null, contractHint: string | null) {
   let cleaned = title.replace(/\s+/g, " ").trim();
 
-  for (const pattern of TITLE_JUNK_PATTERNS) {
+  for (const pattern of [...TITLE_JUNK_PATTERNS, ...INVALID_TITLE_PATTERNS]) {
     cleaned = cleaned.replace(pattern, "");
   }
 
@@ -477,18 +701,35 @@ function normalizeDescriptionStructure(description: string) {
 export function finalizeExtractedOffer(
   parsed: Partial<OfferExtractModelOutput>,
   raw?: string,
+  url?: string,
 ): ExtractedOfferFields | null {
-  if (!parsed.title?.trim() || !parsed.description?.trim()) return null;
+  if (!parsed.description?.trim()) return null;
 
   const contractHint = normalizeContractHint(parsed.contractHint);
-  const company = cleanExtractedCompany(
+  let company = cleanExtractedCompany(
     parsed.company ? String(parsed.company).trim() : null,
   );
-  const title = improveGenericTitle(
-    cleanExtractedTitle(String(parsed.title).trim(), company, contractHint),
+  if (isInvalidExtractedCompany(company)) {
+    company = extractCompanyFromRaw(raw, url);
+  }
+
+  let title = improveGenericTitle(
+    cleanExtractedTitle(String(parsed.title ?? "").trim(), company, contractHint),
     contractHint,
     raw,
   );
+  if (!parsed.title?.trim() || isInvalidExtractedTitle(title)) {
+    const fallbackTitle = extractTitleFromRaw(raw);
+    if (fallbackTitle) {
+      title = improveGenericTitle(
+        cleanExtractedTitle(fallbackTitle, company, contractHint),
+        contractHint,
+        raw,
+      );
+    }
+  }
+  if (!title.trim() || isInvalidExtractedTitle(title)) return null;
+
   const parsedLocation = parsed.location ? cleanLocationCandidate(String(parsed.location)) : null;
   const location = canonicalizeLocation(
     (parsedLocation ?? extractLocationFromRaw(raw))?.slice(0, 200) ?? null,

@@ -1,9 +1,9 @@
-import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { AdminStatsView } from "@/components/admin/admin-stats-view";
 import { loadAdminDashboardStats } from "@/lib/admin-stats";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDashboardPage() {
+export default async function AdminStatsPage() {
   let stats;
   let error: string | null = null;
 
@@ -21,8 +21,8 @@ export default async function AdminDashboardPage() {
     return (
       <section className="admin-offer-page">
         <header className="admin-offer-header">
-          <span className="brand-chip">TABLEAU DE BORD</span>
-          <h1>Accueil admin</h1>
+          <span className="brand-chip">STATISTIQUES</span>
+          <h1>Pilotage détaillé</h1>
           <p className="error" role="alert">
             {error}
           </p>
@@ -33,7 +33,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <section className="admin-offer-page">
-      <AdminDashboard stats={stats} />
+      <AdminStatsView stats={stats} />
     </section>
   );
 }

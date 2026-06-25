@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ActivityPageTracker } from "@/components/activity/activity-page-tracker";
 import { FreemiumProUpgradeBanner } from "@/components/billing/freemium-pro-upgrade-banner";
 import { JobboardOfferCard } from "@/components/offers/jobboard-offer-card";
 import { JobboardPagination } from "@/components/offers/jobboard-pagination";
@@ -22,6 +23,7 @@ import {
   parseOffersView,
 } from "@/lib/offers-dashboard";
 import { offerFromAssignmentEmbed, type AssignmentEmbedRow } from "@/lib/offers-demo-preview";
+import { USER_ACTIVITY_EVENTS } from "@/lib/user-activity";
 import { createClient } from "@/lib/supabase/server";
 
 type OfferStatus = "sent" | "seen" | "applied" | "archived";
@@ -115,7 +117,9 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
   };
 
   return (
-    <div className="offers-page">
+    <>
+      <ActivityPageTracker eventType={USER_ACTIVITY_EVENTS.OFFERS_VIEW} />
+      <div className="offers-page">
       <header className="offers-page-header">
         <div>
           <h1 className="offers-page-title">Offres</h1>
@@ -278,5 +282,6 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
         </section>
       ) : null}
     </div>
+    </>
   );
 }

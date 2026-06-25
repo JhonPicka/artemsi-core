@@ -12,7 +12,9 @@ function isActive(pathname: string, href: string, exact: boolean) {
 }
 
 const LINKS = [
-  { href: "/admin", label: "Tableau de bord", exact: true },
+  { href: "/admin", label: "Accueil", exact: true },
+  { href: "/admin/stats", label: "Statistiques", exact: true },
+  { href: "/admin/candidats", label: "Candidats", exact: false },
   { href: "/admin/offres", label: "Offres", exact: false },
   { href: "/admin/audits", label: "Audits", exact: false },
 ] as const;
