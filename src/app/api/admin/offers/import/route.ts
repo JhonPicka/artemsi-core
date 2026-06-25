@@ -16,6 +16,7 @@ export async function POST(request: Request) {
 
   const formData = await request.formData().catch(() => null);
   const file = formData?.get("file");
+  const runMatching = formData?.get("runMatching") === "true";
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Fichier CSV requis." }, { status: 400 });
@@ -113,7 +114,9 @@ export async function POST(request: Request) {
       insertedOfferIds.push(...(insertedRows ?? []).map((row) => row.id as string));
     }
 
-    const matching = await runOfferMatchingForOffers(insertedOfferIds);
+    const matching = runMatching
+      ? await runOfferMatchingForOffers(insertedOfferIds)
+      : null;
 
     return NextResponse.json({
       ok: true,

@@ -95,6 +95,11 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
       <section className="card admin-offer-step">
         <h2>Offres en base</h2>
         <p className="muted">Aucune offre pour le moment.</p>
+        <p>
+          <Link href="/admin/offres/nouvelle" className="button-link">
+            + Ajouter une offre
+          </Link>
+        </p>
       </section>
     );
   }

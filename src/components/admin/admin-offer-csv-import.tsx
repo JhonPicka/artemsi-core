@@ -20,6 +20,7 @@ const CSV_TEMPLATE = `title,url,description,company,location,is_public
 export function AdminOfferCsvImport() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
+  const [runMatching, setRunMatching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
 
@@ -41,6 +42,7 @@ export function AdminOfferCsvImport() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      if (runMatching) formData.append("runMatching", "true");
 
       const response = await fetch("/api/admin/offers/import", {
         method: "POST",
@@ -71,9 +73,18 @@ export function AdminOfferCsvImport() {
       <p className="muted admin-offer-lead">
         Pour les offres issues de sites carrières ou sources publiques (pas d&apos;offre exclusive
         partenaire). Chaque ligne est importée avec <strong>source = autre</strong> et{" "}
-        <strong>non exclusive</strong>. Les offres partenaires / exclusives passent par le
-        formulaire ci-dessous (analyse IA).
+        <strong>non exclusive</strong>. Les offres partenaires passent par{" "}
+        <strong>Nouvelle offre</strong> (analyse IA ou saisie manuelle).
       </p>
+
+      <label className="admin-offer-check">
+        <input
+          type="checkbox"
+          checked={runMatching}
+          onChange={(e) => setRunMatching(e.target.checked)}
+        />
+        Lancer le matching après l&apos;import
+      </label>
 
       <p className="muted small-label">
         Colonnes obligatoires : <code>title</code>, <code>url</code>, <code>description</code>
@@ -138,7 +149,11 @@ export function AdminOfferCsvImport() {
                 <span>profil(s) analysé(s)</span>
               </div>
             </div>
-          ) : null}
+          ) : (
+            <p className="muted small-label">
+              Import terminé sans matching. Lance-le depuis l&apos;onglet Matching quand tu veux.
+            </p>
+          )}
         </section>
       ) : null}
 

@@ -64,7 +64,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
-    const matching = await runOfferMatchingForOffers([inserted.id as string]);
+    const matching = data.runMatching
+      ? await runOfferMatchingForOffers([inserted.id as string])
+      : null;
 
     return NextResponse.json({
       ok: true,
