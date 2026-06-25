@@ -90,6 +90,7 @@ export async function POST(request: Request) {
         location: row.location,
         url: row.url,
         description: row.description,
+        study_domain: row.studyDomain,
         source: "autre" as const,
         is_public: row.isPublic,
         is_partner_exclusive: false,

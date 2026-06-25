@@ -23,6 +23,7 @@ export type AdminOfferListRow = {
   company: string | null;
   location: string | null;
   url: string;
+  studyDomain: string | null;
   source: string;
   isPublic: boolean;
   isPartnerExclusive: boolean;
@@ -94,6 +95,7 @@ function mapAdminOfferRows(
     company: (row.company as string | null) ?? null,
     location: (row.location as string | null) ?? null,
     url: row.url as string,
+    studyDomain: (row.study_domain as string | null) ?? null,
     source: row.source as string,
     isPublic: Boolean(row.is_public),
     isPartnerExclusive: Boolean(row.is_partner_exclusive),
@@ -110,7 +112,7 @@ export async function loadAdminOffersPage(
 ): Promise<AdminOffersPageResult> {
   const supabase = createAdminClient();
   const selectFields =
-    "id, title, company, location, url, source, is_public, is_partner_exclusive, hidden_at, hidden_reason, created_at, updated_at";
+    "id, title, company, location, url, study_domain, source, is_public, is_partner_exclusive, hidden_at, hidden_reason, created_at, updated_at";
 
   let countQuery = supabase.from("offers").select("id", { count: "exact", head: true });
   countQuery = applyAdminOffersFilters(countQuery, query);
@@ -147,7 +149,7 @@ export async function loadAdminOfferById(id: string): Promise<AdminOfferDetail |
   const { data, error } = await supabase
     .from("offers")
     .select(
-      "id, title, company, location, url, description, source, is_public, is_partner_exclusive, application_guide, hidden_at, hidden_reason, created_at, updated_at",
+      "id, title, company, location, url, description, study_domain, source, is_public, is_partner_exclusive, application_guide, hidden_at, hidden_reason, created_at, updated_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -163,6 +165,7 @@ export async function loadAdminOfferById(id: string): Promise<AdminOfferDetail |
     company: (data.company as string | null) ?? null,
     location: (data.location as string | null) ?? null,
     url: data.url as string,
+    studyDomain: (data.study_domain as string | null) ?? null,
     description: (data.description as string | null) ?? "",
     source: data.source as string,
     isPublic: Boolean(data.is_public),
@@ -216,6 +219,7 @@ export async function updateAdminOffer(
       location: body.location ?? null,
       url: body.url,
       description: body.description,
+      study_domain: body.studyDomain,
       source: body.source,
       is_public: shouldRestoreVisibility ? true : body.isPublic,
       is_partner_exclusive: body.isPartnerExclusive,

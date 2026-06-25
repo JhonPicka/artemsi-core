@@ -52,6 +52,7 @@ export async function POST(request: Request) {
         location: data.location ?? null,
         url: data.url,
         description: data.description,
+        study_domain: data.studyDomain,
         source: data.source,
         is_public: data.isPublic,
         is_partner_exclusive: data.isPartnerExclusive,

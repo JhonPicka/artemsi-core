@@ -8506,6 +8506,51 @@ input[type="checkbox"] {
   border-color: var(--primary-soft-strong);
 }
 
+.admin-offer-dist-charts {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 960px) {
+  .admin-offer-dist-charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.admin-offer-dist-priority-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-offer-dist-gap-positive {
+  color: var(--admin-chart-2, #28d39a);
+  font-weight: 700;
+}
+
+.admin-offer-dist-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: 0.85rem;
+  font-size: 0.82rem;
+}
+
+.admin-offer-dist-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+}
+
+.admin-offer-dist-swatch--profiles {
+  background: #7c5cff;
+}
+
+.admin-offer-dist-swatch--offers {
+  background: #28d39a;
+}
+
 .admin-offer-header h1 {
   margin: 0.35rem 0 0.5rem;
 }

@@ -21,6 +21,7 @@ type OfferRow = {
   company: string | null;
   location: string | null;
   description: string | null;
+  study_domain: string | null;
   is_partner_exclusive: boolean;
 };
 
@@ -31,6 +32,7 @@ function mapOfferRow(row: OfferRow): MatchableOffer {
     company: row.company,
     location: row.location,
     summary: row.description ?? "",
+    study_domain: row.study_domain,
     is_partner_exclusive: Boolean(row.is_partner_exclusive),
   };
 }
@@ -43,7 +45,7 @@ async function loadRecentOffersForMatching(
 
   const { data, error } = await supabase
     .from("offers")
-    .select("id,title,company,location,description,is_partner_exclusive")
+    .select("id,title,company,location,description,study_domain,is_partner_exclusive")
     .is("hidden_at", null)
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending: false })
@@ -62,7 +64,7 @@ async function loadOffersByIds(
 
   const { data, error } = await supabase
     .from("offers")
-    .select("id,title,company,location,description,is_partner_exclusive")
+    .select("id,title,company,location,description,study_domain,is_partner_exclusive")
     .in("id", [...offerIds])
     .is("hidden_at", null);
 

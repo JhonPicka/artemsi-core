@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   guideTipsToText,
   textToApplicationGuide,
 } from "@/lib/offer-application-guide";
+import {
+  STUDY_DOMAINS,
+  STUDY_DOMAIN_LABEL,
+  type StudyDomain,
+} from "@/lib/constants";
 import type { OfferMatchingResult } from "@/lib/run-offer-matching";
 
 type InputMode = "scan" | "manual";
@@ -17,6 +22,7 @@ type ExtractedFields = {
   location: string | null;
   description: string;
   contractHint: string | null;
+  studyDomain: StudyDomain | null;
 };
 
 type PublishResult = {
@@ -24,7 +30,10 @@ type PublishResult = {
   matching?: OfferMatchingResult | null;
 };
 
+const INITIAL_STUDY_DOMAIN: StudyDomain = "AUTRE";
+
 export function AdminOfferForm() {
+  const urlInputRef = useRef<HTMLInputElement>(null);
   const [inputMode, setInputMode] = useState<InputMode>("scan");
   const [url, setUrl] = useState("");
   const [pastedText, setPastedText] = useState("");
@@ -32,6 +41,7 @@ export function AdminOfferForm() {
   const [company, setCompany] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
+  const [studyDomain, setStudyDomain] = useState<StudyDomain>(INITIAL_STUDY_DOMAIN);
   const [tips, setTips] = useState("");
   const [source, setSource] = useState<"partner" | "autre">("partner");
   const [isPublic, setIsPublic] = useState(true);
@@ -41,17 +51,39 @@ export function AdminOfferForm() {
   const [error, setError] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [matching, setMatching] = useState(false);
-  const [published, setPublished] = useState<PublishResult | null>(null);
-  const [matchingResult, setMatchingResult] = useState<OfferMatchingResult | null>(null);
+  const [lastPublished, setLastPublished] = useState<PublishResult | null>(null);
 
   const isPartnerOffer = source === "partner" || isExclusive;
+
+  function resetFormFields() {
+    setUrl("");
+    setPastedText("");
+    setTitle("");
+    setCompany("");
+    setLocation("");
+    setDescription("");
+    setStudyDomain(INITIAL_STUDY_DOMAIN);
+    setTips("");
+    window.requestAnimationFrame(() => {
+      urlInputRef.current?.focus();
+      urlInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  function buildPublishSuccessMessage(
+    offerId: string,
+    matching: OfferMatchingResult | null | undefined,
+  ) {
+    if (matching) {
+      return `Offre publiée (${matching.insertedAssignments} assignation(s), ${matching.matchedPairs} match(s)). Formulaire vidé — tu peux enchaîner.`;
+    }
+    return `Offre publiée (ID ${offerId.slice(0, 8)}…). Formulaire vidé — colle la prochaine offre.`;
+  }
 
   async function handleExtract() {
     setError(null);
     setInfo(null);
-    setPublished(null);
-    setMatchingResult(null);
+    setLastPublished(null);
 
     if (!url.trim()) {
       setError("Indique l'URL de l'offre.");
@@ -79,6 +111,7 @@ export function AdminOfferForm() {
       setCompany(fields.company ?? "");
       setLocation(fields.location ?? "");
       setDescription(fields.description ?? "");
+      if (fields.studyDomain) setStudyDomain(fields.studyDomain);
 
       const hints: string[] = [];
       if (data.rawSource) hints.push(`Source analysée : ${data.rawSource}.`);
@@ -86,6 +119,7 @@ export function AdminOfferForm() {
       if (data.usedAi) hints.push("Analyse IA : faits extraits (sans conseils candidat).");
       if (data.extractMode) hints.push(`Mode : ${data.extractMode}.`);
       if (fields.contractHint) hints.push(`Contrat détecté : ${fields.contractHint}.`);
+      if (fields.studyDomain) hints.push(`Domaine suggéré : ${STUDY_DOMAIN_LABEL[fields.studyDomain]}.`);
       setInfo(
         hints.length
           ? hints.join(" ")
@@ -101,8 +135,7 @@ export function AdminOfferForm() {
   async function handlePublish() {
     setError(null);
     setInfo(null);
-    setPublished(null);
-    setMatchingResult(null);
+    setLastPublished(null);
 
     if (!url.trim() || !title.trim() || description.trim().length < 20) {
       setError("URL, titre et description (20 caracteres min.) sont obligatoires.");
@@ -122,6 +155,7 @@ export function AdminOfferForm() {
           company: company.trim() || null,
           location: location.trim() || null,
           description: description.trim(),
+          studyDomain,
           source,
           isPublic,
           isPartnerExclusive: isExclusive,
@@ -135,45 +169,16 @@ export function AdminOfferForm() {
         return;
       }
 
-      setPublished({
-        offerId: data.offerId,
-        matching: data.matching,
-      });
-      if (data.matching) {
-        setMatchingResult(data.matching);
-        setInfo("Offre publiée et matching lancé.");
-      } else {
-        setInfo("Offre publiée. Lance le matching quand tu veux depuis l'onglet Matching.");
-      }
+      const publishedOfferId = data.offerId as string;
+      const matching = data.matching as OfferMatchingResult | null | undefined;
+
+      setLastPublished({ offerId: publishedOfferId, matching: matching ?? null });
+      setInfo(buildPublishSuccessMessage(publishedOfferId, matching));
+      resetFormFields();
     } catch {
       setError("Erreur reseau lors de la publication.");
     } finally {
       setPublishing(false);
-    }
-  }
-
-  async function handleMatchPublished() {
-    if (!published?.offerId) return;
-
-    setError(null);
-    setMatching(true);
-    try {
-      const response = await fetch("/api/admin/offers/match", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offerIds: [published.offerId] }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        setError(data.error ?? "Matching impossible.");
-        return;
-      }
-      setMatchingResult(data.matching as OfferMatchingResult);
-      setInfo("Matching lancé pour cette offre.");
-    } catch {
-      setError("Erreur réseau lors du matching.");
-    } finally {
-      setMatching(false);
     }
   }
 
@@ -234,6 +239,7 @@ export function AdminOfferForm() {
           <label htmlFor="offer-url">URL</label>
           <input
             id="offer-url"
+            ref={urlInputRef}
             type="url"
             placeholder="https://..."
             value={url}
@@ -268,6 +274,7 @@ export function AdminOfferForm() {
           <label htmlFor="offer-url-manual">URL</label>
           <input
             id="offer-url-manual"
+            ref={urlInputRef}
             type="url"
             placeholder="https://..."
             value={url}
@@ -284,6 +291,18 @@ export function AdminOfferForm() {
         <input id="offer-company" value={company} onChange={(e) => setCompany(e.target.value)} />
         <label htmlFor="offer-location">Lieu</label>
         <input id="offer-location" value={location} onChange={(e) => setLocation(e.target.value)} />
+        <label htmlFor="offer-domain">Domaine</label>
+        <select
+          id="offer-domain"
+          value={studyDomain}
+          onChange={(e) => setStudyDomain(e.target.value as StudyDomain)}
+        >
+          {STUDY_DOMAINS.map((domain) => (
+            <option key={domain} value={domain}>
+              {STUDY_DOMAIN_LABEL[domain]}
+            </option>
+          ))}
+        </select>
         <label htmlFor="offer-description">Description</label>
         <textarea
           id="offer-description"
@@ -368,68 +387,32 @@ export function AdminOfferForm() {
       {info ? (
         <p className="admin-offer-info" role="status">
           {info}
+          {lastPublished?.offerId ? (
+            <>
+              {" "}
+              <Link
+                href={`/admin/offres#admin-offer-${lastPublished.offerId}`}
+                className="admin-inline-link"
+              >
+                Voir dans la liste
+              </Link>
+              {!lastPublished.matching ? (
+                <>
+                  {" "}
+                  ·{" "}
+                  <Link href="/admin/offres/matching" className="admin-inline-link">
+                    Matching
+                  </Link>
+                </>
+              ) : null}
+            </>
+          ) : null}
         </p>
       ) : null}
       {error ? (
         <p className="error admin-offer-error" role="alert">
           {error}
         </p>
-      ) : null}
-      {published?.offerId ? (
-        <section className="card admin-offer-success" role="status" aria-live="polite">
-          <div className="admin-offer-success-head">
-            <span className="admin-offer-success-icon" aria-hidden="true">
-              ✓
-            </span>
-            <div>
-              <h3>Offre publiée avec succès</h3>
-              <p className="muted">
-                ID : <code>{published.offerId}</code>
-              </p>
-            </div>
-          </div>
-          <div className="admin-offer-success-checks" aria-label="Statut de publication">
-            <span>✓ Enregistrée en base</span>
-            {matchingResult ? <span>✓ Matching effectué</span> : null}
-          </div>
-
-          {matchingResult ? (
-            <div className="admin-offer-matching-summary">
-              <div>
-                <strong>{matchingResult.insertedAssignments}</strong>
-                <span>assignation(s) créée(s)</span>
-              </div>
-              <div>
-                <strong>{matchingResult.matchedPairs}</strong>
-                <span>match(s) trouvé(s)</span>
-              </div>
-              <div>
-                <strong>{matchingResult.profilesConsidered}</strong>
-                <span>profil(s) analysé(s)</span>
-              </div>
-            </div>
-          ) : (
-            <div className="form-actions">
-              <button
-                type="button"
-                className="button-link secondary-link"
-                onClick={handleMatchPublished}
-                disabled={matching}
-              >
-                {matching ? "Matching…" : "Lancer le matching pour cette offre"}
-              </button>
-              <Link href="/admin/offres/matching" className="button-link secondary-link">
-                Matching global
-              </Link>
-              <Link
-                href={`/admin/offres#admin-offer-${published.offerId}`}
-                className="button-link secondary-link"
-              >
-                Voir dans la liste
-              </Link>
-            </div>
-          )}
-        </section>
       ) : null}
     </div>
   );

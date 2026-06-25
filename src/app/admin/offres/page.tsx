@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { AdminOffersList } from "@/components/admin/admin-offers-list";
 import { getAdminEmail } from "@/lib/admin-auth";
 import { loadAdminOffersPage, loadAdminOffersTotals } from "@/lib/admin-offers";
@@ -42,23 +40,13 @@ export default async function AdminOffersPage({ searchParams }: PageProps) {
 
   return (
     <section className="admin-offer-page">
-      <header className="admin-offer-header admin-offer-header--row">
-        <div>
-          <span className="brand-chip">ADMIN OFFRES</span>
-          <h1>Toutes les offres</h1>
-          <p className="muted">
-            Réservé à <strong>{getAdminEmail()}</strong>. Filtre, modifie ou masque les offres du
-            catalogue.
-          </p>
-        </div>
-        <Link
-          href="/admin/offres/nouvelle"
-          className="admin-offer-add-btn"
-          aria-label="Ajouter une offre"
-          title="Ajouter une offre"
-        >
-          +
-        </Link>
+      <header className="admin-offer-header">
+        <span className="brand-chip">ADMIN OFFRES</span>
+        <h1>Toutes les offres</h1>
+        <p className="muted">
+          Réservé à <strong>{getAdminEmail()}</strong>. Filtre, modifie ou masque les offres du
+          catalogue.
+        </p>
       </header>
       <div className="admin-offer-panel">
         {listError ? (

@@ -13,9 +13,9 @@ type ImportResult = {
   };
 };
 
-const CSV_TEMPLATE = `title,url,description,company,location,is_public
-"Alternance Marketing Digital","https://exemple.com/offre/1","Alternance 12 mois en marketing digital, Bac+3/4, missions SEO et réseaux sociaux, début septembre.","Publicis","Lyon",true
-"Alternance Data Analyst","https://exemple.com/offre/2","Alternance data Bac+4, Python/SQL, dashboards, équipe BI à Paris.","Capgemini","Paris",true`;
+const CSV_TEMPLATE = `title,url,description,company,location,study_domain,is_public
+"Alternance Marketing Digital","https://exemple.com/offre/1","Alternance 12 mois en marketing digital, Bac+3/4, missions SEO et réseaux sociaux, début septembre.","Publicis","Lyon","MARKETING",true
+"Alternance Data Analyst","https://exemple.com/offre/2","Alternance data Bac+4, Python/SQL, dashboards, équipe BI à Paris.","Capgemini","Paris","INFORMATIQUE",true`;
 
 export function AdminOfferCsvImport() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -89,7 +89,8 @@ export function AdminOfferCsvImport() {
       <p className="muted small-label">
         Colonnes obligatoires : <code>title</code>, <code>url</code>, <code>description</code>
         (min. 20 car.). Recommandées : <code>company</code>, <code>location</code>,{" "}
-        <code>is_public</code> (true par défaut).
+        <code>study_domain</code> (codes : INFORMATIQUE, MARKETING, …), <code>is_public</code> (true
+        par défaut).
       </p>
 
       <div className="form-actions admin-offer-csv-actions">

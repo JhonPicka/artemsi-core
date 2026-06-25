@@ -1,5 +1,6 @@
 import { REGIONS, STUDY_DOMAINS, type StudyDomain } from "@/lib/constants";
 import { DOMAIN_HINTS, REGION_HINTS } from "@/lib/offer-matching";
+import { normalizeStudyDomain } from "@/lib/study-domain";
 
 /** Réponse JSON attendue du modèle. */
 export type OfferExtractModelOutput = {
@@ -19,6 +20,7 @@ export type ExtractedOfferFields = {
   location: string | null;
   description: string;
   contractHint: string | null;
+  studyDomain: StudyDomain | null;
 };
 
 const REGION_SLUGS = REGIONS.map((r) =>
@@ -698,6 +700,24 @@ function normalizeDescriptionStructure(description: string) {
   return sanitizeDescription(text);
 }
 
+function inferStudyDomainFromText(text: string): StudyDomain | null {
+  const norm = normalizeText(text);
+  let best: StudyDomain | null = null;
+  let bestHits = 0;
+
+  for (const domain of STUDY_DOMAINS) {
+    if (domain === "AUTRE") continue;
+    const hints = DOMAIN_HINTS[domain] ?? [];
+    const hits = hints.filter((hint) => norm.includes(normalizeText(hint))).length;
+    if (hits > bestHits) {
+      bestHits = hits;
+      best = domain;
+    }
+  }
+
+  return bestHits > 0 ? best : null;
+}
+
 export function finalizeExtractedOffer(
   parsed: Partial<OfferExtractModelOutput>,
   raw?: string,
@@ -736,6 +756,9 @@ export function finalizeExtractedOffer(
     raw,
   );
   const description = normalizeDescriptionStructure(String(parsed.description).trim());
+  const studyDomain =
+    normalizeStudyDomain(parsed.studyDomainHint) ??
+    inferStudyDomainFromText(`${title} ${description}`);
 
   return {
     title,
@@ -743,5 +766,6 @@ export function finalizeExtractedOffer(
     location,
     description,
     contractHint,
+    studyDomain,
   };
 }

@@ -14,6 +14,7 @@ export type MatchableOffer = {
   company: string | null;
   location: string | null;
   summary: string;
+  study_domain: string | null;
   is_partner_exclusive?: boolean;
 };
 
@@ -91,11 +92,40 @@ function contractScore(contractType: string | null, haystack: string) {
   return 0;
 }
 
-function domainScore(studyDomain: string | null, haystack: string) {
+function domainScore(
+  studyDomain: string | null,
+  offer: MatchableOffer,
+  haystack: string,
+) {
+  const offerDomain = offer.study_domain;
+  if (offerDomain) {
+    if (!profileOfferDomainCompatible(studyDomain, offerDomain)) return 0;
+    if (
+      studyDomain &&
+      studyDomain !== "AUTRE" &&
+      offerDomain !== "AUTRE" &&
+      studyDomain === offerDomain
+    ) {
+      return 3;
+    }
+    return 1;
+  }
+
   if (!studyDomain || studyDomain === "AUTRE") return 0;
   const hints = DOMAIN_HINTS[studyDomain] ?? [];
   const text = normalize(haystack);
   return hints.some((h) => text.includes(normalize(h))) ? 1 : 0;
+}
+
+/** Filtre dur quand l'offre a un tag domaine explicite. */
+export function profileOfferDomainCompatible(
+  profileDomain: string | null,
+  offerDomain: string | null,
+) {
+  if (!offerDomain) return true;
+  if (!profileDomain || profileDomain === "AUTRE") return true;
+  if (offerDomain === "AUTRE") return true;
+  return profileDomain === offerDomain;
 }
 
 function interestScore(keywords: string[] | null | undefined, haystack: string) {
@@ -126,10 +156,11 @@ function jobScore(targetJob: string | null, haystack: string) {
 export function computeOfferMatchScore(profile: MatchableProfile, offer: MatchableOffer) {
   const haystack = offerHaystack(offer);
   if (!hasRegionMatch(profile.regions, haystack)) return 0;
+  if (!profileOfferDomainCompatible(profile.study_domain, offer.study_domain)) return 0;
   return (
     jobScore(profile.target_job, haystack) +
     contractScore(profile.contract_type, haystack) +
-    domainScore(profile.study_domain, haystack) +
+    domainScore(profile.study_domain, offer, haystack) +
     interestScore(profile.interest_keywords, haystack)
   );
 }
@@ -137,6 +168,7 @@ export function computeOfferMatchScore(profile: MatchableProfile, offer: Matchab
 export function profileMatchesOffer(profile: MatchableProfile, offer: MatchableOffer) {
   const haystack = offerHaystack(offer);
   if (!hasRegionMatch(profile.regions, haystack)) return false;
+  if (!profileOfferDomainCompatible(profile.study_domain, offer.study_domain)) return false;
 
   const score = computeOfferMatchScore(profile, offer);
   if (score >= OFFER_MATCH_SCORE_THRESHOLD) return true;

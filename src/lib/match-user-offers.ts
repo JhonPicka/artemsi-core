@@ -37,7 +37,7 @@ export async function assignMatchingOffersToUser(
 
   const { data: offers, error: offersError } = await supabase
     .from("offers")
-    .select("id,title,company,location,description,is_partner_exclusive")
+    .select("id,title,company,location,description,study_domain,is_partner_exclusive")
     .is("hidden_at", null)
     .gte("created_at", since.toISOString())
     .order("created_at", { ascending: false })
@@ -51,6 +51,7 @@ export async function assignMatchingOffersToUser(
     company: row.company as string | null,
     location: row.location as string | null,
     summary: (row.description as string | null) ?? "",
+    study_domain: (row.study_domain as string | null) ?? null,
     is_partner_exclusive: Boolean(row.is_partner_exclusive),
   }));
 

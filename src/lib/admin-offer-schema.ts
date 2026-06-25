@@ -1,11 +1,14 @@
 import { z } from "zod";
 
+import { STUDY_DOMAINS } from "@/lib/constants";
+
 export const adminOfferBodySchema = z.object({
   title: z.string().min(2).max(200),
   company: z.string().max(200).optional().nullable(),
   location: z.string().max(200).optional().nullable(),
   url: z.string().url(),
   description: z.string().min(20).max(8000),
+  studyDomain: z.enum(STUDY_DOMAINS),
   source: z.enum(["partner", "autre"]),
   isPublic: z.boolean(),
   isPartnerExclusive: z.boolean(),

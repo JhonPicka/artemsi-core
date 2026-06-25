@@ -9,6 +9,7 @@ import {
 } from "@/lib/offer-application-guide";
 import { OFFER_DEAD_LINK_HIDE_THRESHOLD } from "@/lib/offer-link-reports";
 import type { AdminOfferDetail } from "@/lib/admin-offers";
+import { STUDY_DOMAINS, STUDY_DOMAIN_LABEL, type StudyDomain } from "@/lib/constants";
 
 type Props = {
   offer: AdminOfferDetail;
@@ -21,6 +22,11 @@ export function AdminOfferEditForm({ offer }: Props) {
   const [company, setCompany] = useState(offer.company ?? "");
   const [location, setLocation] = useState(offer.location ?? "");
   const [description, setDescription] = useState(offer.description);
+  const [studyDomain, setStudyDomain] = useState<StudyDomain>(
+    STUDY_DOMAINS.includes((offer.studyDomain ?? "") as StudyDomain)
+      ? (offer.studyDomain as StudyDomain)
+      : "AUTRE",
+  );
   const [tips, setTips] = useState(guideTipsToText(offer.applicationGuide));
   const [source, setSource] = useState<"partner" | "autre">(
     offer.source === "partner" ? "partner" : "autre",
@@ -58,6 +64,7 @@ export function AdminOfferEditForm({ offer }: Props) {
           company: company.trim() || null,
           location: location.trim() || null,
           description: description.trim(),
+          studyDomain,
           source,
           isPublic,
           isPartnerExclusive: isExclusive,
@@ -171,6 +178,19 @@ export function AdminOfferEditForm({ offer }: Props) {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         />
+
+        <label htmlFor="edit-offer-domain">Domaine</label>
+        <select
+          id="edit-offer-domain"
+          value={studyDomain}
+          onChange={(e) => setStudyDomain(e.target.value as StudyDomain)}
+        >
+          {STUDY_DOMAINS.map((domain) => (
+            <option key={domain} value={domain}>
+              {STUDY_DOMAIN_LABEL[domain]}
+            </option>
+          ))}
+        </select>
 
         <label htmlFor="edit-offer-description">Description</label>
         <textarea

@@ -1,3 +1,6 @@
+import { normalizeStudyDomain } from "@/lib/study-domain";
+import type { StudyDomain } from "@/lib/constants";
+
 export type CsvOfferRow = {
   line: number;
   title: string;
@@ -5,6 +8,7 @@ export type CsvOfferRow = {
   description: string;
   company: string | null;
   location: string | null;
+  studyDomain: StudyDomain;
   isPublic: boolean;
 };
 
@@ -32,6 +36,10 @@ const HEADER_ALIASES: Record<string, keyof Omit<CsvOfferRow, "line" | "isPublic"
   lieu: "location",
   ville: "location",
   region: "location",
+  study_domain: "studyDomain",
+  domaine: "studyDomain",
+  domain: "studyDomain",
+  filiere: "studyDomain",
   is_public: "isPublic",
   ispublic: "isPublic",
   public: "isPublic",
@@ -182,6 +190,7 @@ export function parseOffersCsv(text: string): {
     const description = cells[columnIndex.get("description")!]?.trim() ?? "";
     const company = cells[columnIndex.get("company")!]?.trim() ?? "";
     const location = cells[columnIndex.get("location")!]?.trim() ?? "";
+    const studyDomainRaw = cells[columnIndex.get("studyDomain")!]?.trim() ?? "";
     const isPublicIdx = columnIndex.get("isPublic");
     const isPublic = parseBoolean(
       isPublicIdx === undefined ? undefined : cells[isPublicIdx],
@@ -208,6 +217,20 @@ export function parseOffersCsv(text: string): {
     }
     seenUrls.add(url);
 
+    const parsedDomain = normalizeStudyDomain(studyDomainRaw);
+    const studyDomain = parsedDomain ?? "AUTRE";
+    if (studyDomainRaw && !parsedDomain) {
+      issues.push({
+        line,
+        message: `Domaine « ${studyDomainRaw} » non reconnu — AUTRE appliqué.`,
+      });
+    } else if (!studyDomainRaw) {
+      issues.push({
+        line,
+        message: "Colonne study_domain absente — AUTRE appliqué.",
+      });
+    }
+
     rows.push({
       line,
       title: title.slice(0, 200),
@@ -215,6 +238,7 @@ export function parseOffersCsv(text: string): {
       description: description.slice(0, 8000),
       company: company ? company.slice(0, 200) : null,
       location: location ? location.slice(0, 200) : null,
+      studyDomain,
       isPublic,
     });
   }

@@ -207,6 +207,7 @@ function heuristicExtract(
       location: base.location ?? null,
       description: base.description ?? "",
       contractHint: hints.contractHint,
+      studyDomain: null,
     }
   );
 }
@@ -314,6 +315,7 @@ export async function extractOfferFieldsFromUrl(input: {
         location: null,
         description: `URL: ${url}\n\nColle la description de l'offre.`,
         contractHint: null,
+        studyDomain: null,
       },
       fetchWarning,
       usedAi: false,

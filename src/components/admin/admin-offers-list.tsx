@@ -19,6 +19,7 @@ import {
   offerUrlHostShort,
 } from "@/lib/admin-offer-url-platform";
 import { OFFER_DEAD_LINK_HIDE_THRESHOLD } from "@/lib/offer-link-reports";
+import { STUDY_DOMAIN_LABEL, type StudyDomain } from "@/lib/constants";
 
 type Props = {
   offers: AdminOfferListRow[];
@@ -26,6 +27,11 @@ type Props = {
   meta: AdminOffersListMeta;
   query: AdminOffersListQuery;
 };
+
+function formatDomain(code: string | null) {
+  if (!code) return "—";
+  return STUDY_DOMAIN_LABEL[code as StudyDomain] ?? code;
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("fr-FR", {
@@ -225,6 +231,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
                 <th scope="col">Titre</th>
                 <th scope="col">Lien</th>
                 <th scope="col">Entreprise</th>
+                <th scope="col">Domaine</th>
                 <th scope="col">Lieu</th>
                 <th scope="col">Type</th>
                 <th scope="col">Signalements</th>
@@ -270,6 +277,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
                       </a>
                     </td>
                     <td>{offer.company ?? "—"}</td>
+                    <td>{formatDomain(offer.studyDomain)}</td>
                     <td>{offer.location ?? "—"}</td>
                     <td>
                       {offer.source === "partner"
