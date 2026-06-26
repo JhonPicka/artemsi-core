@@ -10,7 +10,6 @@ import { OffersViewTabs } from "@/components/offers/offers-view-tabs";
 import { requireUser } from "@/lib/auth";
 import { userHasProAccess } from "@/lib/billing";
 import {
-  filterExclusiveOffersForProfile,
   mergeExclusiveOffersWithAssignments,
 } from "@/lib/exclusive-offers-dashboard";
 import {
@@ -38,9 +37,19 @@ type AssignmentRow = {
   offer: OfferCardData | null;
 };
 
-type ExclusiveOfferRow = OfferCardData & {
-  study_domain: string | null;
-};
+function buildVisibleJobboard(offers: OfferCardData[], isPro: boolean): OfferCardData[] {
+  if (isPro || offers.length === 0) return offers;
+
+  const exclusives = offers.filter((offer) => offer.is_partner_exclusive);
+  const standard = offers.filter((offer) => !offer.is_partner_exclusive);
+  const visibleStandard = sliceJobboardForFreeTier(standard);
+  const visibleIds = new Set([
+    ...exclusives.map((offer) => offer.id),
+    ...visibleStandard.map((offer) => offer.id),
+  ]);
+
+  return offers.filter((offer) => visibleIds.has(offer.id));
+}
 
 type PageProps = {
   searchParams: Promise<{
@@ -67,15 +76,14 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
   const supabase = await createClient();
   const isPro = await userHasProAccess(user);
 
-  const [jobboardRes, assignmentsRes, interestsRes, keywordsRes, profileRes, exclusiveRes] =
+  const [jobboardRes, assignmentsRes, interestsRes, keywordsRes, exclusiveRes] =
     await Promise.all([
       supabase
         .from("offers")
         .select(
           "id, title, company, location, description, url, source, is_partner_exclusive, application_guide",
         )
-        .eq("is_public", true)
-        .eq("is_partner_exclusive", false)
+        .or("is_public.eq.true,is_partner_exclusive.eq.true")
         .order("created_at", { ascending: false }),
       supabase
         .from("offer_assignments")
@@ -90,18 +98,17 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
         .select("interest_keywords")
         .eq("user_id", user.id)
         .maybeSingle(),
-      supabase.from("profiles").select("study_domain").eq("id", user.id).maybeSingle(),
       supabase
         .from("offers")
         .select(
-          "id, title, company, location, description, url, source, is_partner_exclusive, application_guide, study_domain",
+          "id, title, company, location, description, url, source, is_partner_exclusive, application_guide",
         )
         .eq("is_partner_exclusive", true)
         .order("created_at", { ascending: false }),
     ]);
 
   const allJobboard = (jobboardRes.data ?? []) as OfferCardData[];
-  const visibleJobboard = isPro ? allJobboard : sliceJobboardForFreeTier(allJobboard);
+  const visibleJobboard = buildVisibleJobboard(allJobboard, isPro);
   const filteredJobboard = filterJobboardOffers(visibleJobboard, {
     q: jobboardQuery,
   });
@@ -128,12 +135,7 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
     ? personalAssignments.length - FREE_TIER_ASSIGNMENT_CAP
     : 0;
 
-  const profileStudyDomain = (profileRes.data?.study_domain as string | null) ?? null;
-  const exclusiveOffers = filterExclusiveOffersForProfile(
-    (exclusiveRes.data ?? []) as ExclusiveOfferRow[],
-    { study_domain: profileStudyDomain },
-  ).map(({ study_domain: _studyDomain, ...offer }) => offer as OfferCardData);
-
+  const exclusiveOffers = (exclusiveRes.data ?? []) as OfferCardData[];
   const exclusiveAssignments = mergeExclusiveOffersWithAssignments(exclusiveOffers, assignments);
 
   const tabCounts = {
@@ -224,15 +226,14 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
             <h2 id="offers-exclusive-title">Offres exclusives ARTEMSI</h2>
           </div>
           <p className="muted">
-            Alternances réservées aux candidats ARTEMSI — avec guide candidat dédié. La candidature
-            se fait directement depuis la plateforme.
+            Notre catalogue d&apos;alternances partenaires ARTEMSI — avec guide candidat dédié.
+            Toutes les offres exclusives, sans filtre de matching.
           </p>
           {exclusiveRes.error ? (
             <p className="error">Erreur offres exclusives : {exclusiveRes.error.message}</p>
           ) : exclusiveAssignments.length === 0 ? (
             <p className="muted offers-empty-hint">
-              Pas encore d&apos;offre exclusive pour ton domaine. Reviens bientôt ou complète ton
-              profil pour affiner le ciblage.
+              Pas encore d&apos;offre exclusive publiée. Reviens bientôt.
             </p>
           ) : (
             <div className="offers-grid">
@@ -260,8 +261,8 @@ export default async function DashboardOffersPage({ searchParams }: PageProps) {
             <h2 id="offers-jobboard-title">Jobboard public</h2>
           </div>
           <p className="muted">
-            Parcours les offres de la communauté. Clique sur <strong>Ça m'intéresse</strong> pour
-            recevoir plus d&apos;offres similaires dans <em>Pour toi</em>.
+            Parcours les offres de la communauté, y compris les exclusives ARTEMSI. Les offres
+            exclusives sont visibles pour tous ; la candidature est réservée aux abonnés Pro.
           </p>
 
           {jobboardRes.error ? (

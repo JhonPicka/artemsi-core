@@ -1,18 +1,4 @@
 import type { OfferCardData } from "@/components/offers/offer-card";
-import { profileOfferDomainCompatible } from "@/lib/offer-matching";
-
-type ProfileSlice = {
-  study_domain: string | null;
-};
-
-export function filterExclusiveOffersForProfile<T extends { study_domain: string | null }>(
-  offers: readonly T[],
-  profile: ProfileSlice,
-): T[] {
-  return offers.filter((offer) =>
-    profileOfferDomainCompatible(profile.study_domain, offer.study_domain),
-  );
-}
 
 export function mergeExclusiveOffersWithAssignments(
   offers: readonly OfferCardData[],

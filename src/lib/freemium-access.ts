@@ -56,7 +56,7 @@ export async function assertFreeUserCanAccessPublicOffer(
 }
 
 export const PARTNER_APPLY_BLOCKED_MESSAGE =
-  "Les candidatures sur les offres partenaires sont réservées aux abonnés Pro.";
+  "Les candidatures sur les offres exclusives sont réservées aux abonnés Pro.";
 
 function isProProfile(profile: {
   id: string;

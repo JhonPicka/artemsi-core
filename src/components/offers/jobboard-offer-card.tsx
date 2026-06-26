@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import {
   canOpenOfferExternally,
+  OfferApplicationButton,
   openOfferInNewTab,
   type OfferCardData,
 } from "@/components/offers/offer-card";
@@ -24,9 +25,10 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const opensExternally = canOpenOfferExternally(offer);
+  const isExclusive = offer.is_partner_exclusive;
 
   function handleOpenOffer() {
-    if (!opensExternally) return;
+    if (!opensExternally || isExclusive) return;
     trackActivity(USER_ACTIVITY_EVENTS.OFFER_OPEN_EXTERNAL, {
       offerId: offer.id,
       offerTitle: offer.title,
@@ -83,12 +85,12 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
 
   return (
     <article
-      className={`offer-card offer-card--jobboard${interested ? " offer-card--interested" : ""}${opensExternally ? " offer-card--clickable" : ""}`}
-      role={opensExternally ? "link" : undefined}
-      tabIndex={opensExternally ? 0 : undefined}
-      onClick={opensExternally ? handleOpenOffer : undefined}
+      className={`offer-card offer-card--jobboard${interested ? " offer-card--interested" : ""}${opensExternally && !isExclusive ? " offer-card--clickable" : ""}`}
+      role={opensExternally && !isExclusive ? "link" : undefined}
+      tabIndex={opensExternally && !isExclusive ? 0 : undefined}
+      onClick={opensExternally && !isExclusive ? handleOpenOffer : undefined}
       onKeyDown={
-        opensExternally
+        opensExternally && !isExclusive
           ? (event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
@@ -97,10 +99,15 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
             }
           : undefined
       }
-      aria-label={opensExternally ? `Ouvrir l'offre ${offer.title} dans un nouvel onglet` : undefined}
+      aria-label={
+        opensExternally && !isExclusive
+          ? `Ouvrir l'offre ${offer.title} dans un nouvel onglet`
+          : undefined
+      }
     >
       <div className="offer-card-header">
-        {interested ? (
+        {isExclusive ? <span className="offer-tag">Exclusive</span> : null}
+        {!isExclusive && interested ? (
           <span className="offer-tag offer-tag--interest">Dans tes interets</span>
         ) : null}
       </div>
@@ -111,27 +118,33 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
         {offer.location ? <span>{offer.location}</span> : null}
       </p>
       <div className="offer-card-actions offer-card-actions--compact">
-        <button
-          type="button"
-          className={`button-link secondary-link offer-interest-btn${interested ? " is-active" : ""}`}
-          onClick={toggleInterest}
-          disabled={loading}
-          aria-pressed={interested}
-        >
-          {loading ? "…" : interested ? "Intéressé ✓" : "Ça m'intéresse"}
-        </button>
-        {opensExternally ? (
-          <a
-            className="button-link offer-view-btn"
-            href={offer.url!}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(event) => event.stopPropagation()}
-          >
-            Voir l&apos;offre
-          </a>
-        ) : null}
-        <OfferReportDeadLinkButton offerId={offer.id} />
+        {isExclusive ? (
+          <OfferApplicationButton offer={offer} isPro={isPro} />
+        ) : (
+          <>
+            <button
+              type="button"
+              className={`button-link secondary-link offer-interest-btn${interested ? " is-active" : ""}`}
+              onClick={toggleInterest}
+              disabled={loading}
+              aria-pressed={interested}
+            >
+              {loading ? "…" : interested ? "Intéressé ✓" : "Ça m'intéresse"}
+            </button>
+            {opensExternally ? (
+              <a
+                className="button-link offer-view-btn"
+                href={offer.url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(event) => event.stopPropagation()}
+              >
+                Voir l&apos;offre
+              </a>
+            ) : null}
+            <OfferReportDeadLinkButton offerId={offer.id} />
+          </>
+        )}
       </div>
       {message ? <p className="offer-interest-feedback muted">{message}</p> : null}
     </article>
