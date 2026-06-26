@@ -17,7 +17,7 @@ type Props = {
 
 export function AdminOfferEditForm({ offer }: Props) {
   const router = useRouter();
-  const [url, setUrl] = useState(offer.url);
+  const [url, setUrl] = useState(offer.url ?? "");
   const [title, setTitle] = useState(offer.title);
   const [company, setCompany] = useState(offer.company ?? "");
   const [location, setLocation] = useState(offer.location ?? "");
@@ -39,15 +39,20 @@ export function AdminOfferEditForm({ offer }: Props) {
   const [info, setInfo] = useState<string | null>(null);
 
   const isHidden = Boolean(offer.hiddenAt);
-  const urlChanged = url.trim() !== offer.url;
+  const urlChanged = url.trim() !== (offer.url ?? "");
   const isPartnerOffer = source === "partner" || isExclusive;
+  const urlRequired = !isExclusive;
 
   async function handleSave() {
     setError(null);
     setInfo(null);
 
-    if (!url.trim() || !title.trim() || description.trim().length < 20) {
-      setError("URL, titre et description (20 caracteres min.) sont obligatoires.");
+    if (!title.trim() || description.trim().length < 20) {
+      setError("Titre et description (20 caracteres min.) sont obligatoires.");
+      return;
+    }
+    if (urlRequired && !url.trim()) {
+      setError("URL obligatoire pour une offre non exclusive.");
       return;
     }
 
@@ -59,7 +64,7 @@ export function AdminOfferEditForm({ offer }: Props) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          url: url.trim(),
+          url: url.trim() || null,
           title: title.trim(),
           company: company.trim() || null,
           location: location.trim() || null,
@@ -150,7 +155,9 @@ export function AdminOfferEditForm({ offer }: Props) {
           })}
         </p>
 
-        <label htmlFor="edit-offer-url">URL</label>
+        <label htmlFor="edit-offer-url">
+          URL{isExclusive ? " (facultatif pour une offre exclusive)" : ""}
+        </label>
         <input
           id="edit-offer-url"
           type="url"

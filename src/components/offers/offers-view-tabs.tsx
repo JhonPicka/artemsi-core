@@ -16,7 +16,7 @@ type OffersViewTabsProps = {
 
 const TABS: { id: OffersView; label: string; countKey: keyof OffersViewTabsProps["counts"] }[] = [
   { id: "pour-moi", label: "Pour moi", countKey: "personal" },
-  { id: "partenaires", label: "Partenaires", countKey: "exclusive" },
+  { id: "exclusives", label: "Offres exclusives", countKey: "exclusive" },
   { id: "jobboard", label: "Jobboard", countKey: "jobboard" },
 ];
 

@@ -1,12 +1,13 @@
 import type { OfferCardData } from "@/components/offers/offer-card";
 
-export const OFFERS_VIEWS = ["pour-moi", "partenaires", "jobboard"] as const;
+export const OFFERS_VIEWS = ["pour-moi", "exclusives", "jobboard"] as const;
 export type OffersView = (typeof OFFERS_VIEWS)[number];
 
 export const JOBBOARD_PAGE_SIZE = 24;
 
 export function parseOffersView(raw?: string | null): OffersView {
-  if (raw === "partenaires" || raw === "jobboard") return raw;
+  if (raw === "exclusives" || raw === "partenaires") return "exclusives";
+  if (raw === "jobboard") return "jobboard";
   return "pour-moi";
 }
 

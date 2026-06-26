@@ -7,7 +7,7 @@ import {
 } from "@/lib/billing-offer";
 import { FREE_TIER_ASSIGNMENT_CAP } from "@/lib/freemium-access";
 
-type Variant = "matching" | "hidden-offers" | "partners" | "jobboard";
+type Variant = "matching" | "hidden-offers" | "exclusives" | "jobboard";
 
 type Props = {
   variant: Variant;
@@ -33,9 +33,9 @@ function copyForVariant(variant: Variant, hiddenCount: number) {
         title: `Encore ${hiddenCount} offre${hiddenCount > 1 ? "s" : ""} te correspond${hiddenCount > 1 ? "ent" : ""}`,
         description: "Passe Pro pour les afficher et candidater sans limite sur ton matching.",
       };
-    case "partners":
+    case "exclusives":
       return {
-        title: "Candidater sur les offres partenaires",
+        title: "Candidater sur les offres exclusives",
         description:
           "En compte gratuit, tu peux consulter ces offres mais pas y postuler. Passe Pro pour candidater.",
       };

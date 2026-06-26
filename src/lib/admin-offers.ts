@@ -1,5 +1,5 @@
 import { normalizeApplicationGuide, type OfferApplicationGuide } from "@/lib/offer-application-guide";
-import type { AdminOfferBody } from "@/lib/admin-offer-schema";
+import { normalizeAdminOfferUrl, type AdminOfferBody } from "@/lib/admin-offer-schema";
 import {
   clearOfferDeadLinkReports,
   getOfferLinkReportCounts,
@@ -22,7 +22,7 @@ export type AdminOfferListRow = {
   title: string;
   company: string | null;
   location: string | null;
-  url: string;
+  url: string | null;
   studyDomain: string | null;
   source: string;
   isPublic: boolean;
@@ -102,7 +102,7 @@ function mapAdminOfferRows(
     title: row.title as string,
     company: (row.company as string | null) ?? null,
     location: (row.location as string | null) ?? null,
-    url: row.url as string,
+    url: (row.url as string | null) ?? null,
     studyDomain: (row.study_domain as string | null) ?? null,
     source: row.source as string,
     isPublic: Boolean(row.is_public),
@@ -172,7 +172,7 @@ export async function loadAdminOfferById(id: string): Promise<AdminOfferDetail |
     title: data.title as string,
     company: (data.company as string | null) ?? null,
     location: (data.location as string | null) ?? null,
-    url: data.url as string,
+    url: (data.url as string | null) ?? null,
     studyDomain: (data.study_domain as string | null) ?? null,
     description: (data.description as string | null) ?? "",
     source: data.source as string,
@@ -202,18 +202,21 @@ export async function updateAdminOffer(
     return { ok: false, error: "Offre introuvable." };
   }
 
-  const urlChanged = (current.url as string) !== body.url;
+  const normalizedUrl = normalizeAdminOfferUrl(body.url, body.isPartnerExclusive);
+  const urlChanged = (current.url as string | null) !== normalizedUrl;
   const shouldRestoreVisibility = urlChanged && Boolean(current.hidden_at);
 
-  const { data: urlConflict } = await supabase
-    .from("offers")
-    .select("id, title")
-    .eq("url", body.url)
-    .neq("id", id)
-    .maybeSingle();
+  if (normalizedUrl) {
+    const { data: urlConflict } = await supabase
+      .from("offers")
+      .select("id, title")
+      .eq("url", normalizedUrl)
+      .neq("id", id)
+      .maybeSingle();
 
-  if (urlConflict) {
-    return { ok: false, error: "Cette URL est deja utilisee par une autre offre." };
+    if (urlConflict) {
+      return { ok: false, error: "Cette URL est deja utilisee par une autre offre." };
+    }
   }
 
   const applicationGuide = normalizeApplicationGuide(body.applicationGuide);
@@ -225,7 +228,7 @@ export async function updateAdminOffer(
       title: body.title,
       company: body.company ?? null,
       location: body.location ?? null,
-      url: body.url,
+      url: normalizedUrl,
       description: body.description,
       study_domain: body.studyDomain,
       source: body.source,

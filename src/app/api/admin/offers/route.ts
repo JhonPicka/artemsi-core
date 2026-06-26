@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { adminUnauthorizedResponse, getAdminUserOrNull } from "@/lib/admin-api-auth";
-import { adminOfferBodySchema } from "@/lib/admin-offer-schema";
+import { adminOfferBodySchema, normalizeAdminOfferUrl } from "@/lib/admin-offer-schema";
 import { normalizeApplicationGuide } from "@/lib/offer-application-guide";
 import { runOfferMatchingForOffers } from "@/lib/run-offer-matching";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -25,21 +25,25 @@ export async function POST(request: Request) {
   try {
     const supabase = createAdminClient();
 
-    const { data: existing } = await supabase
-      .from("offers")
-      .select("id, title")
-      .eq("url", data.url)
-      .maybeSingle();
+    const normalizedUrl = normalizeAdminOfferUrl(data.url, data.isPartnerExclusive);
 
-    if (existing) {
-      return NextResponse.json(
-        {
-          error: "Cette URL existe deja en base.",
-          offerId: existing.id,
-          title: existing.title,
-        },
-        { status: 409 },
-      );
+    if (normalizedUrl) {
+      const { data: existing } = await supabase
+        .from("offers")
+        .select("id, title")
+        .eq("url", normalizedUrl)
+        .maybeSingle();
+
+      if (existing) {
+        return NextResponse.json(
+          {
+            error: "Cette URL existe deja en base.",
+            offerId: existing.id,
+            title: existing.title,
+          },
+          { status: 409 },
+        );
+      }
     }
 
     const applicationGuide = normalizeApplicationGuide(data.applicationGuide);
@@ -50,7 +54,7 @@ export async function POST(request: Request) {
         title: data.title,
         company: data.company ?? null,
         location: data.location ?? null,
-        url: data.url,
+        url: normalizedUrl,
         description: data.description,
         study_domain: data.studyDomain,
         source: data.source,
@@ -65,7 +69,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
-    const matching = data.runMatching
+    const shouldRunMatching = data.runMatching || data.isPartnerExclusive;
+    const matching = shouldRunMatching
       ? await runOfferMatchingForOffers([inserted.id as string])
       : null;
 

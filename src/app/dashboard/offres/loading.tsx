@@ -33,7 +33,7 @@ export default function OffersLoading() {
   return (
     <>
       <OffersSkeletonSection title="Pour toi" />
-      <OffersSkeletonSection title="Offres partenaires" />
+      <OffersSkeletonSection title="Offres exclusives" />
       <OffersSkeletonSection title="Jobboard" />
     </>
   );

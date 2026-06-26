@@ -34,7 +34,8 @@ export const OFFER_URL_PLATFORM_FILTERS: { value: OfferUrlPlatformFilter; label:
   { value: "other", label: "Autre lien" },
 ];
 
-export function detectOfferUrlPlatform(url: string): OfferUrlPlatform {
+export function detectOfferUrlPlatform(url: string | null | undefined): OfferUrlPlatform {
+  if (!url?.trim()) return "other";
   try {
     const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
     if (host.includes("hellowork")) return "hellowork";

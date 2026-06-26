@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 import {
   guideTipsToText,
@@ -60,6 +60,14 @@ export function AdminOfferForm({ initialStudyDomain }: AdminOfferFormProps = {})
   const [lastPublished, setLastPublished] = useState<PublishResult | null>(null);
 
   const isPartnerOffer = source === "partner" || isExclusive;
+  const urlRequired = !isExclusive;
+
+  useEffect(() => {
+    if (isExclusive) {
+      setRunMatchingOnPublish(true);
+      setSource("partner");
+    }
+  }, [isExclusive]);
 
   function resetFormFields() {
     setUrl("");
@@ -143,8 +151,12 @@ export function AdminOfferForm({ initialStudyDomain }: AdminOfferFormProps = {})
     setInfo(null);
     setLastPublished(null);
 
-    if (!url.trim() || !title.trim() || description.trim().length < 20) {
-      setError("URL, titre et description (20 caracteres min.) sont obligatoires.");
+    if (!title.trim() || description.trim().length < 20) {
+      setError("Titre et description (20 caracteres min.) sont obligatoires.");
+      return;
+    }
+    if (urlRequired && !url.trim()) {
+      setError("URL obligatoire pour une offre non exclusive.");
       return;
     }
 
@@ -156,7 +168,7 @@ export function AdminOfferForm({ initialStudyDomain }: AdminOfferFormProps = {})
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          url: url.trim(),
+          url: url.trim() || null,
           title: title.trim(),
           company: company.trim() || null,
           location: location.trim() || null,
@@ -242,7 +254,9 @@ export function AdminOfferForm({ initialStudyDomain }: AdminOfferFormProps = {})
             Lien officiel (site carrières). Copie aussi le texte de l&apos;annonce — indispensable
             si la page est chargée de menus (HelloWork, etc.).
           </p>
-          <label htmlFor="offer-url">URL</label>
+          <label htmlFor="offer-url">
+            URL{isExclusive ? " (facultatif pour une offre exclusive)" : ""}
+          </label>
           <input
             id="offer-url"
             ref={urlInputRef}
@@ -274,10 +288,13 @@ export function AdminOfferForm({ initialStudyDomain }: AdminOfferFormProps = {})
         <section className="card form admin-offer-step">
           <h2>1. Lien de l&apos;offre</h2>
           <p className="muted admin-offer-lead">
-            L&apos;URL reste obligatoire (évite les doublons). Tu peux coller le lien de
-            candidature ou la page carrières.
+            {isExclusive
+              ? "Lien externe optionnel — la candidature se fait sur ARTEMSI."
+              : "L'URL reste obligatoire (évite les doublons). Tu peux coller le lien de candidature ou la page carrières."}
           </p>
-          <label htmlFor="offer-url-manual">URL</label>
+          <label htmlFor="offer-url-manual">
+            URL{isExclusive ? " (facultatif)" : ""}
+          </label>
           <input
             id="offer-url-manual"
             ref={urlInputRef}

@@ -33,7 +33,7 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
       company: offer.company,
       source: "jobboard",
     });
-    openOfferInNewTab(offer.url);
+    openOfferInNewTab(offer.url!);
   }
 
   async function toggleInterest(event: React.MouseEvent<HTMLButtonElement>) {
@@ -123,7 +123,7 @@ export function JobboardOfferCard({ offer, initialInterested, isPro = true }: Jo
         {opensExternally ? (
           <a
             className="button-link offer-view-btn"
-            href={offer.url}
+            href={offer.url!}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(event) => event.stopPropagation()}

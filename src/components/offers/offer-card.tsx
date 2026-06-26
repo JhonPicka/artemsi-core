@@ -18,7 +18,7 @@ export type OfferCardData = {
   company: string | null;
   location: string | null;
   description?: string | null;
-  url: string;
+  url: string | null;
   source: "indeed" | "partner" | "autre";
   is_partner_exclusive: boolean;
   /** Raccourci candidat (tips JSON). */
@@ -291,7 +291,7 @@ function PartnerOfferApplyDialog({
   return (
     <div className="offer-apply-dialog" role="dialog" aria-modal="true">
       <div className="offer-apply-dialog-head">
-        <p className="offer-details-label">Candidature offre partenaire</p>
+        <p className="offer-details-label">Candidature offre exclusive</p>
         <button type="button" className="offer-apply-dialog-close" onClick={onClose} aria-label="Fermer">
           ×
         </button>
@@ -511,7 +511,7 @@ export function OfferApplicationButton({
       ) : null}
       {partnerApplyBlocked ? (
         <span className="offer-apply-feedback muted">
-          <Link href="/subscribe">Passe Pro</Link> pour candidater sur les offres partenaires.
+          <Link href="/subscribe">Passe Pro</Link> pour candidater sur les offres exclusives.
         </span>
       ) : null}
       {dialogOpen ? (
@@ -538,20 +538,24 @@ export function OfferOfficialActions({
 }) {
   const isPersisted = isPersistedOffer(offer);
 
+  const hasExternalUrl = canOpenOfferExternally(offer);
+
   return (
     <div className="offer-official-actions">
       <div className="offer-primary-actions">
-        <a
-          className="button-link secondary-link offer-site-btn"
-          href={offer.url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Aller sur le site
-        </a>
+        {hasExternalUrl ? (
+          <a
+            className="button-link secondary-link offer-site-btn"
+            href={offer.url!}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Aller sur le site
+          </a>
+        ) : null}
         <OfferApplicationButton offer={offer} isPro={isPro} />
       </div>
-      <OfferReportDeadLinkButton offerId={offer.id} disabled={!isPersisted} />
+      {hasExternalUrl ? <OfferReportDeadLinkButton offerId={offer.id} disabled={!isPersisted} /> : null}
     </div>
   );
 }
@@ -626,7 +630,7 @@ export function OfferCard({ offer, badge, tag, isPro = true }: OfferCardProps) {
       company: offer.company,
       source: offer.source,
     });
-    openOfferInNewTab(offer.url);
+    openOfferInNewTab(offer.url!);
   }
 
   return (
@@ -661,7 +665,7 @@ export function OfferCard({ offer, badge, tag, isPro = true }: OfferCardProps) {
         {opensExternally ? (
           <a
             className="button-link offer-view-btn"
-            href={offer.url}
+            href={offer.url!}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(event) => event.stopPropagation()}

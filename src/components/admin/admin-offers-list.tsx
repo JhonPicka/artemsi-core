@@ -279,7 +279,7 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
             </thead>
             <tbody>
               {offers.map((offer) => {
-                const urlPlatform = detectOfferUrlPlatform(offer.url);
+                const urlPlatform = offer.url ? detectOfferUrlPlatform(offer.url) : "other";
                 return (
                   <tr
                     key={offer.id}
@@ -303,17 +303,23 @@ export function AdminOffersList({ offers, totals, meta, query }: Props) {
                       ) : null}
                     </td>
                     <td data-label="Lien">
-                      <span className="admin-offers-link-platform">
-                        {OFFER_URL_PLATFORM_LABELS[urlPlatform]}
-                      </span>
-                      <a
-                        href={offer.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="admin-offers-link-host muted small-label"
-                      >
-                        {offerUrlHostShort(offer.url)}
-                      </a>
+              {offer.url ? (
+                <>
+                  <span className="admin-offers-link-platform">
+                    {OFFER_URL_PLATFORM_LABELS[urlPlatform]}
+                  </span>
+                  <a
+                    href={offer.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="admin-offers-link-host muted small-label"
+                  >
+                    {offerUrlHostShort(offer.url)}
+                  </a>
+                </>
+              ) : (
+                <span className="muted">Pas de lien externe</span>
+              )}
                     </td>
                     <td data-label="Entreprise">{offer.company ?? "—"}</td>
                     <td data-label="Domaine">{formatDomain(offer.studyDomain)}</td>
