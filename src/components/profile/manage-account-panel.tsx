@@ -4,7 +4,10 @@ import Link from "next/link";
 
 import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
-import { billingProCtaLabel, billingProTrialLine } from "@/lib/billing-offer";
+import {
+  billingProTrialLine,
+  billingUpgradeCtaLabel,
+} from "@/lib/billing-offer";
 import { legalConfig } from "@/lib/legal-config";
 
 type Props = {
@@ -20,9 +23,12 @@ export function ManageAccountPanel({ isPro }: Props) {
       <article
         className={`manage-account-row${!isPro ? " manage-account-row--upgrade" : ""}`}
       >
-        <p className="manage-account-row-title">
-          {isPro ? "Gérer mon abonnement" : "Passer Pro"}
-        </p>
+        <div className="manage-account-row-head">
+          {!isPro ? <span className="brand-chip manage-account-row-chip">PRO</span> : null}
+          <p className="manage-account-row-title">
+            {isPro ? "Gérer mon abonnement" : "Upgrade Pro"}
+          </p>
+        </div>
         {isPro ? (
           <>
             <p className="muted manage-account-row-lead">
@@ -44,7 +50,9 @@ export function ManageAccountPanel({ isPro }: Props) {
             </p>
             <p className="manage-account-row-trial">{billingProTrialLine()}</p>
             <div className="manage-account-upgrade-actions">
-              <SubscribeButton className="button-link">{billingProCtaLabel()}</SubscribeButton>
+              <SubscribeButton className="button-link manage-account-upgrade-cta">
+                {billingUpgradeCtaLabel()}
+              </SubscribeButton>
               <Link href="/subscribe" className="button-link secondary-link">
                 Voir les détails
               </Link>

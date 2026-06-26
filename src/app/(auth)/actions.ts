@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { getFreshLoginPath } from "@/lib/auth-paths";
-import { redirectAfterAuth } from "@/lib/auth-session";
+import { markPasswordSetupComplete, redirectAfterAuth } from "@/lib/auth-session";
 import { resendActivationEmail } from "@/lib/account-setup";
 import { userHasBillingAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
@@ -47,7 +47,13 @@ export async function loginAction(
     return { error: "Impossible de récupérer la session utilisateur." };
   }
 
-  return redirectAfterAuth(user);
+  // Connexion réussie = mot de passe valide : ne pas renvoyer vers /signup/finish.
+  await markPasswordSetupComplete(user);
+  const {
+    data: { user: refreshed },
+  } = await supabase.auth.getUser();
+
+  return redirectAfterAuth(refreshed ?? user);
 }
 
 export async function signupAction(

@@ -1,5 +1,7 @@
 import { ProfileMainClient } from "@/components/profile/profile-main-client";
 import { ActivityPageTracker } from "@/components/activity/activity-page-tracker";
+import { ProUpgradeCard } from "@/components/billing/pro-upgrade-card";
+import { billingUpgradeCtaLabel } from "@/lib/billing-offer";
 import { requireUser } from "@/lib/auth";
 import { userHasProAccess } from "@/lib/billing";
 import {
@@ -170,6 +172,14 @@ export default async function DashboardProfilePage() {
           <p className="profile-hero-email">{user.email}</p>
         </div>
       </header>
+
+      {!isPro ? (
+        <ProUpgradeCard
+          title="Upgrade Pro"
+          description="Débloque le matching complet, le jobboard intégral, les candidatures sur les offres exclusives ARTEMSI et l'audit CV."
+          ctaLabel={billingUpgradeCtaLabel()}
+        />
+      ) : null}
 
       <ProfileMainClient
         isPro={isPro}

@@ -14,6 +14,10 @@ export function billingProCtaLabel() {
   return "Passer Pro";
 }
 
+export function billingUpgradeCtaLabel() {
+  return "Upgrade";
+}
+
 /** @deprecated Préférer billingProCtaLabel — conservé pour boutons Stripe existants */
 export function billingTrialCtaLabel() {
   return billingProCtaLabel();

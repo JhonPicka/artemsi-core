@@ -6840,6 +6840,22 @@ input[type="checkbox"] {
   );
 }
 
+.manage-account-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.manage-account-row-chip {
+  font-size: 0.68rem;
+}
+
+.manage-account-upgrade-cta {
+  min-width: 8.5rem;
+  justify-content: center;
+}
+
 .manage-account-row-trial {
   margin: 0;
   font-size: 0.78rem;
@@ -7525,8 +7541,145 @@ input[type="checkbox"] {
   cursor: default;
 }
 
+.offer-card--jobboard.offer-card--clickable,
+.offer-card--exclusive.offer-card--clickable {
+  cursor: pointer;
+}
+
+.offer-card--jobboard.offer-card--clickable:hover,
+.offer-card--exclusive.offer-card--clickable:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-soft-strong);
+}
+
 .offer-card--jobboard:hover {
   transform: none;
+}
+
+.offer-card-actions--exclusive {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.offer-card-actions--exclusive .button-link,
+.offer-card-actions--exclusive .offer-action-with-feedback {
+  width: 100%;
+}
+
+.offer-card-actions--exclusive .offer-action-with-feedback .offer-apply-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.offer-modal-pro-teaser {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(168, 138, 255, 0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(124, 92, 255, 0.12),
+    rgba(124, 92, 255, 0.04)
+  );
+}
+
+.offer-modal-pro-teaser p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--foreground-soft);
+}
+
+.pro-upgrade-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: rgba(3, 5, 16, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.pro-upgrade-dialog {
+  position: relative;
+  width: min(440px, 100%);
+  display: grid;
+  gap: 0.65rem;
+  padding: clamp(1.1rem, 2.5vw, 1.5rem);
+  border-radius: 22px;
+  border: 1px solid rgba(168, 138, 255, 0.35);
+  background:
+    linear-gradient(160deg, rgba(124, 92, 255, 0.16), rgba(40, 211, 154, 0.06)),
+    var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.pro-upgrade-dialog__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--foreground);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pro-upgrade-dialog__title {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.pro-upgrade-dialog__text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.pro-upgrade-dialog__perks {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--foreground-soft);
+}
+
+.pro-upgrade-dialog__trial {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.pro-upgrade-dialog__actions {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.pro-upgrade-dialog__cta {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.profile-page .pro-upgrade-card {
+  border: 1px solid rgba(168, 138, 255, 0.35);
+  background:
+    linear-gradient(135deg, rgba(124, 92, 255, 0.12), rgba(124, 92, 255, 0.04)),
+    var(--surface);
 }
 
 .offer-card--interested {

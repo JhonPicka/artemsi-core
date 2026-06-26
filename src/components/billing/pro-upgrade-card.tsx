@@ -1,14 +1,21 @@
 import Link from "next/link";
 
 import { SubscribeButton } from "@/components/billing/subscribe-button";
-import { billingProCtaLabel, billingProTrialLine } from "@/lib/billing-offer";
+import {
+  billingProCtaLabel,
+  billingProTrialLine,
+  billingUpgradeCtaLabel,
+} from "@/lib/billing-offer";
 
 type ProUpgradeCardProps = {
   title: string;
   description: string;
+  ctaLabel?: string;
 };
 
-export function ProUpgradeCard({ title, description }: ProUpgradeCardProps) {
+export function ProUpgradeCard({ title, description, ctaLabel }: ProUpgradeCardProps) {
+  const label = ctaLabel ?? billingProCtaLabel();
+
   return (
     <section className="card pro-upgrade-card">
       <span className="brand-chip">PRO</span>
@@ -16,7 +23,7 @@ export function ProUpgradeCard({ title, description }: ProUpgradeCardProps) {
       <p className="muted">{description}</p>
       <p className="muted pro-upgrade-card-trial">{billingProTrialLine()}</p>
       <div className="pro-upgrade-card-actions">
-        <SubscribeButton className="button-link">{billingProCtaLabel()}</SubscribeButton>
+        <SubscribeButton className="button-link">{label}</SubscribeButton>
         <Link href="/subscribe" className="button-link secondary-link">
           Voir les détails
         </Link>
