@@ -2,6 +2,27 @@
 export const BILLING_MONTHLY_PRICE_EUR = 19.9;
 export const BILLING_TRIAL_DAYS = 7;
 
+/** Audits humains Pro inclus par mois civil (Europe/Paris). */
+export const PRO_AUDITS_PER_MONTH = 1;
+
+export function billingProAuditFeatureLabel() {
+  return PRO_AUDITS_PER_MONTH === 1
+    ? "1 audit personnalisé de 1 h / mois"
+    : `${PRO_AUDITS_PER_MONTH} audits personnalisés de 1 h / mois`;
+}
+
+export function billingProAuditShortLabel() {
+  return PRO_AUDITS_PER_MONTH === 1
+    ? "1 audit de 1 h par mois"
+    : `${PRO_AUDITS_PER_MONTH} audits de 1 h par mois`;
+}
+
+export function billingProAuditLegalLabel() {
+  return PRO_AUDITS_PER_MONTH === 1
+    ? "1 audit personnalisé d'1 heure par mois"
+    : `${PRO_AUDITS_PER_MONTH} audits personnalisés d'1 heure par mois`;
+}
+
 /** Feature affichée dans le comparatif landing (Gratuit / Pro). */
 export type PlanMarketingFeature = {
   label: string;
@@ -99,7 +120,7 @@ export function billingFreePlanMarketingFeatures(): PlanMarketingFeature[] {
       included: false,
     },
     {
-      label: "3 appels personnalisés de 1 h / mois",
+      label: billingProAuditFeatureLabel(),
       included: false,
     },
   ];
@@ -119,7 +140,7 @@ export function billingProPlanMarketingFeatures(): PlanMarketingFeature[] {
       highlight: true,
     },
     {
-      label: "3 appels personnalisés de 1 h / mois",
+      label: billingProAuditFeatureLabel(),
       included: true,
       highlight: true,
     },
@@ -131,6 +152,6 @@ export function billingFreeVsProFaqSummary() {
   return {
     free:
       "inscription sans carte — tu organises ta recherche (profil, suivi candidatures, aperçu d'offres matchées et exclusives partenaires)",
-    pro: "tu débloques le matching complet, tu postules aux exclusives, tu accèdes aux guides candidat CV/LM et à 3 appels de 1 h par mois avec un humain",
+    pro: `tu débloques le matching complet, tu postules aux exclusives, tu accèdes aux guides candidat CV/LM et à ${billingProAuditShortLabel()} avec un humain`,
   };
 }

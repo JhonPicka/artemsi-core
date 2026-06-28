@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LegalPageShell } from "@/components/legal/legal-page-shell";
 import {
   billingMonthlyPriceLine,
+  billingProAuditLegalLabel,
   billingTrialShortLabel,
   BILLING_TRIAL_DAYS,
 } from "@/lib/billing-offer";
@@ -50,7 +51,7 @@ export default function CguPage() {
           <li>
             <strong>Pro</strong> — accès au jobboard complet, au matching selon ton profil, aux
             offres exclusives partenaires, aux guides candidat CV/LM par offre et à{" "}
-            <strong>3 appels personnalisés d'1 heure par mois</strong> avec un accompagnateur
+            <strong>{billingProAuditLegalLabel()}</strong> avec un accompagnateur
             humain (pas de score automatique, pas d'IA générative à la place de l'échange).
           </li>
         </ul>
@@ -112,7 +113,7 @@ export default function CguPage() {
             précisées au moment de l'offre.
           </li>
           <li>
-            Une offre promo acceptée ne remplace pas l'accompagnement Pro (appels d'1 heure)
+            Une offre promo acceptée ne remplace pas l&apos;accompagnement Pro (audit d&apos;1 heure)
             ni une relecture illimitée de documents.
           </li>
         </ul>
@@ -131,7 +132,7 @@ export default function CguPage() {
             d'essai, sauf résiliation avant son terme.
           </li>
           <li>
-            <strong>Accompagnement Pro :</strong> jusqu'à 3 appels d'1 heure par mois,
+            <strong>Accompagnement Pro :</strong> {billingProAuditLegalLabel()},
             réservables depuis l'Application (délai de réservation indiqué in-app). Un rapport
             récapitulatif peut être disponible dans ton espace après chaque échange.
           </li>

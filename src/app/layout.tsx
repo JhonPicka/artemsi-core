@@ -7,6 +7,7 @@ import "./globals.css";
 import { themeBootstrapScript } from "@/components/theme/theme-bootstrap";
 import { ThemeProvider } from "@/components/theme/theme-context";
 import { ToastProvider } from "@/components/ui/toast";
+import { billingProAuditShortLabel } from "@/lib/billing-offer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,8 +26,7 @@ export const metadata: Metadata = {
     default: "ARTEMSI — Plateforme alternance ingénieur & industrie | Offres ciblées, suivi et accompagnement",
     template: "%s — ARTEMSI",
   },
-  description:
-    "Trouve ton alternance en ingénierie et industrie partout en France. Offres matchées sur ton profil, suivi candidatures, guides CV/LM et 3 appels de coaching par mois. Inscription gratuite.",
+  description: `Trouve ton alternance en ingénierie et industrie partout en France. Offres matchées sur ton profil, suivi candidatures, guides CV/LM et ${billingProAuditShortLabel()}. Inscription gratuite.`,
   metadataBase: new URL(APP_URL),
   alternates: {
     canonical: "/",

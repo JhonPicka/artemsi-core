@@ -13,6 +13,7 @@ import { LandingPlanCompare } from "@/components/landing/landing-plan-compare";
 import { LandingStatsFilet } from "@/components/landing/landing-stats-filet";
 import { LandingTabs } from "@/components/landing/landing-tabs";
 import { LegalFooterLinks } from "@/components/legal/legal-footer-links";
+import { billingProAuditShortLabel } from "@/lib/billing-offer";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { getFreshLoginPath } from "@/lib/auth-paths";
 import {
@@ -170,7 +171,7 @@ export default async function Home({ searchParams }: HomeProps) {
               <div className="landing-step-body">
                 <p className="landing-step-text">
                   Matching complet, offres exclusives partenaires, guides CV/LM et{" "}
-                  <strong>3 appels de 1 h par mois</strong> avec un humain — pas de score, pas
+                  <strong>{billingProAuditShortLabel()}</strong> avec un humain — pas de score, pas
                   d&apos;IA à la place de l&apos;échange.
                 </p>
               </div>
@@ -190,7 +191,7 @@ export default async function Home({ searchParams }: HomeProps) {
             <h2 className="landing-section-title">Un rendez-vous d&apos;1 h pour booster ton dossier</h2>
             <p className="landing-section-lead landing-audit-lead">
               <span className="landing-kicker landing-audit-pro-tag">Inclus dans l&apos;offre Pro</span>
-              <strong>3 appels de 1 h par mois</strong>.
+              <strong>{billingProAuditShortLabel()}</strong>.
               <br />
               Tu réserves un créneau avec quelqu&apos;un qui sait ce que les entreprises veulent et
               connaît ton profil — pas besoin de score ni d&apos;IA. Tu choisis ton horaire dans le

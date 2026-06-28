@@ -1,7 +1,12 @@
 import { AuditCalendar } from "@/components/audit/audit-calendar";
 import { ProUpgradeCard } from "@/components/billing/pro-upgrade-card";
 import { requireUser } from "@/lib/auth";
+import {
+  auditMonthlyLimitMessage,
+  hasReachedMonthlyAuditLimit,
+} from "@/lib/audit-booking-limits";
 import { userHasProAccess } from "@/lib/billing";
+import { billingProAuditFeatureLabel } from "@/lib/billing-offer";
 import { AUDIT_AVAILABILITY_LABEL, generateAuditDays } from "@/lib/audit-slots";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,7 +24,7 @@ export default async function DashboardAuditPage() {
 
   const nowISO = new Date().toISOString();
 
-  const [bookingsRes, takenRes] = await Promise.all([
+  const [bookingsRes, takenRes, limitBookingsRes] = await Promise.all([
     supabase
       .from("audit_bookings")
       .select("id, slot_start, slot_end, status, user_notes, admin_notes")
@@ -32,9 +37,17 @@ export default async function DashboardAuditPage() {
           .gte("slot_start", nowISO)
           .in("status", ["pending", "confirmed"])
       : Promise.resolve({ data: [], error: null }),
+    isPro
+      ? supabase
+          .from("audit_bookings")
+          .select("slot_start, status")
+          .eq("user_id", user.id)
+          .in("status", ["pending", "confirmed"])
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   const bookings = bookingsRes.data ?? [];
+  const monthlyLimitReached = hasReachedMonthlyAuditLimit(limitBookingsRes.data ?? [], new Date());
   const takenStarts = new Set(
     (takenRes.data ?? []).map((row) => new Date(row.slot_start).toISOString()),
   );
@@ -52,9 +65,9 @@ export default async function DashboardAuditPage() {
         </p>
         {isPro ? (
           <p className="muted audit-intro-practical">
-            Reserve un creneau ci-dessous. Disponibilites : {AUDIT_AVAILABILITY_LABEL}.
-            Une fois ta demande envoyee, tu recevras une
-            notification apres validation.
+            {billingProAuditFeatureLabel()} — réserve un créneau ci-dessous. Disponibilites :{" "}
+            {AUDIT_AVAILABILITY_LABEL}. Une fois ta demande envoyee, tu recevras une notification
+            apres validation.
           </p>
         ) : (
           <p className="muted audit-intro-practical">
@@ -65,10 +78,17 @@ export default async function DashboardAuditPage() {
       </section>
 
       {isPro ? (
-        <section className="card">
-          <h3>Choisir un creneau</h3>
-          <AuditCalendar days={days} />
-        </section>
+        monthlyLimitReached ? (
+          <section className="card">
+            <h3>Quota mensuel atteint</h3>
+            <p className="muted">{auditMonthlyLimitMessage()}</p>
+          </section>
+        ) : (
+          <section className="card">
+            <h3>Choisir un creneau</h3>
+            <AuditCalendar days={days} />
+          </section>
+        )
       ) : (
         <ProUpgradeCard
           title="Audit CV réservé aux abonnés Pro"

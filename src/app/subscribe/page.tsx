@@ -10,6 +10,7 @@ import { userHasBillingAccess } from "@/lib/billing";
 import {
   billingAfterTrialPriceLine,
   billingFreeCtaLabel,
+  billingProAuditShortLabel,
   billingProCtaLabel,
   billingTrialShortLabel,
 } from "@/lib/billing-offer";
@@ -67,7 +68,7 @@ export default async function SubscribePage() {
               <p className="muted">
                 Tu es connecté avec <strong>{user!.email}</strong>. Passe Pro pour débloquer le
                 matching complet, les offres exclusives, les guides candidat et{" "}
-                <strong>3 appels de 1 h par mois</strong> ({billingTrialShortLabel()},{" "}
+                <strong>{billingProAuditShortLabel()}</strong> ({billingTrialShortLabel()},{" "}
                 {billingAfterTrialPriceLine()}).
               </p>
             ) : (

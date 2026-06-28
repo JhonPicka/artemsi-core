@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAdminAuditsPath, getAdminUserId } from "@/lib/admin-auth";
+import {
+  auditMonthlyLimitMessage,
+  hasReachedMonthlyAuditLimit,
+} from "@/lib/audit-booking-limits";
 import { AUDIT_AVAILABILITY_LABEL, isSlotAllowed } from "@/lib/audit-slots";
 import { userHasProAccess } from "@/lib/billing";
 import { getAppUrl } from "@/lib/email";
@@ -53,6 +57,23 @@ export async function POST(request: Request) {
   }
 
   const slotEnd = new Date(slotStart.getTime() + 60 * 60_000);
+
+  const { data: userBookings, error: limitError } = await supabase
+    .from("audit_bookings")
+    .select("slot_start, status")
+    .eq("user_id", user.id)
+    .in("status", ["pending", "confirmed"]);
+
+  if (limitError) {
+    return NextResponse.json(
+      { error: limitError.message ?? "Erreur verification quota audit" },
+      { status: 500 },
+    );
+  }
+
+  if (hasReachedMonthlyAuditLimit(userBookings ?? [], slotStart)) {
+    return NextResponse.json({ error: auditMonthlyLimitMessage() }, { status: 429 });
+  }
 
   const { data: booking, error } = await supabase
     .from("audit_bookings")

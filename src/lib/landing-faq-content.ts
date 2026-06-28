@@ -1,6 +1,8 @@
 import {
   billingFreeVsProFaqSummary,
   billingMonthlyPriceLine,
+  billingProAuditFeatureLabel,
+  billingProAuditShortLabel,
   billingTrialShortLabel,
   BILLING_TRIAL_DAYS,
 } from "@/lib/billing-offer";
@@ -98,7 +100,7 @@ export function getLandingFaqEntries(): LandingFaqEntry[] {
       category: "documents-entretien",
       question: "Comment préparer un entretien d'alternance ?",
       answerText:
-        "Prépare-toi sur 4 axes : (1) connaissance de l'entreprise (activité, concurrents, actualités récentes) ; (2) maîtrise de ton CV et de tes projets (savoir expliquer chaque ligne concrètement) ; (3) réponses aux questions classiques (« pourquoi nous ? », « tes forces et faiblesses ? », « où tu te vois dans 5 ans ? ») ; (4) questions à poser au recruteur (missions précises, encadrement, équipe, évolution possible). Les abonnés Pro ARTEMSI bénéficient de 3 appels d'une heure par mois, dont une préparation entretien personnalisée avec un accompagnateur humain.",
+        `Prépare-toi sur 4 axes : (1) connaissance de l'entreprise (activité, concurrents, actualités récentes) ; (2) maîtrise de ton CV et de tes projets (savoir expliquer chaque ligne concrètement) ; (3) réponses aux questions classiques (« pourquoi nous ? », « tes forces et faiblesses ? », « où tu te vois dans 5 ans ? ») ; (4) questions à poser au recruteur (missions précises, encadrement, équipe, évolution possible). Les abonnés Pro ARTEMSI bénéficient de ${billingProAuditShortLabel()}, dont une préparation entretien personnalisée avec un accompagnateur humain.`,
     },
     {
       id: "relancer-recruteur",
@@ -119,7 +121,7 @@ export function getLandingFaqEntries(): LandingFaqEntry[] {
       id: "vs-indeed-linkedin",
       category: "artemsi",
       question: `En quoi ${brand} est différent d'Indeed, LinkedIn ou Hellowork ?`,
-      answerText: `Indeed, LinkedIn ou Hellowork diffusent du volume : tu cherches parmi des milliers d'offres, tu filtres, tu postules partout — souvent dans le vide. ${brand} inverse la logique : les offres compatibles avec ton profil arrivent dans ton dashboard selon ton domaine, ta région et ton type de contrat. Tu suis chaque candidature dans un tableau de bord unique, et en Pro tu accèdes aux offres exclusives partenaires entreprises, aux guides CV/LM par offre et à 3 appels personnalisés d'une heure par mois avec un humain — pas un chatbot.`,
+      answerText: `Indeed, LinkedIn ou Hellowork diffusent du volume : tu cherches parmi des milliers d'offres, tu filtres, tu postules partout — souvent dans le vide. ${brand} inverse la logique : les offres compatibles avec ton profil arrivent dans ton dashboard selon ton domaine, ta région et ton type de contrat. Tu suis chaque candidature dans un tableau de bord unique, et en Pro tu accèdes aux offres exclusives partenaires entreprises, aux guides CV/LM par offre et à ${billingProAuditFeatureLabel()} avec un humain — pas un chatbot.`,
     },
     {
       id: "offres-exclusives",
@@ -131,7 +133,7 @@ export function getLandingFaqEntries(): LandingFaqEntry[] {
       id: "accompagnement",
       category: "artemsi",
       question: `Comment fonctionne l'accompagnement humain chez ${brand} ?`,
-      answerText: `Les abonnés Pro bénéficient de 3 appels personnalisés d'une heure par mois : relecture CV et lettre de motivation, revue des candidatures en cours, préparation entretien. Tu réserves un créneau directement dans l'application (2 jours à l'avance) ; un compte rendu avec tes actions prioritaires reste accessible dans ton espace après l'échange. Ce n'est pas un score automatique ni de l'IA : une personne qui connaît les difficultés de l'alternance examine ton dossier et te donne des retours concrets.`,
+      answerText: `Les abonnés Pro bénéficient de ${billingProAuditFeatureLabel()} : relecture CV et lettre de motivation, revue des candidatures en cours, préparation entretien. Tu réserves un créneau directement dans l'application (2 jours à l'avance) ; un compte rendu avec tes actions prioritaires reste accessible dans ton espace après l'échange. Ce n'est pas un score automatique ni de l'IA : une personne qui connaît les difficultés de l'alternance examine ton dossier et te donne des retours concrets.`,
     },
     {
       id: "inscription",
