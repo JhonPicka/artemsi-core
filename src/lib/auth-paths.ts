@@ -13,7 +13,12 @@ export function getFreshLoginPath(params?: { email?: string; error?: string }) {
   return buildResetSessionPath(params);
 }
 
-/** Inscription gratuite : efface la session puis ouvre le formulaire (CTA landing). */
+/** Inscription : efface la session puis ouvre le formulaire (CTA landing). */
+export function getFreshSignupPath() {
+  return buildResetSessionPath({ next: "/signup" });
+}
+
+/** @deprecated Préférer getFreshSignupPath — alias conservé pour liens existants. */
 export function getFreshSignupGratuitPath() {
-  return buildResetSessionPath({ next: "/signup/gratuit" });
+  return getFreshSignupPath();
 }

@@ -38,7 +38,7 @@ export function LandingStatsFilet() {
           ))}
         </ul>
         <p className="landing-stats-filet-note">
-          Moyennes observées en 2025 chez les candidats ARTEMSI Pro · selon profil et secteur
+          Objectifs estimés · résultats variables selon profil, secteur et région
         </p>
       </div>
     </div>

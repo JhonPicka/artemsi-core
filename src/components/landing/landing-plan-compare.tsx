@@ -6,38 +6,19 @@ import { useCallback, useRef, useState } from "react";
 import { FreeCTAInterceptor } from "@/components/landing/landing-free-cta-interceptor";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
 import {
+  billingFreePlanMarketingFeatures,
   billingFreePlanTagline,
   billingMonthlyPriceLine,
+  billingPlansSectionLead,
+  billingPlansSectionTitle,
   billingProCtaLabel,
+  billingProPlanMarketingFeatures,
+  billingProPlanTagline,
   billingTrialShortLabel,
+  type PlanMarketingFeature,
 } from "@/lib/billing-offer";
 
-type PlanFeature = {
-  label: string;
-  included: boolean;
-  highlight?: boolean;
-};
-
 type PlanCompareVariant = "landing" | "auth";
-
-const FREE_FEATURES: PlanFeature[] = [
-  { label: "Jobboard alternance (~50 % du catalogue, hors dernières offres)", included: true },
-  { label: "Suivi de tes candidatures", included: true },
-  { label: "Profil + CV / lettre", included: true },
-  { label: "1–2 offres assignées (aperçu matching)", included: true },
-  { label: "100 % du jobboard + matching selon ton profil", included: false },
-  { label: "Accès aux offres exclusives", included: false },
-  { label: "Guides candidat CV/LM pour chaque offre", included: false },
-  { label: "3 appels personnalisés 1 h / mois", included: false },
-];
-
-const PRO_FEATURES: PlanFeature[] = [
-  { label: "Gratuit +", included: true, highlight: true },
-  { label: "100 % du jobboard + matching selon ton profil", included: true, highlight: true },
-  { label: "Accès aux offres exclusives", included: true, highlight: true },
-  { label: "Guides candidat CV/LM pour chaque offre", included: true, highlight: true },
-  { label: "3 appels personnalisés 1 h / mois", included: true, highlight: true },
-];
 
 function CheckIcon({ muted }: { muted?: boolean }) {
   return (
@@ -80,7 +61,7 @@ function CrossIcon() {
   );
 }
 
-function PlanFeatureList({ features }: { features: PlanFeature[] }) {
+function PlanFeatureList({ features }: { features: PlanMarketingFeature[] }) {
   return (
     <ul className="landing-plan-features">
       {features.map((feature) => (
@@ -108,7 +89,7 @@ function FreePlanCard({
         <span className="landing-plan-price-amount">0 €</span>
       </p>
       <p className="landing-plan-tagline">{billingFreePlanTagline()}</p>
-      <PlanFeatureList features={FREE_FEATURES} />
+      <PlanFeatureList features={billingFreePlanMarketingFeatures()} />
       <FreeCTAInterceptor
         className="button-link secondary-link landing-plan-cta"
         showArrow={false}
@@ -130,10 +111,10 @@ function ProPlanCard({ className }: { className?: string }) {
           <span className="landing-plan-price-amount">{billingMonthlyPriceLine()}</span>
         </p>
         <p className="landing-plan-tagline">
-          Prélèvement après l&apos;essai · Matching complet + accompagnement humain
+          Prélèvement après l&apos;essai · {billingProPlanTagline()}
         </p>
       </div>
-      <PlanFeatureList features={PRO_FEATURES} />
+      <PlanFeatureList features={billingProPlanMarketingFeatures()} />
       <SubscribeButton className="button-link landing-cta-primary landing-plan-cta">
         {billingProCtaLabel()}
         <span className="landing-cta-arrow" aria-hidden="true">
@@ -209,8 +190,7 @@ function PlanCompareHead({ variant }: { variant: PlanCompareVariant }) {
         <span className="landing-kicker">Inscription</span>
         <h1 className="landing-section-title">Choisis ta formule</h1>
         <p className="landing-section-lead">
-          Gratuit pour organiser ta recherche, Pro pour tout débloquer avec l&apos;accompagnement
-          humain.
+          Gratuit pour organiser ta recherche, Pro pour être accompagné.
         </p>
       </div>
     );
@@ -220,12 +200,9 @@ function PlanCompareHead({ variant }: { variant: PlanCompareVariant }) {
     <div className="landing-section-head landing-plans-head">
       <span className="landing-kicker">Formules</span>
       <h2 id="landing-plans-title" className="landing-section-title">
-        Deux niveaux pour ta recherche d&apos;alternance
+        {billingPlansSectionTitle()}
       </h2>
-      <p className="landing-section-lead">
-        Le gratuit couvre l&apos;essentiel pour organiser ta recherche d&apos;alternance en France.
-        Pro débloque le matching complet, les offres exclusives et l&apos;accompagnement humain.
-      </p>
+      <p className="landing-section-lead">{billingPlansSectionLead()}</p>
     </div>
   );
 }

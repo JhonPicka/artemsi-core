@@ -133,55 +133,45 @@ export default async function Home({ searchParams }: HomeProps) {
               3 étapes pour décrocher ton alternance
             </h2>
             <p className="landing-section-lead">
-              Inscris-toi, complète ton profil, reçois des offres adaptées et un accompagnement
-              humain — le tout dans un seul espace.
+              Inscris-toi gratuitement, complète ton profil, reçois des offres adaptées — Pro pour
+              l&apos;accompagnement humain.
             </p>
           </div>
 
           <ol className="landing-steps">
             <li className="landing-step">
               <span className="landing-step-num">01</span>
-              <h3 className="landing-step-title">Choisis ta formule et crée ton compte (~2 min)</h3>
+              <h3 className="landing-step-title">Crée ton compte et complète ton profil (~2 min)</h3>
               <div className="landing-step-body">
                 <p className="landing-step-text">
-                  <strong>Gratuit</strong> — pour organiser ta recherche (offres, dashboard, profil).
-                </p>
-                <p className="landing-step-text">
-                  <strong>Pro</strong> — fais passer ta recherche à un stade supérieur (mail de
-                  suivi chaque semaine).
-                </p>
-                <p className="landing-step-text">
-                  Ensuite tu crées ton compte, tu complètes ton profil (métier, région, contrat) et
-                  tu accèdes à ton espace.
+                  Inscription gratuite, sans carte. Tu renseignes métier, région, école — ton espace
+                  est prêt.
                 </p>
               </div>
             </li>
             <li className="landing-step">
               <span className="landing-step-num">02</span>
-              <h3 className="landing-step-title">Reçois des offres qui match et suis ta progression</h3>
+              <h3 className="landing-step-title">
+                Reçois des offres qui matchent et suis ta progression
+              </h3>
               <div className="landing-step-body">
                 <p className="landing-step-text">
-                  Des opportunités adaptées à ton profil arrivent dans ton espace, avec un lien
-                  direct pour postuler.
+                  Des offres adaptées arrivent dans ton dashboard, avec un lien direct pour
+                  postuler.
                 </p>
                 <p className="landing-step-text">
-                  Tu pilotes tout depuis ton dashboard : candidatures envoyées, relances et
-                  prochaines actions.
+                  Tu pilotes tes candidatures, relances et prochaines actions depuis un seul espace.
                 </p>
               </div>
             </li>
             <li className="landing-step">
               <span className="landing-step-num">03</span>
-              <h3 className="landing-step-title">Arrête de chercher seul</h3>
+              <h3 className="landing-step-title">Passe Pro pour être accompagné</h3>
               <div className="landing-step-body">
                 <p className="landing-step-text">
-                  <strong>Pro</strong> : un échange d&apos;1 h en direct — pas de score, pas
-                  d&apos;IA.
-                </p>
-                <p className="landing-step-text">
-                  Une personne qui connaît vraiment les difficultés de l&apos;alternance relit ton
-                  dossier, corrige ce qui bloque, et tu repars avec des actions claires pour
-                  augmenter tes chances d&apos;entretiens.
+                  Matching complet, offres exclusives partenaires, guides CV/LM et{" "}
+                  <strong>3 appels de 1 h par mois</strong> avec un humain — pas de score, pas
+                  d&apos;IA à la place de l&apos;échange.
                 </p>
               </div>
             </li>
@@ -205,7 +195,7 @@ export default async function Home({ searchParams }: HomeProps) {
               Tu réserves un créneau avec quelqu&apos;un qui sait ce que les entreprises veulent et
               connaît ton profil — pas besoin de score ni d&apos;IA. Tu choisis ton horaire dans le
               calendrier de l&apos;app (2 jours à l&apos;avance) ; on confirme ou on te propose un autre
-              créneau. Et ensuite, place à la magie.
+              créneau. Tu repars avec un plan d&apos;action clair pour décrocher plus d&apos;entretiens.
             </p>
           </div>
 
@@ -258,8 +248,9 @@ export default async function Home({ searchParams }: HomeProps) {
               <span className="landing-title-accent">extrêmement compliqué</span>.
             </h2>
             <p className="landing-section-lead landing-cta-final-lead">
-              Choisis la formule qui te convient : jobboard et suivi, ou matching complet avec
-              accompagnement humain pour ton alternance en Île-de-France.
+              Choisis la formule qui te convient : jobboard et suivi gratuit, ou matching complet
+              avec accompagnement humain — pour ton alternance en ingénierie et industrie, partout
+              en France.
             </p>
             <LandingDualCta className="landing-cta-row landing-cta-final-actions" />
           </div>

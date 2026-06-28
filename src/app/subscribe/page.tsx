@@ -9,13 +9,14 @@ import { resolveAdminPostAuthPath } from "@/lib/admin-profile";
 import { userHasBillingAccess } from "@/lib/billing";
 import {
   billingAfterTrialPriceLine,
+  billingFreeCtaLabel,
   billingProCtaLabel,
   billingTrialShortLabel,
 } from "@/lib/billing-offer";
 import { isBillingEnforced } from "@/lib/stripe";
 import { logoutToLoginAction } from "@/app/(auth)/actions";
 import { getCurrentUser } from "@/lib/auth";
-import { getFreshLoginPath } from "@/lib/auth-paths";
+import { getFreshLoginPath, getFreshSignupPath } from "@/lib/auth-paths";
 import { legalRoutes } from "@/lib/legal-config";
 
 export default async function SubscribePage() {
@@ -27,12 +28,13 @@ export default async function SubscribePage() {
 
   const alreadyActive = user?.email ? await userHasBillingAccess(user.email) : false;
   const isUpgradeFromAccount = Boolean(user?.email && !alreadyActive);
+  const isGuest = !user?.email;
 
   return (
     <AuthPageShell>
       <div className="card form">
         <span className="brand-chip">ABONNEMENT</span>
-        <h1>{isUpgradeFromAccount ? "Passer Pro" : "Accès ARTEMSI"}</h1>
+        <h1>{isUpgradeFromAccount ? "Passer Pro" : isGuest ? "Passer Pro" : "Accès ARTEMSI"}</h1>
 
         {alreadyActive ? (
           <>
@@ -42,13 +44,31 @@ export default async function SubscribePage() {
             </Link>
             <ManageSubscriptionButton className="button-link secondary-link" />
           </>
+        ) : isGuest ? (
+          <>
+            <p className="muted">
+              Crée d&apos;abord ton compte gratuit pour accéder à ton espace. Tu pourras passer Pro
+              depuis ton dashboard quand tu veux ({billingTrialShortLabel()},{" "}
+              {billingAfterTrialPriceLine()}).
+            </p>
+            <Link href={getFreshSignupPath()} className="button-link">
+              {billingFreeCtaLabel()}
+            </Link>
+            <p className="muted">
+              Déjà inscrit ? <Link href={getFreshLoginPath()}>Connecte-toi</Link> pour upgrader.
+            </p>
+            <p className="muted">
+              <Link href="/#landing-prix">Comparer Gratuit et Pro</Link>
+            </p>
+          </>
         ) : (
           <>
             {isUpgradeFromAccount ? (
               <p className="muted">
                 Tu es connecté avec <strong>{user!.email}</strong>. Passe Pro pour débloquer le
-                jobboard complet, l&apos;audit CV et les candidatures sur les offres partenaires (
-                {billingTrialShortLabel()}, {billingAfterTrialPriceLine()}).
+                matching complet, les offres exclusives, les guides candidat et{" "}
+                <strong>3 appels de 1 h par mois</strong> ({billingTrialShortLabel()},{" "}
+                {billingAfterTrialPriceLine()}).
               </p>
             ) : (
               <p className="muted">

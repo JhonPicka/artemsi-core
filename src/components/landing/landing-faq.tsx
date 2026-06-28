@@ -1,108 +1,131 @@
+"use client";
+
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState } from "react";
 
-import { getFreshSignupGratuitPath } from "@/lib/auth-paths";
+import { getFreshLoginPath, getFreshSignupPath } from "@/lib/auth-paths";
 import {
-  billingMonthlyPriceLine,
-  billingTrialShortLabel,
-  BILLING_TRIAL_DAYS,
-} from "@/lib/billing-offer";
-import { legalConfig } from "@/lib/legal-config";
+  buildLandingFaqJsonLd,
+  FAQ_CATEGORIES,
+  getLandingFaqEntries,
+  type LandingFaqEntry,
+} from "@/lib/landing-faq-content";
+import { legalConfig, legalRoutes } from "@/lib/legal-config";
 
-type FaqItem = {
-  question: string;
-  answer: ReactNode;
-};
+function FaqAnswerBody({ entry }: { entry: LandingFaqEntry }) {
+  switch (entry.id) {
+    case "inscription":
+      return (
+        <p>
+          Rends-toi sur{" "}
+          <Link href={getFreshSignupPath()}>{legalConfig.publicSiteLabel}/signup</Link>, inscris-toi
+          avec ton email et un mot de passe — sans carte bancaire. Complète l&apos;onboarding en
+          quelques minutes (métier visé, région, école, type de contrat) pour recevoir tes premières
+          offres matchées et accéder au suivi de candidatures. Tu pourras passer Pro depuis ton
+          dashboard quand tu le souhaites.
+        </p>
+      );
+    case "prix-annulation":
+      return (
+        <p>
+          {entry.answerText}{" "}
+          <Link href={legalRoutes.terms}>Détails dans les CGU</Link>.
+        </p>
+      );
+    case "gratuit-pro":
+      return (
+        <p>
+          {entry.answerText}{" "}
+          <Link href="/#landing-prix">Compare les formules</Link> sur la page tarifs.
+        </p>
+      );
+    case "relancer-recruteur":
+      return (
+        <p>
+          {entry.answerText} <Link href={getFreshSignupPath()}>Crée ton espace candidat gratuit</Link> pour
+          centraliser tes candidatures et tes relances.
+        </p>
+      );
+    default:
+      return <p>{entry.answerText}</p>;
+  }
+}
 
-const FAQ_ITEMS: FaqItem[] = [
-  {
-    question: "Je cherche une alternance : c'est pour moi ?",
-    answer: (
-      <>
-        Oui. ARTEMSI est pensé pour les étudiants en alternance, quel que soit ton secteur. Dès
-        l&apos;onboarding, tu renseignes métier, région, école et type de contrat — les offres et le
-        suivi s&apos;adaptent à ton profil.
-      </>
-    ),
-  },
-  {
-    question: "Gratuit ou Pro : quelle différence ?",
-    answer: (
-      <>
-        <strong>Gratuit</strong> — inscription sans carte,{" "}
-        <strong>50 % du jobboard</strong> (hors dernières offres), suivi candidatures, profil et{" "}
-        <strong>1 à 2 offres assignées</strong>. <strong>Pro</strong> — matching sur{" "}
-        <strong>100 % du jobboard</strong>, offres exclusives, guides CV/LM et{" "}
-        <strong>3 appels de 1 h par mois</strong> avec un humain. Essai :{" "}
-        <strong>{billingTrialShortLabel()}</strong>, puis{" "}
-        <strong>{billingMonthlyPriceLine()}</strong>.
-      </>
-    ),
-  },
-  {
-    question: "En quoi c'est différent d'un job board ?",
-    answer: (
-      <>
-        Les offres viennent à toi selon ton profil, pas l&apos;inverse. Tu suis tes candidatures
-        dans un seul espace et tu peux réserver un accompagnement sur ton dossier —{" "}
-        <strong>postuler mieux</strong>, pas juste plus.
-      </>
-    ),
-  },
-  {
-    question: "Comment se déroule l'accompagnement ?",
-    answer: (
-      <>
-        <strong>Pro</strong> : <strong>3 appels de 1 h par mois</strong> — tu réserves un créneau
-        dans l&apos;app (2 jours à l&apos;avance), on confirme ou on te repropose un horaire. Un{" "}
-        <strong>rapport</strong> avec tes actions prioritaires reste dans ton espace après
-        l&apos;échange. ARTEMSI peut aussi proposer ponctuellement un mini-audit découverte (10 min)
-        en opération promo — ce n&apos;est pas inclus automatiquement dans le compte Gratuit.
-      </>
-    ),
-  },
-  {
-    question: "Comment accéder à mon espace ?",
-    answer: (
-      <>
-        <Link href={getFreshSignupGratuitPath()}>Crée ton compte gratuit</Link> ou passe Pro depuis ton espace. Connexion
-        avec l&apos;email utilisé à l&apos;inscription. Email introuvable ? Vérifie les spams. Bloqué ?{" "}
-        <a href={`mailto:${legalConfig.contactEmail}`}>Contacte-nous</a>.
-      </>
-    ),
-  },
-  {
-    question: "Essai Pro et annulation",
-    answer: (
-      <>
-        L&apos;essai Pro dure <strong>{BILLING_TRIAL_DAYS} jours</strong>, sans débit pendant cette
-        période. Ensuite : <strong>{billingMonthlyPriceLine()}</strong> sauf résiliation avant la
-        fin. Annulation à tout moment depuis ton profil (portail Stripe). Détails dans les{" "}
-        <Link href="/cgu">CGU</Link>.
-      </>
-    ),
-  },
-];
+type CategoryKey = LandingFaqEntry["category"];
+const ALL = "__all__" as const;
+type FilterValue = CategoryKey | typeof ALL;
 
 export function LandingFaq() {
+  const faqEntries = getLandingFaqEntries();
+  const faqJsonLd = buildLandingFaqJsonLd();
+
+  const [active, setActive] = useState<FilterValue>(ALL);
+
+  const categories = Object.entries(FAQ_CATEGORIES) as [CategoryKey, string][];
+  const visible = active === ALL ? faqEntries : faqEntries.filter((e) => e.category === active);
+
   return (
-    <section id="landing-faq" className="landing-section landing-faq landing-scroll-target">
+    <section
+      id="landing-faq"
+      className="landing-section landing-faq landing-scroll-target"
+      aria-labelledby="landing-faq-title"
+    >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <div className="landing-container">
         <div className="landing-section-head landing-faq-head">
-          <span className="landing-kicker">FAQ</span>
-          <h2 className="landing-section-title">Questions fréquemment posées</h2>
+          <span className="landing-kicker">FAQ alternance</span>
+          <h2 id="landing-faq-title" className="landing-section-title">
+            Questions fréquentes sur la recherche d&apos;alternance ingénieur
+          </h2>
           <p className="landing-section-lead">
-            L&apos;essentiel sur le gratuit, Pro et l&apos;accompagnement humain.
+            Salaire, timing, contrats, CV, lettre de motivation, entretien, et tout sur{" "}
+            {legalConfig.brand} — les réponses pour décrocher ton alternance en ingénierie et
+            industrie.
           </p>
         </div>
+
+        <div className="landing-faq-filters" role="group" aria-label="Filtrer les questions">
+          <button
+            type="button"
+            className={`landing-faq-filter${active === ALL ? " landing-faq-filter--active" : ""}`}
+            onClick={() => setActive(ALL)}
+          >
+            Toutes les questions
+          </button>
+          {categories.map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              className={`landing-faq-filter${active === key ? " landing-faq-filter--active" : ""}`}
+              onClick={() => setActive(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         <div className="landing-faq-list">
-          {FAQ_ITEMS.map((item) => (
-            <details key={item.question} className="landing-faq-item">
-              <summary>{item.question}</summary>
-              <p>{item.answer}</p>
+          {visible.map((entry) => (
+            <details key={entry.id} className="landing-faq-item" id={`faq-${entry.id}`}>
+              <summary>
+                <h3 className="landing-faq-question">{entry.question}</h3>
+              </summary>
+              <div className="landing-faq-answer">
+                <FaqAnswerBody entry={entry} />
+              </div>
             </details>
           ))}
         </div>
+
+        <p className="muted landing-faq-footer">
+          Encore une question ?{" "}
+          <Link href={getFreshSignupPath()}>Crée ton compte gratuit</Link>,{" "}
+          <Link href={getFreshLoginPath()}>connecte-toi</Link> ou écris à{" "}
+          <a href={`mailto:${legalConfig.contactEmail}`}>{legalConfig.contactEmail}</a>.
+        </p>
       </div>
     </section>
   );

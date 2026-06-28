@@ -18,13 +18,43 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://artemsi.fr";
+
 export const metadata: Metadata = {
   title: {
-    default: "ARTEMSI — Trouve ton alternance et profite de l'été",
+    default: "ARTEMSI — Plateforme alternance ingénieur & industrie | Offres ciblées, suivi et accompagnement",
     template: "%s — ARTEMSI",
   },
   description:
-    "Trouve ton alternance plus vite : offres ciblées, suivi des candidatures et accompagnement personnalisé dans un seul espace.",
+    "Trouve ton alternance en ingénierie et industrie partout en France. Offres matchées sur ton profil, suivi candidatures, guides CV/LM et 3 appels de coaching par mois. Inscription gratuite.",
+  metadataBase: new URL(APP_URL),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "ARTEMSI",
+    title: "ARTEMSI — Plateforme alternance ingénieur & industrie",
+    description:
+      "Offres ciblées, suivi candidatures et accompagnement humain pour décrocher ton alternance en ingénierie et industrie partout en France.",
+    images: [
+      {
+        url: "/artemsi-logo.png",
+        width: 512,
+        height: 512,
+        alt: "ARTEMSI — Plateforme alternance ingénieur & industrie",
+      },
+    ],
+    locale: "fr_FR",
+  },
+  twitter: {
+    card: "summary",
+    title: "ARTEMSI — Plateforme alternance ingénieur & industrie",
+    description:
+      "Offres ciblées, suivi candidatures et accompagnement humain pour décrocher ton alternance en France.",
+    images: ["/artemsi-logo.png"],
+  },
   icons: {
     icon: [
       { url: "/icon.png", type: "image/jpeg" },

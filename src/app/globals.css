@@ -2960,6 +2960,48 @@ html:has(.landing-shell) {
   margin-right: auto;
 }
 
+.landing-faq-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: min(920px, 100%);
+  margin: 0 auto 1.5rem;
+}
+
+.landing-faq-filter {
+  padding: 0.4rem 0.9rem;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted-strong);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  line-height: 1.4;
+}
+
+.landing-faq-filter:hover {
+  border-color: rgba(124, 92, 255, 0.4);
+  color: var(--foreground);
+}
+
+.landing-faq-filter--active {
+  background: rgba(124, 92, 255, 0.12);
+  border-color: rgba(124, 92, 255, 0.5);
+  color: var(--primary-2);
+}
+
+@media (max-width: 767px) {
+  .landing-faq-filters {
+    gap: 0.4rem;
+  }
+  .landing-faq-filter {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.75rem;
+  }
+}
+
 .landing-faq-list {
   display: grid;
   gap: 0.75rem;
@@ -3017,6 +3059,17 @@ html:has(.landing-shell) {
   content: "−";
 }
 
+.landing-faq-item summary .landing-faq-question {
+  flex: 1;
+  margin: 0;
+  font: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  text-align: left;
+}
+
 .landing-faq-item p {
   margin: 0;
   padding: 0 1.15rem 1.15rem;
@@ -3034,6 +3087,37 @@ html:has(.landing-shell) {
 }
 
 .landing-faq-item p a:hover {
+  color: var(--primary);
+}
+
+.landing-faq-answer {
+  padding: 0 1.15rem 1.15rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.9rem;
+}
+
+.landing-faq-answer p {
+  margin: 0;
+  padding: 0;
+  border-top: none;
+  padding-top: 0;
+}
+
+.landing-faq-footer {
+  max-width: min(920px, 100%);
+  margin: 1.25rem auto 0;
+  text-align: center;
+  font-size: var(--landing-body-size);
+  line-height: var(--landing-body-leading);
+}
+
+.landing-faq-footer a {
+  color: var(--primary-2);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.landing-faq-footer a:hover {
   color: var(--primary);
 }
 

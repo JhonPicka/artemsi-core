@@ -5,7 +5,6 @@ import {
   billingProCtaLabel,
   billingProTrialLine,
 } from "@/lib/billing-offer";
-import { FREE_TIER_ASSIGNMENT_CAP } from "@/lib/freemium-access";
 
 type Variant = "matching" | "hidden-offers" | "exclusives" | "jobboard";
 
@@ -19,12 +18,11 @@ function copyForVariant(variant: Variant, hiddenCount: number) {
   switch (variant) {
     case "matching":
       return {
-        title: "Matching complet sur ton profil",
+        title: "Plus d'offres pour toi",
         description: (
           <>
-            Aperçu gratuit : <strong>{FREE_TIER_ASSIGNMENT_CAP} offres personnalisées</strong>{" "}
-            maximum. Passe Pro pour recevoir toutes les offres adaptées à ton profil dans{" "}
-            <em>Pour toi</em>.
+            Aperçu gratuit limité. Passe Pro pour recevoir toutes les offres qui matchent ton profil
+            dans <em>Pour toi</em>.
           </>
         ),
       };
@@ -42,12 +40,8 @@ function copyForVariant(variant: Variant, hiddenCount: number) {
     case "jobboard":
       return {
         title: "Jobboard complet",
-        description: (
-          <>
-            Compte gratuit : tu vois <strong>50&nbsp;% du jobboard</strong> (offres les moins
-            récentes). Les dernières publications et l'audit CV sont réservés Pro.
-          </>
-        ),
+        description:
+          "Passe Pro pour accéder à toutes les offres récentes du catalogue et postuler sans limite.",
       };
   }
 }

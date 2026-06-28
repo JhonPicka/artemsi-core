@@ -42,9 +42,10 @@ export default function CguPage() {
         <p>Deux formules coexistent :</p>
         <ul>
           <li>
-            <strong>Gratuit</strong> — inscription par e-mail, sans carte bancaire, accès immédiat
-            à une partie du jobboard, au suivi candidatures, au profil et aux documents, et à un
-            aperçu du matching (1 à 2 offres assignées).
+            <strong>Gratuit</strong> — inscription par e-mail, sans carte bancaire. Tu organises ta
+            recherche : profil, suivi candidatures, documents, aperçu d&apos;offres matchées et
+            exclusives partenaires (consultation). Le détail des limites (jobboard, matching) est
+            précisé à la section 4.
           </li>
           <li>
             <strong>Pro</strong> — accès au jobboard complet, au matching selon ton profil, aux
@@ -76,6 +77,11 @@ export default function CguPage() {
 
       <section>
         <h2>4. Formule Gratuite</h2>
+        <p>
+          La formule Gratuite permet d&apos;organiser sa recherche d&apos;alternance (profil, suivi
+          candidatures, aperçu d&apos;offres). Les fonctionnalités avancées (matching complet,
+          candidature aux exclusives, accompagnement humain) relèvent de la formule Pro.
+        </p>
         <ul>
           <li>
             La création d'un compte gratuit ne nécessite pas de moyen de paiement.

@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { MouseEvent } from "react";
 
-import { getFreshSignupGratuitPath } from "@/lib/auth-paths";
+import { getFreshSignupPath } from "@/lib/auth-paths";
 import {
   BILLING_TRIAL_DAYS,
   billingFreeCtaLabel,
   billingMonthlyPriceLine,
 } from "@/lib/billing-offer";
 
-const SIGNUP_GRATUIT_PATH = getFreshSignupGratuitPath();
+const SIGNUP_PATH = getFreshSignupPath();
 
 async function startProCheckout() {
   const response = await fetch("/api/stripe/checkout", {
@@ -80,7 +80,7 @@ export function FreeCTAInterceptor({ className, showArrow = true }: Props) {
 
   function handleConfirmFree() {
     handleClose();
-    window.location.assign(SIGNUP_GRATUIT_PATH);
+    window.location.assign(SIGNUP_PATH);
   }
 
   async function handleTryPro() {
@@ -150,7 +150,7 @@ export function FreeCTAInterceptor({ className, showArrow = true }: Props) {
   return (
     <>
       <a
-        href={SIGNUP_GRATUIT_PATH}
+        href={SIGNUP_PATH}
         className={className}
         onClick={handleFreeClick}
       >

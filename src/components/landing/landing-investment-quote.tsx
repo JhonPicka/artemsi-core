@@ -6,8 +6,8 @@ export function LandingInvestmentQuote() {
           <span className="landing-investment-guillemet" aria-hidden="true">
             «
           </span>
-          Tout ce stress ne mérite-t-il pas <strong>3&nbsp;%</strong>&nbsp;de ton futur salaire
-          d&apos;alternant&nbsp;?
+          Moins de <strong>67&nbsp;centimes par jour</strong>&nbsp;— moins qu&apos;un café&nbsp;— pour
+          arrêter de candidater dans le vide.
           <span className="landing-investment-guillemet" aria-hidden="true">
             »
           </span>

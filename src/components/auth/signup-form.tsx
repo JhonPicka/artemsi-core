@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 
 import { signupAction, type AuthFormState } from "@/app/(auth)/actions";
+import { billingFreeSignupLead } from "@/lib/billing-offer";
 import { legalRoutes } from "@/lib/legal-config";
 
 const initialState: AuthFormState = {};
@@ -16,9 +17,7 @@ export function SignupForm() {
     <form className="card form" action={action} autoComplete="off">
       <span className="brand-chip">INSCRIPTION</span>
       <h1>Créer un compte</h1>
-      <p className="muted">
-        Inscription gratuite — accès au jobboard, au suivi candidatures et à ton profil.
-      </p>
+      <p className="muted">{billingFreeSignupLead()}</p>
 
       <label htmlFor="email">Email</label>
       <input id="email" name="email" type="email" required autoComplete="email" />
@@ -65,8 +64,8 @@ export function SignupForm() {
 
       <div className="auth-form-footer">
         <p className="muted auth-form-footer-line">
-          <Link href="/signup" className="inline-link">
-            Changer de formule
+          <Link href="/#landing-prix" className="inline-link">
+            Comparer Gratuit et Pro
           </Link>
         </p>
         <p className="muted auth-form-footer-line">
