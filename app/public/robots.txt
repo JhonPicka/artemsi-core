@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /checkout
+Disallow: /auth/
+Disallow: /signup/finish
+Disallow: /activer-mon-compte
+Disallow: /subscribe
+
+Sitemap: https://artemsi.fr/sitemap.xml
