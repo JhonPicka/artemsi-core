@@ -1,0 +1,53 @@
+---
+description: Landing — parité visuelle PC et tablette (≥768px), mobile différé
+globs: app/src/app/page.tsx,app/src/app/globals.css,app/src/components/landing/**/*
+alwaysApply: false
+---
+
+# Landing — PC & tablette identiques
+
+## Règle produit
+
+Sur la **landing** (`page.tsx`, `globals.css`, `components/landing/`), **PC et tablette doivent afficher le même design** : même structure, mêmes proportions, même densité. Le rendu ne doit pas « changer de layout » entre 768px et grand écran.
+
+**Mobile (< 768px)** : voir `landing-responsive-mobile.mdc` — même format que PC/tablette, empilé ; un seul design pour tous les téléphones.
+
+## Breakpoint unique
+
+- **Seuil unique : `768px`**
+  - `< 768px` → mobile (layout empilé, règles dédiées plus tard)
+  - `≥ 768px` → **PC + tablette = un seul design** (grilles multi-colonnes, blocs côte à côte, etc.)
+
+Éviter d’ajouter des `@media` intermédiaires (900px, 1024px, 1200px…) qui feraient diverger tablette et PC sur la landing.
+
+## À faire lors d’une modification landing
+
+1. **Un layout pour `min-width: 768px`** — pas de variantes « tablette » vs « desktop ».
+2. **Valeurs figées ≥ 768px** — bloc `@media (min-width: 768px)` dans `globals.css` (après `.landing-container`) : paddings, titres, gaps en px/rem fixes. Pas de `clamp(..., vw, ...)` au-dessus de 768px.
+3. **Breakpoint unique** — remplacer `720px`, `880px`, `1080px` par `768px` / `767px` max pour le mobile.
+4. **Vérifier visuellement** à ~768px et ~1440px : même mise en page et mêmes proportions.
+5. **Ne pas introduire** de `@media (min-width: 900px)` ou similaire sans accord explicite.
+
+## Exemples
+
+```css
+/* ✅ Bon — un seul palier au-dessus du mobile */
+.landing-app-preview-stack {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .landing-app-preview-stack {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ❌ À éviter — tablette ≠ PC */
+@media (min-width: 768px) { .block { grid-template-columns: 1fr; } }
+@media (min-width: 1024px) { .block { grid-template-columns: 1fr 1fr; } }
+```
+
+## Fichiers concernés
+
+- `app/src/app/page.tsx`
+- `app/src/app/globals.css` (sections `.landing-*`)
+- `app/src/components/landing/**/*.tsx`

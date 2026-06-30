@@ -46,11 +46,6 @@ export function billingUpgradeCtaLabel() {
   return "Upgrade";
 }
 
-/** @deprecated Préférer billingProCtaLabel — conservé pour boutons Stripe existants */
-export function billingTrialCtaLabel() {
-  return billingProCtaLabel();
-}
-
 export function billingTrialShortLabel() {
   return `${BILLING_TRIAL_DAYS} jours gratuits`;
 }

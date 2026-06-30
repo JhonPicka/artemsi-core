@@ -118,18 +118,6 @@ export async function preparePaidAccountPasswordSetup(
   };
 }
 
-/** @deprecated Conservé pour compat — préférer preparePaidAccountPasswordSetup */
-export async function startPaidAccountSession(
-  email: string,
-  _supabaseClient?: SupabaseClient,
-): Promise<{ ok: true; mode: "password-setup" } | { ok: false; error: string }> {
-  const result = await preparePaidAccountPasswordSetup(email);
-  if (!result.ok) {
-    return result;
-  }
-  return { ok: true, mode: "password-setup" };
-}
-
 export type FinishSignupWithTokenResult =
   | { ok: true; email: string }
   | { ok: false; error: string };

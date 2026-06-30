@@ -1,0 +1,59 @@
+---
+description: Landing — parité visuelle mobile (<768px), format aligné PC/tablette
+globs: app/src/app/page.tsx,app/src/app/globals.css,app/src/components/landing/**/*
+alwaysApply: false
+---
+
+# Landing — mobile identique (tous téléphones)
+
+## Règle produit
+
+Sur la **landing** (`page.tsx`, `globals.css`, `components/landing/`), **tous les téléphones (< 768px) affichent le même design** : iPhone SE, iPhone Pro Max, Android petit/grand écran — **un seul layout mobile**, pas de variantes intermédiaires.
+
+Le **format** (structure, contenu, hiérarchie, éléments visibles) doit **reprendre celui du PC/tablette (≥ 768px)** : mêmes blocs, mêmes textes, mêmes CTAs, mêmes sections. Seule adaptation autorisée : **empilement vertical** quand l’espace ne permet pas le côte à côte.
+
+**Ne pas** créer de parcours mobile « simplifié » ou divergent (carousel à la place du comparatif, CTAs masqués, onglets absents, etc.) sauf contrainte technique explicite validée.
+
+## Breakpoint unique
+
+- **Seuil unique : `768px`**
+  - `< 768px` → **mobile = un seul design** pour tous les téléphones
+  - `≥ 768px` → PC + tablette (voir `landing-responsive-pc-tablet.mdc`)
+
+**Interdit** sur la landing mobile : `@media (max-width: 720px)`, `640px`, `520px`, `480px`, `(min-width: 480px) and (max-width: 720px)`, etc. — tout ce qui fait diverger un petit phone d’un grand phone.
+
+## À faire lors d’une modification landing (mobile)
+
+1. **Un layout pour `max-width: 767px`** — pas de variantes « petit phone » vs « grand phone ».
+2. **Même contenu que ≥ 768px** — si un élément est visible sur PC/tablette, il doit l’être sur mobile (CTAs hero, onglets nav, comparatif formules, trust list, etc.).
+3. **Empiler, ne pas remplacer** — grilles multi-colonnes → 1 colonne ; barre d’onglets → scroll horizontal si besoin ; pas de composant mobile alternatif.
+4. **Valeurs cohérentes** — préférer rem/px fixes dans le bloc mobile plutôt que des `clamp(..., vw, ...)` qui changent le rendu selon la largeur du phone.
+5. **Vérifier visuellement** à ~320px, ~390px et ~767px : même mise en page, seules les marges peuvent respirer légèrement.
+
+## Exemples
+
+```css
+/* ✅ Bon — un seul palier mobile */
+.landing-steps {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .landing-steps {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ❌ À éviter — petit phone ≠ grand phone */
+@media (max-width: 520px) { .block { font-size: 0.8rem; } }
+@media (max-width: 720px) { .block { display: none; } }
+
+/* ❌ À éviter — UI mobile différente du desktop */
+.landing-plans-desktop { display: none; }
+.landing-plans-mobile { display: block; } /* carousel ≠ comparatif côte à côte empilé */
+```
+
+## Fichiers concernés
+
+- `app/src/app/page.tsx`
+- `app/src/app/globals.css` (sections `.landing-*`)
+- `app/src/components/landing/**/*.tsx`

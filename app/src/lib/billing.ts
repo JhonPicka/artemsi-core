@@ -283,8 +283,3 @@ export async function userHasProAccess(user: Pick<User, "id" | "email">) {
   const status = await syncUserBilling(user);
   return isActiveSubscriptionStatus(status);
 }
-
-/** @deprecated Préférer hasApiAccountAccess ou userHasProAccess. */
-export async function hasApiBillingAccess(user: Pick<User, "id" | "email">) {
-  return userHasProAccess(user);
-}

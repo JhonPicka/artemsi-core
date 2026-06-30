@@ -346,9 +346,3 @@ export async function extractOfferFieldsFromUrl(input: {
     extractMode: "heuristique",
   };
 }
-
-/** @deprecated Utilise fetchOfferPage en interne. Conservé pour compatibilité. */
-export async function fetchOfferPageText(url: string) {
-  const page = await fetchOfferPage(url);
-  return { ok: page.ok, text: page.text, fetchError: page.fetchError };
-}

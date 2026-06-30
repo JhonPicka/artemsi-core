@@ -17,8 +17,3 @@ export function getFreshLoginPath(params?: { email?: string; error?: string }) {
 export function getFreshSignupPath() {
   return buildResetSessionPath({ next: "/signup" });
 }
-
-/** @deprecated Préférer getFreshSignupPath — alias conservé pour liens existants. */
-export function getFreshSignupGratuitPath() {
-  return getFreshSignupPath();
-}

@@ -251,14 +251,3 @@ export async function patchAdminAuditBooking(
     slotStart: (updated?.slot_start ?? booking.slot_start) as string,
   };
 }
-
-/** @deprecated Utiliser patchAdminAuditBooking */
-export async function updateAuditBookingStatus(
-  bookingId: string,
-  action: "confirm" | "decline",
-  auth: { adminToken?: string; asTrustedAdmin?: boolean },
-) {
-  const result = await patchAdminAuditBooking(bookingId, { action }, auth);
-  if (!result.ok) return result;
-  return { ok: true as const, status: result.status };
-}
