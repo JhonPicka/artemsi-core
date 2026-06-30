@@ -9,6 +9,7 @@ import {
 import { LandingHeroVisualPanel } from "@/components/landing/landing-hero-preview-box";
 import { LandingFaq } from "@/components/landing/landing-faq";
 import { LandingInvestmentQuote } from "@/components/landing/landing-investment-quote";
+import { LandingJsonLd } from "@/components/landing/landing-json-ld";
 import { LandingPlanCompare } from "@/components/landing/landing-plan-compare";
 import { LandingStatsFilet } from "@/components/landing/landing-stats-filet";
 import { LandingTabs } from "@/components/landing/landing-tabs";
@@ -30,6 +31,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
   return (
     <main className="landing-shell">
+      <LandingJsonLd />
       <div className="landing-bg" aria-hidden="true">
         <div className="landing-bg-grid" />
         <div className="landing-bg-aurora landing-bg-aurora--a" />
