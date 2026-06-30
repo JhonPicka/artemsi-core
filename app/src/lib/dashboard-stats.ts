@@ -55,6 +55,9 @@ export function getCurrentMonthDayKeysParis(): string[] {
   for (let d = 1; d <= 31; d++) {
     const day = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     const check = new Date(`${day}T12:00:00Z`);
+    // Safari/JSC renvoie une date invalide pour un jour inexistant (ex. 31 juin) ;
+    // .toISOString() y lèverait "RangeError: Invalid Date". On ignore ces jours.
+    if (Number.isNaN(check.getTime())) continue;
     if (dateKeyParis(check.toISOString()) !== day) continue;
     if (day > todayKey) break;
     keys.push(day);
