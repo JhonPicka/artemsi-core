@@ -1,5 +1,3 @@
-import { buildOffersHref } from "@/lib/offers-dashboard";
-
 type JobboardToolbarProps = {
   q: string;
   resultCount: number;

@@ -19,12 +19,8 @@ import {
   type AcquisitionSource,
   type AlternanceRhythm,
   type ApplicationsSentRange,
-  type ContractDuration,
-  type ContractType,
   type PreferredSector,
   type SearchLevel,
-  type StudyDomain,
-  type StudyLevel,
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 

@@ -1,5 +1,3 @@
-import type { StudyDomain } from "@/lib/constants";
-
 /** Centroïde approximatif par région (profil candidat → requête LBA). */
 export const REGION_GEOPOINTS: Record<string, { latitude: number; longitude: number }> = {
   "Ile-de-France": { latitude: 48.8566, longitude: 2.3522 },

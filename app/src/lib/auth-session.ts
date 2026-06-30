@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { userNeedsPasswordSetup } from "@/lib/account-setup";
 import { isAdminUser } from "@/lib/admin-auth";
 import { resolveAdminPostAuthPath } from "@/lib/admin-profile";
-import { syncUserBilling, userHasBillingAccess } from "@/lib/billing";
+import { syncUserBilling } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
 
 /** Mot de passe pas encore choisi sur /signup/finish. */

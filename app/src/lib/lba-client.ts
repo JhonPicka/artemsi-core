@@ -139,8 +139,6 @@ function parseLbaJob(raw: unknown): LbaNormalizedJob | null {
 
   const identifier = asRecord(row.identifier) ?? row;
   const partnerLabel = pickString(identifier, "partner_label", "partnerLabel");
-  const partnerJobId = pickString(identifier, "partner_job_id", "partnerJobId", "id");
-  const identifierId = pickString(identifier, "id");
 
   const offer = asRecord(row.offer) ?? row;
   const workplace = asRecord(row.workplace) ?? asRecord(offer.workplace);

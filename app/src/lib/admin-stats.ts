@@ -241,24 +241,6 @@ function countRegions(rows: (string[] | null)[]): RankedItem[] {
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count);
 }
-
-function countMultiSelect(
-  rows: (string[] | null)[],
-  labelFor: (value: string) => string,
-): RankedItem[] {
-  const map = new Map<string, number>();
-  for (const items of rows) {
-    for (const raw of items ?? []) {
-      if (!raw?.trim()) continue;
-      const label = labelFor(raw);
-      map.set(label, (map.get(label) ?? 0) + 1);
-    }
-  }
-  return [...map.entries()]
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count);
-}
-
 function toSlices(entries: { label: string; value: number }[], max = 6): ChartSlice[] {
   return entries
     .filter((e) => e.value > 0)

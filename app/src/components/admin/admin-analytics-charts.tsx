@@ -80,7 +80,6 @@ function GridAndYAxis({
   max: number;
   margin?: ChartMargins;
 }) {
-  const plotW = width - margin.left - margin.right;
   const plotH = height - margin.top - margin.bottom;
   const ticks = buildTicks(max);
 

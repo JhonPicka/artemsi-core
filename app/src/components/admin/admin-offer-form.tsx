@@ -3,10 +3,7 @@
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
 
-import {
-  guideTipsToText,
-  textToApplicationGuide,
-} from "@/lib/offer-application-guide";
+import { textToApplicationGuide } from "@/lib/offer-application-guide";
 import {
   STUDY_DOMAINS,
   STUDY_DOMAIN_LABEL,

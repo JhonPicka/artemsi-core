@@ -4,7 +4,6 @@ import { SubscribeButton } from "@/components/billing/subscribe-button";
 import {
   billingProCtaLabel,
   billingProTrialLine,
-  billingUpgradeCtaLabel,
 } from "@/lib/billing-offer";
 
 type ProUpgradeCardProps = {
