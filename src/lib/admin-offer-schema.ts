@@ -1,3 +1,4 @@
+import { sanitizeOfferTitle } from "@/lib/offer-title-sanitize";
 import { z } from "zod";
 
 import { STUDY_DOMAINS } from "@/lib/constants";
@@ -13,7 +14,11 @@ function isValidHttpUrl(value: string) {
 
 export const adminOfferBodySchema = z
   .object({
-    title: z.string().min(2).max(200),
+    title: z
+      .string()
+      .min(2)
+      .max(200)
+      .transform((value) => sanitizeOfferTitle(value).slice(0, 200)),
     company: z.string().max(200).optional().nullable(),
     location: z.string().max(200).optional().nullable(),
     url: z.string().optional().nullable(),

@@ -1,5 +1,6 @@
 import { REGIONS, STUDY_DOMAINS, type StudyDomain } from "@/lib/constants";
 import { DOMAIN_HINTS, REGION_HINTS } from "@/lib/offer-matching";
+import { sanitizeOfferTitle } from "@/lib/offer-title-sanitize";
 import { normalizeStudyDomain } from "@/lib/study-domain";
 
 /** Réponse JSON attendue du modèle. */
@@ -515,7 +516,7 @@ function toTitleCase(value: string) {
 }
 
 function cleanExtractedTitle(title: string, company: string | null, contractHint: string | null) {
-  let cleaned = title.replace(/\s+/g, " ").trim();
+  let cleaned = sanitizeOfferTitle(title);
 
   for (const pattern of [...TITLE_JUNK_PATTERNS, ...INVALID_TITLE_PATTERNS]) {
     cleaned = cleaned.replace(pattern, "");

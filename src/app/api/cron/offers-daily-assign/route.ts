@@ -5,9 +5,9 @@ import {
   cronUnauthorizedResponse,
   isCronAuthorized,
 } from "@/lib/cron-auth";
-import { runOfferMatching } from "@/lib/run-offer-matching";
+import { runDailyOfferAssignments } from "@/lib/run-daily-offer-assignments";
 
-/** Cron Vercel : assignation offres en base → profils (offres ajoutees manuellement). */
+/** Cron : jusqu'à 5 nouvelles offres « Pour moi » / jour / abonné Pro. */
 export async function GET(request: Request) {
   if (!process.env.CRON_SECRET?.trim()) {
     return NextResponse.json(cronMissingSecretResponse(), {
@@ -21,11 +21,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    const result = await runOfferMatching({ dryRun: false });
+    const result = await runDailyOfferAssignments();
     return NextResponse.json({ ok: true, result });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Erreur matching offres" },
+      { error: error instanceof Error ? error.message : "Erreur assignation quotidienne" },
       { status: 500 },
     );
   }

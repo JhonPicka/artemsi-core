@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/admin/offres", label: "Toutes les offres", exact: true },
   { href: "/admin/offres/nouvelle", label: "Nouvelle offre", exact: true },
-  { href: "/admin/offres/import", label: "Import CSV", exact: true },
+  { href: "/admin/offres/import", label: "Import", exact: true },
   { href: "/admin/offres/distribution", label: "Distribution", exact: true },
   { href: "/admin/offres/matching", label: "Matching", exact: true },
 ] as const;

@@ -124,6 +124,13 @@ export function parisDatetimeLocalToISO(value: string): string {
   return parisLocalToUTC(year, month, day, hour, minute).toISOString();
 }
 
+/** Début du jour civil courant à Paris (instant UTC, ISO). */
+export function parisStartOfTodayIso(): string {
+  const today = getTodayYyyyMmDdParis();
+  const [year, month, day] = today.split("-").map(Number);
+  return parisLocalToUTC(year, month, day, 0, 0).toISOString();
+}
+
 /** Affiche une date AAAA-MM-JJ en français (ex. « mardi 28 avril 2026 »). */
 export function formatFrenchLongDate(yyyyMmDd: string): string {
   const normalized = normalizeToYyyyMmDd(yyyyMmDd);

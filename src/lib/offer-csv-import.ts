@@ -1,4 +1,5 @@
 import { normalizeStudyDomain } from "@/lib/study-domain";
+import { sanitizeOfferTitle } from "@/lib/offer-title-sanitize";
 import type { StudyDomain } from "@/lib/constants";
 
 export type CsvOfferRow = {
@@ -185,7 +186,7 @@ export function parseOffersCsv(text: string): {
     const line = i + 2;
     const cells = dataRows[i];
 
-    const title = cells[columnIndex.get("title")!]?.trim() ?? "";
+    const title = sanitizeOfferTitle(cells[columnIndex.get("title")!]?.trim() ?? "");
     const urlRaw = cells[columnIndex.get("url")!]?.trim() ?? "";
     const description = cells[columnIndex.get("description")!]?.trim() ?? "";
     const company = cells[columnIndex.get("company")!]?.trim() ?? "";
@@ -197,7 +198,7 @@ export function parseOffersCsv(text: string): {
       true,
     );
 
-    if (!title || title.length < 2) {
+    if (!title || title === "Alternance" || title.length < 2) {
       issues.push({ line, message: "Titre manquant ou trop court (2 caracteres min.)." });
       continue;
     }
