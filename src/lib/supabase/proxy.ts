@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { env } from "@/lib/env";
+import { safeGetUser } from "@/lib/supabase/safe-get-user";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({
@@ -31,9 +32,6 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await safeGetUser(supabase);
   return { supabase, response, user };
 }

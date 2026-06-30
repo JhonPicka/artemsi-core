@@ -15,7 +15,6 @@ import { LandingTabs } from "@/components/landing/landing-tabs";
 import { LegalFooterLinks } from "@/components/legal/legal-footer-links";
 import { billingProAuditShortLabel } from "@/lib/billing-offer";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { getFreshLoginPath } from "@/lib/auth-paths";
 import {
   billingMonthlyPriceLine,
   billingTrialShortLabel,
@@ -49,7 +48,7 @@ export default async function Home({ searchParams }: HomeProps) {
           <LandingTabs />
 
           <nav className="landing-nav-links" aria-label="Accès compte">
-            <Link href={getFreshLoginPath()} className="button-link landing-nav-cta">
+            <Link href="/login" prefetch={false} className="button-link landing-nav-cta">
               Connexion
             </Link>
           </nav>

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
+import {
+  clearSupabaseAuthCookiesOnResponse,
+  listObviouslyCorruptAuthCookieNames,
+} from "@/lib/supabase/sanitize-auth-cookies";
 
 function safeNextPath(raw: string | null, fallback: string) {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
@@ -9,10 +12,31 @@ function safeNextPath(raw: string | null, fallback: string) {
   return raw;
 }
 
-/** Déconnexion via Route Handler (les cookies sont bien effacés). */
+function parseRequestCookies(request: Request) {
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  return cookieHeader
+    .split(";")
+    .map((part) => {
+      const [name, ...rest] = part.trim().split("=");
+      return name ? { name, value: rest.join("=") } : null;
+    })
+    .filter((cookie): cookie is { name: string; value: string } => cookie !== null);
+}
+
+function allSupabaseAuthCookieNames(request: Request): string[] {
+  const names = new Set<string>();
+  for (const cookie of parseRequestCookies(request)) {
+    if (cookie.name.startsWith("sb-") && cookie.name.includes("-auth-token")) {
+      names.add(cookie.name);
+    }
+  }
+  return [...names];
+}
+
+/** Efface les cookies auth Supabase puis redirige (sans appeler signOut — évite crash UTF-8). */
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  const parsed = parseRequestCookies(request);
+  const invalidCookieNames = listObviouslyCorruptAuthCookieNames(parsed);
 
   const requestUrl = new URL(request.url);
   const email = requestUrl.searchParams.get("email");
@@ -29,5 +53,12 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(redirectUrl);
+  const response = NextResponse.redirect(redirectUrl);
+  const toClear = new Set([
+    ...allSupabaseAuthCookieNames(request),
+    ...invalidCookieNames,
+  ]);
+  clearSupabaseAuthCookiesOnResponse(response, [...toClear]);
+
+  return response;
 }

@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.artemsi.fr" }],
+        destination: "https://artemsi.fr/:path*",
+        permanent: true,
+      },
+      {
         source: "/favicon.ico",
         destination: "/artemsi-logo.png",
         permanent: true,
